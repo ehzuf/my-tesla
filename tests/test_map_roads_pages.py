@@ -226,6 +226,31 @@ def test_map_build_mask(auth):
     assert "#fp-build { z-index: 40; }" in html
 
 
+# ---------------------------------------------------------------- 高清海报
+def test_map_poster_button(auth):
+    """高清图钮 (2026-10-11 用户点名「下载高清轨迹地图, 大小不限, 精度拉满,
+    要求带文字」): 住汇总行尾 (汇总出数=有路才露脸), 服务端整幅渲染 PNG
+    (拟合顶点全量, 不迁就车机画布上限)。脚本在 map-filters 后, 拿
+    fpVisibleTracks 的 id 集发 POST —— 屏上筛选是什么海报就是什么。"""
+    html = _shell(auth)
+    assert ('<button type="button" id="fp-poster" '
+            'aria-label="下载高清足迹图">高清图</button>') in html, "缺高清图钮"
+    assert 'src="/tesla/static/js/view/map-poster.js?v=1"' in html
+    refs = page_asset_paths(auth, "/tesla")
+    assert refs.index("/tesla/static/js/view/map-page.js") \
+        < refs.index("/tesla/static/js/view/map-poster.js")
+    js = auth.get("/tesla/static/js/view/map-poster.js").text
+    for frag in ('"/tesla/map/api/roads/poster"',
+                 "fpVisibleTracks().map((t) => t.id)",
+                 "URL.createObjectURL", "a.download", "a.click()",
+                 'btn.textContent = "生成中…"', "btn.disabled = true",
+                 'diag("poster_fail"', 'toast("还没有走过的路可导出")'):
+        assert frag in js, f"海报模块缺少 {frag}"
+    # 钮样式住汇总行尾 (玻璃 chip), 忙态半透明挡连点
+    assert "#fp-stats #fp-poster {" in html
+    assert "#fp-stats #fp-poster:disabled { opacity: .5; }" in html
+
+
 # ---------------------------------------------------------------- 设置页
 def test_settings_amap_web_key_field(auth):
     """设置页 Web 服务 Key (轨迹拟合) 独立成卡 (2026-09-29 用户点名「要配置

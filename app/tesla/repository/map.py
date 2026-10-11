@@ -4,6 +4,7 @@
 粗/细渲染的抽稀不再服务端做 (v4 起全精度下发, 客户端本地抽稀)。
 """
 from collections.abc import Iterable, Sequence
+from datetime import datetime
 from itertools import chain
 from typing import Any
 
@@ -14,6 +15,7 @@ from ..models import Drive, Position
 from .charging import _range_conditions
 from .trips import _driver_condition
 from .common import DateRange, fdate
+from ..roads_poster_grid import PosterStats
 from ..schemas import MapSummary, MapTrack
 
 
@@ -37,6 +39,32 @@ def map_summary(session: Session, own: Session, date_range: DateRange | None,
         duration_min=int(duration or 0),
         first_date=fdate(first) if first else None,
         last_date=fdate(last) if last else None)
+
+
+def roads_poster_stats(session: Session, ids: Sequence[int]) -> PosterStats:
+    """海报头行数字: id 集内的有效行程聚合 (页上汇总条同口径: distance
+    非空)。id 集是客户端当前筛选, 可上千 —— IN 分块 900 (SQLite 参数上限
+    安全垫), 逐块聚合后归并。"""
+    drives, km, minutes = 0, 0.0, 0
+    first: datetime | None = None
+    last: datetime | None = None
+    uniq = list(dict.fromkeys(ids))
+    for i in range(0, len(uniq), 900):
+        c, d, m, f, l = session.execute(
+            select(func.count(), func.coalesce(func.sum(Drive.distance), 0.0),
+                   func.coalesce(func.sum(Drive.duration_min), 0),
+                   func.min(Drive.start_date), func.max(Drive.start_date))
+            .where(Drive.id.in_(uniq[i:i + 900]),
+                   Drive.distance.is_not(None))).one()
+        drives += int(c)
+        km += float(d or 0.0)
+        minutes += int(m or 0)
+        if f is not None and (first is None or f < first):
+            first = f
+        if l is not None and (last is None or l > last):
+            last = l
+    return PosterStats(drives=drives, distance_km=round(km, 1),
+                       duration_min=minutes, first=first, last=last)
 
 
 def drive_max_id(session: Session) -> int:

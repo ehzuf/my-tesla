@@ -31,7 +31,7 @@
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-cards.css?v=2">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-sheet.css?v=31">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-playback.css?v=9">
-<link rel="stylesheet" href="/tesla/static/css/tesla-map-page.css?v=4">
+<link rel="stylesheet" href="/tesla/static/css/tesla-map-page.css?v=5">
 <link rel="stylesheet" href="/tesla/static/css/tesla-map-canvas.css?v=22">
 <link rel="stylesheet" href="/tesla/static/css/tesla-chargemap-page.css?v=4">
 <link rel="stylesheet" href="/tesla/static/css/tesla-chargemap-map.css?v=7">
@@ -339,6 +339,10 @@
         <div class="stats" id="fp-stats" hidden>
           <div class="stat"><div class="lb">里程</div><div class="val" id="st-km">–<small>km</small></div></div>
           <div class="stat"><div class="lb">行驶时长</div><div class="val" id="st-hours">–<small>小时</small></div></div>
+          <!-- 高清图 (2026-10-11 用户点名「下载高清轨迹地图, 大小不限, 精度
+               拉满, 要求带文字」): 服务端把屏上同一批路整幅画成 PNG。住汇总
+               行尾 —— 汇总出数 (即有路) 才露脸, 空库不导出 -->
+          <button type="button" id="fp-poster" aria-label="下载高清足迹图">高清图</button>
         </div>
       </div>
       <div class="map-stage">
@@ -1125,6 +1129,7 @@
 <script src="/tesla/static/js/view/map-boot.js?v=13"></script>
 <script src="/tesla/static/js/view/map-build-mask.js?v=1"></script>
 <script src="/tesla/static/js/view/map-filters.js?v=18"></script>
+<script src="/tesla/static/js/view/map-poster.js?v=1"></script>
 <script src="/tesla/static/js/view/live-page.js?v=9"></script>
 <script src="/tesla/static/js/view/live-driving.js?v=13"></script>
 <script src="/tesla/static/js/view/settings-db.js?v=5"></script>

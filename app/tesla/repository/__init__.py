@@ -37,6 +37,7 @@ from .map import (
     drive_max_id,
     map_summary,
     query_tracks,
+    roads_poster_stats,
 )
 from .map_roads import (
     closed_drives,
@@ -117,7 +118,7 @@ __all__ = [
     "place_name_map",
     "place_name_row", "query_tracks",
     "region_address_ids", "rename_trip_group", "road_row", "roads_lite",
-    "roads_progress", "roads_rows", "save_fill",
+    "roads_poster_stats", "roads_progress", "roads_rows", "save_fill",
     "save_place_name", "save_road", "save_trip_group",
     "save_trip_toll", "set_place_hidden", "set_trip_driver", "to_local",
     "track_hist",
