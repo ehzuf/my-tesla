@@ -38,6 +38,14 @@ def done_drive_ids(own: Session, ver: int) -> set[int]:
         select(DriveRoad.drive_id).where(DriveRoad.v == ver)))
 
 
+def roads_progress(session: Session, own: Session, ver: int) -> tuple[int, int]:
+    """(已处理数, 总数), worker 同口径: 总数 = 已结束行程, 已处理 = 其中在
+    当前算法版本有行的 (ok/failed/skip 都算)。构造进度端点用 —— 蒙版进度
+    与 worker 待办严格对齐, 清单 manifest 的 rd/rt (≥2 点口径) 是另一码事。"""
+    ids = {i for i, _ in closed_drives(session)}
+    return len(done_drive_ids(own, ver) & ids), len(ids)
+
+
 def adopt_v2_ok(own: Session, ver: int) -> int:
     """v2 的 ok 且无推断区间行原地改 v (v2→v3 一次性迁移): 这类行程抓路
     全程成功、没有桥接路径参与, v3 输出等价 (实线 ok, 无虚线), 不必重拟合

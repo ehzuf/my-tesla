@@ -23,7 +23,8 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("css/tesla-chargemap-map.css", 7),  # v7: sh-grid margin 显式钉住 (足迹
                                                          # css 裸规则拆净, 泄漏值收编); v6: 图例
                                                          # 搬画布内左下角 (极值随视野算)
-                   ("css/tesla-map-canvas.css", 21),    # v21: 驾驶员筛选并播放条行 + 进度条封顶
+                   ("css/tesla-map-canvas.css", 22),    # v22: 首回构造蒙版 (#fp-build z40 + 进度条);
+                                                         #   v21: 驾驶员筛选并播放条行 + 进度条封顶
                                                          #   220px + 日期浮标去磨砂 (性能);
                                                          #   v20: 播放条挪地图卡外脚下
                    ("js/tesla-map-adapter.js", 14),       # v14: 探针手机端二修
@@ -207,6 +208,7 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   兜底重画不可见化); v16: 收尾视野; v14: 在途旗+回放藏层
                    ("js/view/map-boot.js", 13),         # v13: 换驾驶员点名重播; v12: 换筛选收播; v11: 自动
                                                          #   开播提前; v10: 收尾自动开播; v9: nudge 守卫
+                   ("js/view/map-build-mask.js", 1),    # v1: 首回构造蒙版 (新建, roads/status 轮询)
                    ("js/view/chargemap-heatmap.js", 5), # v5: 图例极值/汇总三数/热力归一随视野算
                                                          # (视野内最大恒红端) + 图例搬画布内左下角
                    ("js/view/charging-cards.js", 12),   # v11: Tesla 字标改附加标 (快/慢充 pill 旁并排)
@@ -218,7 +220,8 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/chargemap-time-filters.js", 10),  # v10: 屏缘缝条 (v9: ptrMove 整视图;
                                                                # v8: 度量档搬页内 pills mini-seg,
                                                                # 屏底 chip 退役 + bindGestures 回 drawer)
-                   ("js/view/map-filters.js", 17),      # v17: ptrMove 挂整视图; v16: 左缘缝条取证
+                   ("js/view/map-filters.js", 18),      # v18: 构造蒙版三挂点 (show/hide/refresh);
+                                                         # v17: ptrMove 挂整视图; v16: 左缘缝条取证
                                                          # 播放条行尾; v13: 前台旗 + 自动开播
                    ("js/view/live-driving.js", 13),     # v13: 左缘缝条 + ptrMove 整舞台; v12: nudge 守卫
                                                          # v10: 最后一段行程直达钮退役 (用户点名, 整链拆净);
@@ -229,7 +232,8 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   v4: bindGestures 回 drawer
                    ("js/view/settings-drivers.js", 6),  # v6: 加载失败 toast (别装空列表);
                                                          # v5: 左滑三钮 + 行内改名 (v4: bindGestures)
-                   ("js/view/settings-map.js", 19),     # v19: 折叠块整链退役
+                   ("js/view/settings-map.js", 20),     # v20: 构造进度文案 (蒙版接管进度显示);
+                                                         # v19: 折叠块整链退役
                                                          # (HOWTO_*/mdItems 下岗);
                                                          # v18: markdown 一条一行
                                                          # (折行被当第二条);

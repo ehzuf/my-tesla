@@ -1,7 +1,7 @@
 """roads_worker 测试: 无 key 空转 / 水位增量 (落行即占位, 同 v 不再试) /
 v2 ok 无推断行直采不重拟合 / 配额歇一小时 / 网络错误同程 3 次后放弃 /
-日配额歇到零点 (跨天清账) / start·reset 生命周期。AmapClient 换假件,
-不发真请求。"""
+日配额歇到零点 (跨天清账) / 首回完成旗 (蒙版掀盖判据) / start·reset
+生命周期。AmapClient 换假件, 不发真请求。"""
 from datetime import date, datetime, timedelta
 
 from app.tesla import roads_amap, roads_worker
@@ -9,6 +9,7 @@ from app.tesla.models import AppSetting
 from app.tesla.repository.map_roads import (RoadLite, done_drive_ids, road_row,
                                             roads_lite, save_road)
 from app.tesla.roads_fit import ROAD_FIT_V
+from app.tesla.settings_store import roads_initial_done_value
 from tests.seed_factories import seed_drive, seed_position
 
 
@@ -143,8 +144,12 @@ def test_round_gives_up_after_three_errors(db, owndb, monkeypatch):  # pylint: d
         assert roads_worker._round(tesla_f, own_f) == (False, 0.0)
     assert _FakeClient.grasp_calls == 3
     assert not done_drive_ids(owndb, ROAD_FIT_V)      # 网络错误不落行
+    assert not roads_initial_done_value(owndb)         # 还在试, 不算清空
     roads_worker._round(tesla_f, own_f)               # 第 4 轮: attempts 满了
     assert _FakeClient.grasp_calls == 3               # 不再调用
+    with own_f() as own:                              # pylint: disable=not-callable
+        # 全放弃也算首回清空 —— 没这子句坏 Key 下蒙版永远不掀
+        assert roads_initial_done_value(own)
 
 
 def test_round_day_cap_sleeps_to_midnight(db, monkeypatch):
@@ -165,6 +170,57 @@ def test_roll_day_clears_yesterdays_cap(db, owndb, monkeypatch):
     st.calls_today = roads_worker.CALL_CAP_PER_DAY
     assert _round(monkeypatch)[0]                       # 跨天后照常开跑
     assert done_drive_ids(owndb, ROAD_FIT_V) == {5}
+
+
+# ---------------------------------------------------------------- 首回完成旗
+def test_round_marks_initial_done_when_backlog_drains(db, owndb, monkeypatch):
+    """清完待办的那轮不置旗 (蒙版还盖着), 下一轮观察到待办空了才置 ——
+    掀盖是终态, 与「本轮有进展」分开判。"""
+    _seed(db, 5)
+    _seed(db, 6)
+    assert _round(monkeypatch)[0]                      # 两条都拟合完
+    assert not roads_initial_done_value(owndb)
+    assert _round(monkeypatch) == (False, 0.0)         # 空转轮置旗
+    assert roads_initial_done_value(owndb)
+
+
+def test_round_marks_initial_done_on_empty_garage(owndb, monkeypatch):
+    """零行程 (空车库): 第一轮就置旗; 前端看 total=0 本就不蒙, 旗是冗余
+    的终态背书。"""
+    assert _round(monkeypatch) == (False, 0.0)
+    assert _FakeClient.made == 0
+    assert roads_initial_done_value(owndb)
+
+
+def test_round_keeps_initial_flag_unset_without_key(db, owndb, monkeypatch):
+    """没配 Web 服务 Key: 拟合压根没开跑, 不算「构造完成」—— 蒙版口径
+    与 worker 待办一致, 配完 Key 才开始计时。"""
+    _seed(db, 5)
+    _round(monkeypatch, key=None)
+    assert not roads_initial_done_value(owndb)
+
+
+def test_round_gives_up_drives_do_not_block_window(db, owndb, monkeypatch):
+    """放弃的行程不占轮次名额: 堵在队头 (新行程排其后) 时新行程照样轮上,
+    队头清空后照常置旗 —— 否则 50 个放弃行程就能把 worker 永久卡死。"""
+    # 5 条行程: 1 条先放弃 (error 3 轮), 再加 1 条新行程, mode 切回 ok
+    _seed(db, 5)
+    monkeypatch.setattr(roads_amap, "AmapClient", _FakeClient)
+    _FakeClient.mode = "error"
+    tesla_f, own_f = _factories()
+    with own_f() as own:                         # pylint: disable=not-callable
+        own.merge(AppSetting(id=1, amap_web_key="k"))
+        own.commit()
+    for _ in range(3):
+        roads_worker._round(tesla_f, own_f)      # drive 5 放弃计数拉满
+    _seed(db, 6)
+    _FakeClient.mode = "ok"
+    _FakeClient.made = _FakeClient.grasp_calls = 0
+    assert roads_worker._round(tesla_f, own_f) == (True, 0.0)   # 6 照样拟合
+    assert done_drive_ids(owndb, ROAD_FIT_V) == {6}             # 5 无行
+    roads_worker._round(tesla_f, own_f)                         # 只剩放弃的 5
+    with own_f() as own:                              # pylint: disable=not-callable
+        assert roads_initial_done_value(own)          # 全放弃 → 置旗
 
 
 # ---------------------------------------------------------------- 生命周期

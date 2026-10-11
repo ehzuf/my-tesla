@@ -12,8 +12,9 @@ from ... import database
 from .. import (place_worker, repository, roads_worker, settings_store,
                 tracks_cache)
 from ..roads_amap import AmapClient, AmapError, AmapQuota
+from ..roads_fit import ROAD_FIT_V
 from ..schemas import (AmapConfig, AmapKeyTest, AmapKeyTestIn, MapManifest,
-                       MapSummary, RoadStreamRow)
+                       MapSummary, RoadStreamRow, RoadsStatus)
 from ...schemas import OkResponse
 from ._common import date_range_or_400
 
@@ -88,6 +89,18 @@ def roads_tick() -> OkResponse:
     roads_worker.nudge()
     place_worker.nudge()
     return OkResponse(ok=True)
+
+
+@mapapi.get("/roads/status")
+def roads_status(
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> RoadsStatus:
+    """道路构造进度 (足迹地图「正在构造数据」蒙版轮询): done/total 与
+    worker 待办同口径, 首回回填清空 (含放弃收尾) 后 initial_done 置位。
+    故意不挂缓存头 —— worker 随时落新行, 前端轮询带时间戳参数破缓存。"""
+    done, total = repository.roads_progress(db, own, ROAD_FIT_V)
+    return RoadsStatus(done=done, total=total,
+                       initial_done=settings_store.roads_initial_done_value(own))
 
 
 @mapapi.post("/web-key-test")

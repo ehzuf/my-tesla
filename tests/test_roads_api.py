@@ -1,5 +1,6 @@
 """走过之路 API 测试: 清单的 s/rn/m/rv/rd/rt 字段 (含 guess=3) / roads 流
-(NDJSON 只回有几何的行, 上限与校验) / tick 踢醒 worker。"""
+(NDJSON 只回有几何的行, 上限与校验) / tick 踢醒 worker / status 构造进度
+(蒙版口径)。"""
 import json
 from datetime import datetime
 
@@ -8,11 +9,14 @@ from fastapi.testclient import TestClient
 import app.main as m
 from app.tesla.repository.map_roads import road_row, save_road
 from app.tesla.roads_fit import ROAD_FIT_V
+from app.tesla.settings_store import mark_roads_initial_done
 from tests.map_seed_helpers import _two_point_drive
+from tests.seed_factories import seed_drive
 
 MANIFEST = "/tesla/map/api/tracks/manifest"
 STREAM = "/tesla/map/api/roads/stream"
 TICK = "/tesla/map/api/roads/tick"
+STATUS = "/tesla/map/api/roads/status"
 
 
 def _row(owndb, drive_id, status, pts, n, km, err="", v=ROAD_FIT_V,
@@ -103,3 +107,32 @@ def test_roads_tick_ok(auth):
 
 def test_roads_tick_requires_auth():
     assert TestClient(m.app).get(TICK).status_code == 401
+
+
+# ---------------------------------------------------------------- status
+def test_roads_status_worker_universe_counts(auth, db, owndb):
+    """done/total 与 worker 待办同口径: ok/failed 占位行都算 done, 旧 v 的
+    行不算; 没拟合过的算 total 不算 done; 开着的行程 (无 end_date) 不入
+    total, 孤儿行 (行程已不在) 不入 done。"""
+    _seed(db, 5, 1)   # ok 行
+    _row(owndb, 5, "ok", [114.0, 22.5, 114.01, 22.5], 2, 1.2)
+    _seed(db, 6, 2)   # 没拟合过
+    _seed(db, 7, 3)   # 拟合失败 (占位行, 同 v 不再试)
+    _row(owndb, 7, "failed", [], 0, 0.0, "grab_fail")
+    _seed(db, 8, 4)   # 旧算法版本的行: 不算数
+    _row(owndb, 8, "ok", [114.0, 22.5, 114.01, 22.5], 2, 1.2, v=0)
+    _row(owndb, 99, "ok", [114.0, 22.5, 114.01, 22.5], 2, 1.2)   # 孤儿行
+    seed_drive(db, id=20, end_date=None, distance=5.0)           # 还开着
+    r = auth.get(STATUS)
+    assert r.status_code == 200
+    assert r.json() == {"done": 2, "total": 4, "initial_done": False}
+
+
+def test_roads_status_initial_done_flag(auth, db, owndb):
+    """首回完成旗置位后 initial_done=True —— 蒙版掀盖的终态判据。"""
+    mark_roads_initial_done(owndb)
+    assert auth.get(STATUS).json()["initial_done"] is True
+
+
+def test_roads_status_requires_auth():
+    assert TestClient(m.app).get(STATUS).status_code == 401

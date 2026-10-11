@@ -98,7 +98,7 @@ $("#amap-web-save").addEventListener("click", async () => {
     if (changed) {
       /* Web 服务 key 是 worker 每轮现读的, 踢一下立即开跑 (不用等 60s 空转轮) */
       try { await getJSON("/tesla/map/api/roads/tick"); } catch { /* worker 没起也不算保存失败 */ }
-      toast("已保存, 拟合在后台跑 (足迹地图左下角图例有进度)");
+      toast("已保存, 历史路线开始后台构造 (足迹地图会显示构造进度)");
     } else {
       toast("已保存");
     }

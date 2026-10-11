@@ -106,6 +106,27 @@ def test_migrate_own_db_adds_map_provider_column():
     database.migrate_own_db()  # 再跑不炸
 
 
+def test_migrate_own_db_adds_roads_initial_done_column():
+    """v3.9 自有库补 roads_initial_done (首回道路回填完成旗): 无列的老库
+    启动补列默认 0 (未完成), 幂等。"""
+    with database.own_engine().begin() as conn:
+        conn.exec_driver_sql("DROP TABLE IF EXISTS app_settings")
+        conn.exec_driver_sql(
+            "CREATE TABLE app_settings (id INTEGER PRIMARY KEY, tmdb_host TEXT,"
+            " tmdb_port TEXT, tmdb_user TEXT, tmdb_password TEXT, tmdb_name TEXT,"
+            " amap_key TEXT, amap_security_code TEXT, amap_style TEXT,"
+            " map_provider TEXT, amap_web_key TEXT, updated_at DATETIME)")
+    database.migrate_own_db()
+    with database.own_engine().connect() as conn:
+        cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(app_settings)")}
+    assert "roads_initial_done" in cols
+    with database.own_engine().connect() as conn:
+        flag = conn.exec_driver_sql(
+            "SELECT roads_initial_done FROM app_settings").scalar()
+    assert flag in (0, None)   # 老行补列默认未完成 (蒙版口径待 worker 置)
+    database.migrate_own_db()  # 再跑不炸
+
+
 # ---------------------------------------------------------------- 统一错误契约
 def test_sqlalchemy_error_maps_to_503(auth, monkeypatch):
     """路由里的 SQLAlchemyError 统一兜成 503, 不把异常细节裸奔给前端。"""

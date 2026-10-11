@@ -21,14 +21,17 @@ def test_map_roads_scripts_and_load_order(auth):
     细化模块 (map-tracks-refine) 已随原始轨迹层整文件退役。"""
     html = _shell(auth)
     for src in ('js/roads-grid.js?v=4', 'js/view/map-roads-render.js?v=13',
-                'js/view/map-roads-playback.js?v=14', 'js/view/map-roads-boot.js?v=8'):
+                'js/view/map-roads-playback.js?v=14', 'js/view/map-roads-boot.js?v=8',
+                'js/view/map-build-mask.js?v=1'):
         assert f'src="/tesla/static/{src}"' in html, f"缺脚本 {src}"
     refs = page_asset_paths(auth, "/tesla")
     assert refs.index("/tesla/static/js/roads-grid.js") \
         < refs.index("/tesla/static/js/view/map-roads-render.js")
     assert refs.index("/tesla/static/js/view/map-local-store.js") \
         < refs.index("/tesla/static/js/view/map-roads-boot.js") \
-        < refs.index("/tesla/static/js/view/map-boot.js")
+        < refs.index("/tesla/static/js/view/map-boot.js") \
+        < refs.index("/tesla/static/js/view/map-build-mask.js") \
+        < refs.index("/tesla/static/js/view/map-filters.js")
     assert "/tesla/static/js/view/map-tracks-refine.js" not in html, \
         "细化模块应整文件退役 (只画走过的路)"
     # 回放模块在渲染层后 (makeRoadLines/roadInViewNow 是它的画笔, 序即文档)
@@ -184,6 +187,43 @@ def test_map_roads_colors_and_grid_css(auth):
     assert "#view-map .lg-grad {" in html
     assert "linear-gradient(to right, #3d6fa8, #21a179 33.33%," in html
     assert ".lg-sw" not in html, "四色点图例应随热力渐变条退役"
+
+
+# ---------------------------------------------------------------- 构造蒙版
+def test_map_build_mask(auth):
+    """首回构造蒙版 (2026-10-11): 刚配好 Key 后台回填历史道路期间, 足迹
+    地图盖模糊蒙版报进度 (后台拟合口径, 与退役的客户端下载进度条两码事
+    —— 那条按清单下载计数, 2026-09-29 已拆)。三挂点: show 首句 (盖过
+    fpBooted 早退, 造完的回访者也能掀盖) / hide 收轮询 / refresh 立查;
+    掀盖终态收轮询 + 终同步。命名全部避开退役禁用名单 (test_map_pages)。"""
+    html = _shell(auth)
+    for frag in ('<div class="overlay" id="fp-build" hidden>',
+                 '<div class="ov-text">正在构造数据</div>',
+                 'class="fp-build-bar"><div class="fp-build-fill" id="fp-build-fill"',
+                 'id="fp-build-num"'):
+        assert frag in html, f"构造蒙版骨架缺少 {frag}"
+    mask = auth.get("/tesla/static/js/view/map-build-mask.js").text
+    for frag in ('"/tesla/map/api/roads/status?_=" + Date.now()',
+                 "function fpBuildWatch()", "function fpBuildStop()",
+                 "function fpBuildPoke()", "function fpBuildApply(",
+                 "const FP_BUILD_MS = 3000;", "const FP_BUILD_SYNC_MS = 30000;",
+                 "st.initial_done || (st.total > 0 && st.done >= st.total)",
+                 'diag("fp_build_done"'):
+        assert frag in mask, f"构造蒙版模块缺少 {frag}"
+    # 生命周期挂点 (map-filters): watch 在 show 的 fpBooted 早退前 (回视图
+    # 也查), stop 在 hide, refresh 立查 —— 序关系断言 (行尾注释挡精确串)
+    filters = auth.get("/tesla/static/js/view/map-filters.js").text
+    assert filters.index("fpViewOn = true;") \
+        < filters.index("fpBuildWatch();") \
+        < filters.index("if (fpBooted) { fpPlayAuto(); return; }"), \
+        "watch 应在 show 的 fpBooted 早退前 (回视图也查)"
+    assert filters.index("fpViewOn = false;") \
+        < filters.index("fpBuildStop();") \
+        < filters.index("if (fpPlaying) fpPlayExit(true);"), \
+        "stop 应在 hide 的回放收场前"
+    assert "fpSync(); fpBuildPoke();" in filters
+    # z 序: 蒙版盖过一切画布浮层 (错误/Key 提示 z20, 图例与日期浮标 z30)
+    assert "#fp-build { z-index: 40; }" in html
 
 
 # ---------------------------------------------------------------- 设置页

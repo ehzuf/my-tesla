@@ -98,3 +98,12 @@ class RoadStreamRow(BaseModel):
     km: float
     pts: list[float]
     g: list[list[int]] = []
+
+
+class RoadsStatus(BaseModel):
+    """道路构造进度 (蒙版用): done/total 与 worker 待办同口径, 首回
+    回填清空 (含放弃收尾) 后 initial_done 置位 —— 前端掀盖的终态判据。"""
+
+    done: int
+    total: int
+    initial_done: bool

@@ -64,6 +64,7 @@ class AppSetting(OwnBase):
     amap_style: Mapped[str] = mapped_column(String, default="")
     amap_web_key: Mapped[str] = mapped_column(String, default="")  # Web服务 key (轨迹拟合)
     map_provider: Mapped[str] = mapped_column(String, default="")  # 已退役: 列留而不用 (只留高德)
+    roads_initial_done: Mapped[bool] = mapped_column(default=False)  # 历史道路首轮回填已清空
     updated_at: Mapped[datetime] = mapped_column(default=datetime.now,
                                                  onupdate=datetime.now)
 

@@ -32,7 +32,7 @@
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-sheet.css?v=31">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-playback.css?v=9">
 <link rel="stylesheet" href="/tesla/static/css/tesla-map-page.css?v=4">
-<link rel="stylesheet" href="/tesla/static/css/tesla-map-canvas.css?v=21">
+<link rel="stylesheet" href="/tesla/static/css/tesla-map-canvas.css?v=22">
 <link rel="stylesheet" href="/tesla/static/css/tesla-chargemap-page.css?v=4">
 <link rel="stylesheet" href="/tesla/static/css/tesla-chargemap-map.css?v=7">
 <link rel="stylesheet" href="/tesla/static/css/tesla-live-page.css?v=2">
@@ -361,6 +361,16 @@
               <button type="button" class="retry-btn" id="fp-recheck">重新检测</button>
             </div>
           </div>
+        </div>
+        <!-- 首回数据构造蒙版 (2026-10-11): 刚配好高德 Key 后台回填历史道路
+             期间的模糊盖板, 盖的是服务端道路拟合的构造进度 (/roads/status
+             轮询), 造完自动掀开 —— 与退役的「边下边画」流式下载无关, 那条
+             路本就一段段自己冒出来, 无进度可言 -->
+        <div class="overlay" id="fp-build" hidden>
+          <div class="spin"></div>
+          <div class="ov-text">正在构造数据</div>
+          <div class="fp-build-bar"><div class="fp-build-fill" id="fp-build-fill"></div></div>
+          <div class="ov-text" id="fp-build-num">0 / 0</div>
         </div>
         <!-- 走过之路图例 (2026-09-29, 底卡复用充电地图的全局 .legend 磨砂
              暗卡): 次数热力渐变条, 两端只标「偶尔 / 频繁」—— 2026-10-01 起
@@ -1113,11 +1123,12 @@
 <script src="/tesla/static/js/view/map-local-store.js?v=3"></script>
 <script src="/tesla/static/js/view/map-roads-boot.js?v=8"></script>
 <script src="/tesla/static/js/view/map-boot.js?v=13"></script>
-<script src="/tesla/static/js/view/map-filters.js?v=17"></script>
+<script src="/tesla/static/js/view/map-build-mask.js?v=1"></script>
+<script src="/tesla/static/js/view/map-filters.js?v=18"></script>
 <script src="/tesla/static/js/view/live-page.js?v=9"></script>
 <script src="/tesla/static/js/view/live-driving.js?v=13"></script>
 <script src="/tesla/static/js/view/settings-db.js?v=5"></script>
-<script src="/tesla/static/js/view/settings-map.js?v=19"></script>
+<script src="/tesla/static/js/view/settings-map.js?v=20"></script>
 <script src="/tesla/static/js/tesla-swipe-delete.js?v=4"></script>
 <script src="/tesla/static/js/view/settings-drivers.js?v=6"></script>
 <script src="/tesla/static/js/view/trips-place-detail.js?v=12"></script>

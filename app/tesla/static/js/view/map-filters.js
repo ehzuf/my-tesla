@@ -19,6 +19,7 @@
           closeFbPop, anchorPop, openDrawer: writable, PAGE_V,
           drvId: writable, fpDefaultDrv: writable, map: writable,
           mapReady: writable, fpViewOn: writable, fpBoot, fpSync,
+          fpBuildWatch, fpBuildStop, fpBuildPoke,
           fpPlaying, fpPlayExit, fpPlayAuto, fpPlayArm,
           fpSaveFilters */
 /* exported fpFetchDrivers, mapReady, fpViewOn */   // 后两个只写不读 (清态/前台旗), exported 豁免
@@ -166,6 +167,7 @@ registerView("map", {
   el: $("#view-map"),
   show() {                      // 首次进视图: 起地图同步轨迹, 驾驶员表异步拉
     fpViewOn = true;            // 在前台 (自动开播只趁人在看时起)
+    fpBuildWatch();             // 首回构造蒙版: 立查进度起轮询 (回视图也查, 造完的正好掀盖)
     if (fpBooted) { fpPlayAuto(); return; }   // 回视图: 数据就绪补一轮自动开播
     fpBooted = true;
     diag("fp_boot", { pv: PAGE_V, mf: "v16" });   // 版本信标: 确认手机真跑上 v16 (排查旧缓存混跑)
@@ -174,9 +176,10 @@ registerView("map", {
   },
   hide() {                      // 切走视图: 记下不在前台 + 回放整场收掉 —
     fpViewOn = false;           // 回来是静止热力图 (自动开播只此一回不再自来)
+    fpBuildStop();              // 构造蒙版轮询也收 (回来 show 重建)
     if (fpPlaying) fpPlayExit(true);
   },
-  refresh: () => fpSync(),   // 下拉刷新/换时间档/换车 (清单现拉 + 本地渲染)
+  refresh: () => { fpSync(); fpBuildPoke(); },   // 下拉刷新/换时间档/换车 (清单现拉 + 蒙版立查)
 });
 
 /* 地图配置换了 (设置页保存后发 maplib:swap): 常驻实例整个作废 —— 旧引擎

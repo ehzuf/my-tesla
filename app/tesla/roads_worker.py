@@ -18,7 +18,7 @@ from .repository.map_roads import (adopt_v2_ok, closed_drives,
                                    done_drive_ids, drive_points, road_row,
                                    save_road)
 from .roads_fit import ROAD_FIT_V, fit_drive
-from .settings_store import amap_web_key_value
+from .settings_store import amap_web_key_value, mark_roads_initial_done
 
 CALL_CAP_PER_DAY = 9000   # 自记账日上限 (官方个人 1 万, 留余量)
 THROTTLE_S = 0.4          # 相邻 REST 调用最小间隔
@@ -115,18 +115,25 @@ def _round(tesla_factory: sessionmaker[Session],
     if _State.calls_today >= CALL_CAP_PER_DAY:
         return False, _seconds_to_midnight()
     with tesla_factory() as session:
-        pending = [(i, km) for i, km in closed_drives(session)
-                   if i not in done][:ROUND_MAX]
-    if not pending:
+        todo = [(i, km) for i, km in closed_drives(session)
+                if i not in done]
+    # 首回完成旗: 待办清空 (拟合完或全放弃) 即置 —— 足迹地图的「正在构造
+    # 数据」蒙版靠它掀盖。放弃的行程必须算进「清空」: 坏 key 下永远失败的
+    # 行程不落 done 行, 不算它待办永不清零, 蒙版永远不掀。
+    if (not todo
+            or all(_State.attempts.get(i, 0) >= ATTEMPTS_MAX for i, _ in todo)):
+        with own_factory() as own:
+            mark_roads_initial_done(own)
         return False, 0.0
+    # 已放弃的行程不再占轮次名额 (否则堵在队头时后面新行程永远轮不上)
+    pending = [t for t in todo
+               if _State.attempts.get(t[0], 0) < ATTEMPTS_MAX][:ROUND_MAX]
     progressed = False
     client = roads_amap.AmapClient(key, min_interval=THROTTLE_S)
     try:
         for drive_id, km in pending:
             if _State.stop.is_set():
                 break
-            if _State.attempts.get(drive_id, 0) >= ATTEMPTS_MAX:
-                continue
             with tesla_factory() as session:
                 points = drive_points(session, drive_id)
             try:

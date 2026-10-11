@@ -89,6 +89,21 @@ def amap_web_key_value(own: Session) -> str:
     return _row(own).amap_web_key or ""
 
 
+def roads_initial_done_value(own: Session) -> bool:
+    """历史道路首轮回填是否已完成 (含放弃收尾): worker 清空待办时置旗。
+    足迹地图的「正在构造数据」蒙版靠它掀盖 —— 只盖首回大批量回填,
+    之后增量新行程走水位补, 不再蒙。"""
+    return bool(_row(own).roads_initial_done)
+
+
+def mark_roads_initial_done(own: Session) -> None:
+    """置首回完成旗 (幂等: 已置不重写, 避免 worker 每轮空转都写库)。"""
+    row = _row(own)
+    if not row.roads_initial_done:
+        row.roads_initial_done = True
+        own.commit()
+
+
 def wizard_missing(own: Session) -> list[str]:
     """首启引导 (三步版) 还差的配置步: "teslamate" / "amap"。
 

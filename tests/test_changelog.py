@@ -17,6 +17,7 @@ def test_versions_newest_first_and_wellformed():
     """新→老; 每版字段齐全, 文案是用户视角的一句话 (不夹技术黑话)。"""
     vs = changelog.entries()
     assert [v.version for v in vs] == [
+        "3.9.0",
         "3.8.1",
         "3.8.0",
         "3.7.4",
@@ -33,7 +34,7 @@ def test_versions_newest_first_and_wellformed():
         "3.1.6", "3.1.5", "3.1.4", "3.1.3", "3.1.2", "3.1.1",
         "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.6.0", "2.5.1", "2.5.0", "2.4.0",
         "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.1.0", "1.0.0"]
-    assert vs[0].date == "2026-10-10" and vs[-1].date == "2026-09-08"
+    assert vs[0].date == "2026-10-11" and vs[-1].date == "2026-09-08"
     for v in vs:
         assert v.items                                  # 每版至少一条
         assert len(v.date) == 10 and v.date[4] == "-"   # YYYY-MM-DD
@@ -53,7 +54,7 @@ def test_version_data_lives_in_json_dir():
     里, app/ 下不再有 changelog_versions_*.py —— 新批次 = 加一个 json。"""
     data_dir = Path(changelog.__file__).parent / "changelog_data"
     files = sorted(data_dir.glob("*.json"))
-    assert len(files) == 31    # 拆分时代 23 批 + 3.6.0 ~ 3.8.1 八批
+    assert len(files) == 32    # 拆分时代 23 批 + 3.6.0 ~ 3.9.0 九批
     assert not list((data_dir.parent).glob("changelog_versions_*.py"))
     loaded = {v.version for v in changelog.entries()}
     for f in files:                               # 每个文件都被装载 (无孤儿)
@@ -71,7 +72,8 @@ def test_changelog_entries_endpoint(auth):
         assert e["items"] == [{"kind": it.kind, "text": it.text}
                               for it in v.items]
     # 头条是主打: 新功能或修的主 bug; 纯打磨的批次整版都是改进, 不硬凑
-    # (3.8.1 整版都是改进「Web 服务 Key 必填 + 设置说明撤下」;
+    # (3.9.0 头条是新增「历史路线构造进度蒙版」;
+    # 3.8.1 整版都是改进「Web 服务 Key 必填 + 设置说明撤下」;
     # 3.8.0 头条是新增「--cert-file/--key-file 直接指定证书」;
     # 3.7.4 整版都是改进「启动参数瘦身: --tz/--currency 退役」;
     # 3.7.3 整版都是改进「向导第三步一次配齐两把高德 Key」;

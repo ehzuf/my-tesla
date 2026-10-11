@@ -64,6 +64,20 @@ main { position: relative; flex: 1; min-height: 0; margin-top: 10px; }
    进度条了」; 道路本就流式下载边下边画, 路一段段自己冒出来, 进度条纯
    冗余; 缩放钮给加载条让位的规则一并拆) */
 
+/* 首回构造蒙版 (2026-10-11): 盖在一切画布浮层之上 (错误层/Key 提示
+   z20, 图例与日期浮标 z30, 它 z40) —— 后台正把历史行程逐条拟合到实际
+   道路, 蒙版上直接读数, 造完自动掀开 (map-build-mask 轮询 roads/status)。
+   只盖首回大批量回填, 之后增量新行程走水位补不再蒙 */
+#fp-build { z-index: 40; }
+.fp-build-bar {
+  width: min(64vw, 260px); height: 6px; border-radius: 999px;
+  background: rgba(255,255,255,.14); overflow: hidden;
+}
+.fp-build-fill {
+  width: 0%; height: 100%;
+  background: var(--blue); transition: width .4s;
+}
+
 /* 底部控制排 → 播放条 (2026-10-01 用户点名重做「去掉放大缩小按钮…地图下方
    改成播放按钮加进度条」, 同日再点名「放到地图外面下方」+「按钮照行程详情
    页的播放控制样式」): 控件样式全复用行程播放条一家的类 —— .playbar 胶囊

@@ -32,7 +32,8 @@ def test_map_view_skeleton(auth):
         assert gone not in html, f"摘要/弹层残留 {gone}"
     # 关键 id 全页唯一 (孤儿节点会重复 id, JS 绑错元素且不报错)
     for i in ("fp-map", "fp-stats", "fp-error", "fp-play", "fp-play-date",
-              "fp-seek", "fp-gutter"):
+              "fp-seek", "fp-gutter", "fp-build", "fp-build-fill",
+              "fp-build-num"):
         assert html.count(f'id="{i}"') == 1, f"壳 {i} 重复"
     # 地图引擎经适配层 (服务商可切, 设置视图定), 幻影黑兜底在适配层;
     # 足迹地图单图钉灰阶底图 (2026-09-30「搞灰」) —— 彩色只留给热力色

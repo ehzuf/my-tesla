@@ -48,6 +48,10 @@ def migrate_own_db() -> None:
         if "amap_web_key" not in cols:  # v: 高德 Web 服务 key (足迹道路拟合)
             conn.exec_driver_sql(
                 "ALTER TABLE app_settings ADD COLUMN amap_web_key TEXT NOT NULL DEFAULT ''")
+        if "roads_initial_done" not in cols:  # v: 历史道路首轮回填完成旗 (蒙版掀盖判据)
+            conn.exec_driver_sql(
+                "ALTER TABLE app_settings ADD COLUMN roads_initial_done "
+                "BOOLEAN NOT NULL DEFAULT 0")
         rcols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(drive_roads)")}
         if "gaps" not in rcols:  # v: 推断层顶点区间 (可能走过, 虚线渲染)
             conn.exec_driver_sql(
