@@ -99,22 +99,25 @@ def test_drawer_open_close_wiring(auth):
 def test_menu_fab_floating(auth):
     """全局悬浮菜单键 (2026-10-12): 独立悬浮 —— 不进 #bar-row, 不动
     no-chips/no-bar 几何 (用户口径「不改变任何界面的控件布局」); fixed
-    右下角踩 --bar-clear (no-bar 视图自动落低), 地图双页 main:has 让位
-    抬高一档 (避开足迹地图回放条/充电地图 pills 行, 纯 CSS 不给 navigate
-    加钩子); 层序 --z-bar, 弹层/蒙版都在上面盖住它, 不用自己管藏显。"""
+    左下角 (同日用户点名放左边) 踩 --bar-clear (no-bar 视图自动落低),
+    地图双页 main:has 让位抬高一档 (抬过足迹地图回放条 + 卡内左下角
+    图例/充电地图 pills 行, 纯 CSS 不给 navigate 加钩子); 层序 --z-bar,
+    弹层/蒙版都在上面; 菜单开着藏键 (蒙版半透明, 不藏会透出来)。"""
     page = served_page(auth, SHELL)
     assert page.count('id="menu-fab"') == 1                    # 全壳唯一
     assert '<button type="button" id="menu-fab" aria-label="打开菜单">' in page
     assert page.index('id="menu-fab"') < page.index('<div id="bar-row">')  # 条外
     i = page.index("#menu-fab {")
     block = page[i:page.index("}", i)]
-    for frag in ("position: fixed", "right: 14px",
+    for frag in ("position: fixed", "left: 14px",
                  "bottom: calc(var(--bar-clear) + 12px)",
                  "z-index: var(--z-bar)", "width: var(--bar-h)"):
         assert frag in block, f"悬浮键几何缺 {frag}"
     assert "main:has(#view-map:not([hidden])) ~ #menu-fab" in page
     assert "main:has(#view-chargemap:not([hidden])) ~ #menu-fab" in page
-    assert "bottom: calc(var(--bar-clear) + 70px);" in page    # 地图双页让位
+    assert "bottom: calc(var(--bar-clear) + 130px);" in page   # 地图双页让位
+    # 菜单开着: 藏键 (抽屉挂 on 即 display:none —— 蒙版半透明, 不藏会透出)
+    assert "body:has(#drawer.on) #menu-fab { display: none; }" in page
     assert "body.layer-anim #menu-fab," in page                # 磨砂幽灵收编
     # 不掺和屏底条几何: no-chips/no-bar 机制原样 (钉在 test_global_chips_retired)
     assert 'document.body.classList.toggle("no-bar", noChips);' in page_js(auth, SHELL)

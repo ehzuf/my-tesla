@@ -116,7 +116,8 @@ def test_guard_assets_versioned_on_shell(auth):
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
-                   ("css/tesla-base.css", 9),           # v9: 全局悬浮菜单键 #menu-fab (Safari
+                   ("css/tesla-base.css", 10),          # v10: 菜单键挪左下角 + 开抽屉藏键;
+                                                         #   v9: 全局悬浮菜单键 #menu-fab (Safari
                                                          #   左缘右划=系统后退, 边缘呼出失效);
                                                          #   v8: --content-top 落全局上边界 --top-clear
                                                          # (状态页顶进模糊地带修掉, 全 app 标题
