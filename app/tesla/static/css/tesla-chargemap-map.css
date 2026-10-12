@@ -60,11 +60,12 @@ main { position: relative; flex: 1; min-height: 0; margin-top: 10px; }
 }
 .cm-views { flex: none; }   /* mini-seg 样式与充电曲线档位条同款 (充电页 css) */
 
-/* 热力图例 (画布内左下角浮卡, 2026-09-27 用户点名「图例放在地图内部左下
-   角」): 少 → 多 梯度条 + 视野内的最小 / 中位 / 最大值 (极值随视野动态算,
-   左端蓝右端红); 磨砂暗底与缩放钮同款, 压得住底图杂色 */
+/* 热力图例 (画布内右上浮卡, 2026-09-27 用户点名「图例放在地图内部」,
+   2026-10-12 从左下角挪右上 —— 左下让位全局恒定的悬浮菜单键): 少 → 多
+   梯度条 + 视野内的最小 / 中位 / 最大值 (极值随视野动态算, 左端蓝右端红);
+   磨砂暗底与缩放钮同款, 压得住底图杂色 */
 .legend {
-  position: absolute; left: 14px; bottom: 14px; z-index: 30;
+  position: absolute; right: 14px; top: 14px; z-index: 30;
   width: 150px; padding: 8px 10px; border-radius: 12px;
   background: rgba(28,28,30,.85); border: 1px solid var(--hairline);
   -webkit-backdrop-filter: blur(20px) saturate(180%);

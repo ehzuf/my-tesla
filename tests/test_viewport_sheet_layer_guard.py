@@ -112,13 +112,14 @@ def test_body_sizing_declared_once_in_base(auth):
     时代的 body 高度 (height/min-height 100dvh) 原样搬了进来 —— 与
     base.css 同特异度且在级联后面, 把 var(--shell-h) 整个盖掉, 钉高机制
     钉了也白发 (7556 的下半屏黑正是 body 被盖在矮值上)。日历菜单的矮屏
-    封顶同一颗雷, 5 处一起吃 --shell-h。"""
+    封顶同一颗雷 (5 处一起吃 --shell-h) —— 2026-10-12 独立页时代的
+    header/菜单/日历死 CSS 整族退役, 该 5 处随族拆净。"""
     page = served_page(auth, SHELL)
     base = page.index("height: var(--shell-h, 100dvh);")
     for gone in ("height: 100dvh;", "height: 100vh;",
-                 "min-height: 100dvh;", "min-height: 100vh;"):
+                 "min-height: 100dvh;", "min-height: 100vh;",
+                 "max-height: calc(var(--shell-h, 100vh) - 130px);"):
         assert gone not in page[base:], f"base.css 之后又定 body 尺寸: {gone}"
-    assert page.count("max-height: calc(var(--shell-h, 100vh) - 130px);") == 5
 
 
 def test_sheet_settle_wired_on_all_four_sheets(auth):

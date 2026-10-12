@@ -97,12 +97,13 @@ def test_drawer_open_close_wiring(auth):
 
 
 def test_menu_fab_floating(auth):
-    """全局悬浮菜单键 (2026-10-12): 独立悬浮 —— 不进 #bar-row, 不动
-    no-chips/no-bar 几何 (用户口径「不改变任何界面的控件布局」); fixed
-    左下角 (同日用户点名放左边) 踩 --bar-clear (no-bar 视图自动落低),
-    地图双页 main:has 让位抬高一档 (抬过足迹地图回放条 + 卡内左下角
-    图例/充电地图 pills 行, 纯 CSS 不给 navigate 加钩子); 层序 --z-bar,
-    弹层/蒙版都在上面; 菜单开着藏键 (蒙版半透明, 不藏会透出来)。"""
+    """全局悬浮菜单键 (2026-10-12): 独立悬浮 —— 不进 #bar-row, fixed 左下角
+    (同日用户点名放左边), 层序 --z-bar, 弹层/蒙版都在上面; 菜单开着藏键
+    (蒙版半透明, 不藏会透出来)。底距恒定不走 --bar-clear (同晚用户点名
+    「位置忽上忽下, 不是全局固定」): no-bar 视图曾把 --bar-clear 砍到安全区,
+    地图双页又曾让位抬 130 —— 三档高度。现在恒取「屏底条那档」(bar-h+32
+    +安全区 = 条视图原值分毫不动, 其余视图一律同高); 地图双页让位块退役,
+    图例/回放日期改挪画布右上 (钉在 map/chargemap 各自测试)。"""
     page = served_page(auth, SHELL)
     assert page.count('id="menu-fab"') == 1                    # 全壳唯一
     assert '<button type="button" id="menu-fab" aria-label="打开菜单">' in page
@@ -110,12 +111,13 @@ def test_menu_fab_floating(auth):
     i = page.index("#menu-fab {")
     block = page[i:page.index("}", i)]
     for frag in ("position: fixed", "left: 14px",
-                 "bottom: calc(var(--bar-clear) + 12px)",
+                 "bottom: calc(var(--bar-h) + 32px + env(safe-area-inset-bottom))",
                  "z-index: var(--z-bar)", "width: var(--bar-h)"):
         assert frag in block, f"悬浮键几何缺 {frag}"
-    assert "main:has(#view-map:not([hidden])) ~ #menu-fab" in page
-    assert "main:has(#view-chargemap:not([hidden])) ~ #menu-fab" in page
-    assert "bottom: calc(var(--bar-clear) + 130px);" in page   # 地图双页让位
+    # 恒定锚不许回潮: 按视图抬键 (地图双页 130) 与 --bar-clear 口径退役
+    assert "main:has(#view-map:not([hidden])) ~ #menu-fab" not in page
+    assert "main:has(#view-chargemap:not([hidden])) ~ #menu-fab" not in page
+    assert "bottom: calc(var(--bar-clear) + 130px);" not in page
     # 菜单开着: 藏键 (抽屉挂 on 即 display:none —— 蒙版半透明, 不藏会透出)
     assert "body:has(#drawer.on) #menu-fab { display: none; }" in page
     assert "body.layer-anim #menu-fab," in page                # 磨砂幽灵收编

@@ -147,7 +147,7 @@ def test_map_playback_wiring(auth):
     for frag in ('<div class="playbar" id="fp-bar">', 'id="fp-play" class="pb-btn"',
                  'aria-label="按时间顺序回放走过的路"', 'id="fp-seek" class="pb-seek"',
                  "#fp-bar { margin: 10px 16px var(--bar-clear); }",
-                 "var(--pb, 0%)", "#fp-legend { width: max-content; bottom: 14px; }",
+                 "var(--pb, 0%)", "#fp-legend { width: max-content; top: 14px; }",
                  "#fp-legend .lg-cap { white-space: nowrap; }"):
         assert frag in html, f"播放条缺少 {frag}"
     # 缩放钮/旧控制排退役净 (foot-gap 占位随 .map-foot 整排拆)

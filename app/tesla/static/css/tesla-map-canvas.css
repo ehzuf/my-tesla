@@ -106,12 +106,13 @@ main { position: relative; flex: 1; min-height: 0; margin-top: 10px; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 #fp-drv.on { background: rgba(57,135,229,.20); color: #7db3f0; border-radius: 999px; }
-/* 回放期的日期/进度浮标: 图例的同一槽位 (画布左下底沿), 与图例
+/* 回放期的日期/进度浮标: 图例的同一槽位 (画布右上沿, 2026-10-12 挪来
+   让位恒定悬浮键), 与图例
    互斥 —— 回放态图例收起它顶上; 不接指针。底子加浓不磨砂 (2026-10-02
    性能批: 罩着持续平移的画布做 backdrop-blur, iOS 每帧都要重采样,
    回放卡顿的帮凶之一) */
 #fp-play-date {
-  position: absolute; left: 14px; bottom: 14px;
+  position: absolute; right: 14px; top: 14px;
   z-index: 30; padding: 5px 12px; border-radius: 999px;
   background: rgba(28,28,30,.92); border: 1px solid var(--hairline);
   color: var(--ink-1); font-size: 12px; font-variant-numeric: tabular-nums;
@@ -127,11 +128,12 @@ main { position: relative; flex: 1; min-height: 0; margin-top: 10px; }
    flex:none 不缩, 两帽文字戳出定宽卡外 (用户报「文字超过图例」)。选择器
    钉 #fp-legend 不写 .legend 裸名 —— 拼串里裸 .legend 规则的头名是充电
    地图的全局规则, 它家测试按首现切块断言, 裸名会抢了头名) */
-/* 2026-10-01 播放条挪出画布 (用户点名「放到地图外面下方」): 图例回画布
-   左下角底沿自占一槽 (回放期让位日期浮标), 帽文字 nowrap —— 用户点名
+/* 2026-10-01 播放条挪出画布 (用户点名「放到地图外面下方」): 图例自占
+   画布一槽 (2026-10-12 从左下角挪右上, 左下让位恒定悬浮键; 回放期
+   让位日期浮标), 帽文字 nowrap —— 用户点名
    「图例两边的文字不要换行」(原先折在 flex 排里会被挤压换行; max-content
    双保险) */
-#fp-legend { width: max-content; bottom: 14px; }
+#fp-legend { width: max-content; top: 14px; }
 #fp-legend .lg-cap { white-space: nowrap; }
 #view-map .lg-grad-row { display: flex; align-items: center; gap: 6px; }
 #view-map .lg-grad {

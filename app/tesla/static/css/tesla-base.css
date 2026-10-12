@@ -147,14 +147,16 @@ main {
    #bar-row 也不动 no-chips/no-bar 几何 (用户口径: 全局悬浮, 不改变任何
    现有控件布局): fixed 挂左下角 (2026-10-12 用户点名放左边; 键本就在
    左缘呼出带里, 从键上起手右划照旧开抽屉 —— 手势/点击两条路不打架),
-   底距踩 --bar-clear (no-bar 视图自动落低), 层序 --z-bar —— 筛选弹层/
-   抽屉蒙版/全屏弹层都在它上面。菜单开着时藏键 (用户点名): 抽屉挂 on
-   即 display:none —— 蒙版半透明, 不藏会从蒙版底下透出来。地图双页让
-   位: 足迹地图屏底是回放条 (行首是播放钮), 卡内左下角还压着图例/回放
-   日期 —— 抬高一档到图例上方 (main:has 看当前视图, 纯 CSS 不给
-   navigate 加钩子); 充电地图脚下是居中 pills 行, 同一副让位。 */
+   层序 --z-bar —— 筛选弹层/抽屉蒙版/全屏弹层都在它上面。菜单开着时藏键
+   (用户点名): 抽屉挂 on 即 display:none —— 蒙版半透明, 不藏会从蒙版底下
+   透出来。底距恒定不走 --bar-clear (2026-10-12 晚用户点名「位置忽上忽
+   下, 不是全局固定」): no-bar 视图曾把 --bar-clear 砍到安全区, 地图双页
+   又曾让位抬 130 —— 三档高度。现在恒取「屏底条那档」(条视图分毫不动,
+   其余视图一律同高); 地图双页改为图例/回放日期挪画布右上 (map-canvas/
+   chargemap-map), 左下留给恒定键, 不再按视图挪键。 */
 #menu-fab {
-  position: fixed; left: 14px; bottom: calc(var(--bar-clear) + 12px);
+  position: fixed; left: 14px;
+  bottom: calc(var(--bar-h) + 32px + env(safe-area-inset-bottom));
   z-index: var(--z-bar);
   width: var(--bar-h); height: var(--bar-h); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -168,12 +170,6 @@ main {
 }
 #menu-fab:active { transform: translateZ(0) scale(.92); }
 body:has(#drawer.on) #menu-fab { display: none; }   /* 菜单开着: 藏键 */
-main:has(#view-map:not([hidden])) ~ #menu-fab,
-main:has(#view-chargemap:not([hidden])) ~ #menu-fab {
-  /* 抬过回放条 + 卡内左下角图例/回放日期 (实测图例顶在 bar-clear+118:
-     110 只剩 2px 太贴, 130 留 12px 空气) */
-  bottom: calc(var(--bar-clear) + 130px);
-}
 
 /* ---------- 层运动反制 (frosted-ghost) ----------
    层动起来时变换层会从 fixed+磨砂件 (筛选条/悬浮菜单键/抽屉) 底下扫过

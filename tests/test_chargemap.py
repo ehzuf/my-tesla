@@ -138,10 +138,12 @@ def test_chargemap_view_skeleton(auth):
     assert "justify-content: center" in html[html.index(".cm-foot {"):
                                        html.index("}", html.index(".cm-foot {"))]
     assert '<div class="legend" id="cm-legend" hidden>' in html
-    # 图例浮在画布内左下角 (磨砂浮卡), 与缩放钮 (右下角) 分居两侧
+    # 图例浮在画布内右上角 (磨砂浮卡; 2026-10-12 从左下挪来 —— 左下让位
+    # 全局恒定的悬浮菜单键), 缩放钮照旧右下角
     lg = html[html.index(".legend {"):html.index("}", html.index(".legend {"))]
-    for frag in ("position: absolute", "left: 14px", "bottom: 14px"):
-        assert frag in lg, f"图例画布内左下角缺 {frag}"
+    for frag in ("position: absolute", "right: 14px", "top: 14px"):
+        assert frag in lg, f"图例画布内右上角缺 {frag}"
+    assert "left: 14px" not in lg and "bottom: 14px" not in lg
     # 度量切换退役的两件不许回潮: 屏底筛选条 chip 与图例档名行
     assert 'registerChips("chargemap"' not in html
     assert '"视角: " + cmViews[cmMode].lb' not in html

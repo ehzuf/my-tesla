@@ -1,7 +1,6 @@
 /* tesla-trips-cards — trips 页样式。拆自 trips.html 的内联 <style> (结构化重构, 内容逐字节未动)。 */
 /* ---------- 行程列表 (单列) ---------- */
-#list { display: flex; flex-direction: column; gap: 10px; padding: 8px 14px 10px; }
-@media (max-width: 719px) { #list { padding: 8px 12px 10px; } }
+#list { display: flex; flex-direction: column; gap: 10px; padding: 8px 12px 10px; }
 
 /* ---------- 行程卡片 ---------- */
 .card-t {

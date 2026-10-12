@@ -144,10 +144,11 @@ def test_stats_module_wiring(auth):
     assert "no-band" not in sheet_css
     # 版本号 (改过的都带上, 老缓存不掺和; 2026-10-12 弹层批整批破缓存 +1 —
     # 车机 immutable 缓存曾吃住 2a2533f 开发中间态, 强制重下)
-    assert "view/trips-sheet-stats.js?v=43" in html    # v43: 破缓存批 (v42: 第四页挂/摘, nPages 现算/第四枚页标/ptr 提示字换字)
+    assert "view/trips-sheet-stats.js?v=43" in html    # v43: 破缓存批
+    #   (v42: 第四页挂/摘, nPages 现算/第四枚页标/ptr 提示字换字)
     assert "js/trackutil.js?v=5" in html   # v5: 原始轨迹层退役 (扁平版函数)
     assert "view/trips-playback-session.js?v=14" in html    # defer 起播: 数据会话先挂, begin 才进播放态
     assert "view/trips-sheet-close.js?v=14" in html    # v14: 破缓存批 (v13: hideSheet 摘第四页 gtrDetach)
     assert "view/trips-sheet-open.js?v=12" in html    # v12: 破缓存批 (v11: openTrip 挂第四页 gtrPageSync)
-    assert "css/tesla-trips-sheet.css?v=35" in html    # v35: 破缓存批 (v34: 底行还原单页标, v33 底行横排版随第四页方案撤回)
+    assert "css/tesla-trips-sheet.css?v=37" in html    # v37: 宽度查询折叠 (v36: 大屏手机一列, v35: 破缓存批)
     assert "css/tesla-trips-playback.css?v=9" in html

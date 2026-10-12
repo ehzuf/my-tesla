@@ -39,11 +39,10 @@
   border: 1px solid var(--hairline); background: rgba(255,255,255,.06); outline: none;
 }
 .gp-row input:focus { border-color: var(--blue); }
-/* 手机窄屏: 选中信息独占一行, 按钮行换到下面 */
-@media (max-width: 479px) {
-  .sel-row { flex-wrap: wrap; gap: 8px 10px; }
-  .sel-info { flex-basis: 100%; }
-}
+/* 选中信息独占一行, 按钮行换到下面 (列≤480 恒手机布局; 只 .sel-row,
+   同规则的 .gp-row 命名行不折行) */
+.sel-row { flex-wrap: wrap; gap: 8px 10px; }
+.sel-info { flex-basis: 100%; }
 
 
 

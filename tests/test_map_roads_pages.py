@@ -163,9 +163,10 @@ def test_map_roads_skeleton(auth):
     for frag in ('class="lg-grad"', '<span class="lg-cap">偶尔</span>',
                  '<span class="lg-cap">频繁</span>'):
         assert frag in html, f"骨架缺少 {frag}"
-    # 卡宽随内容 (定宽卡装不下不缩的渐变条, 帽文字会戳出去; 钉 #fp-legend
-    # 不写 .legend 裸名 —— .legend { 拼串头名是充电地图全局规则, 不抢)
-    assert "#fp-legend { width: max-content; bottom: 14px; }" in html
+    # 卡宽随内容 (定宽卡装不下不缩的渐变条, 帽文字会戳出去); 画布右上沿
+    # (2026-10-12 从左下挪来, 左下让位恒定悬浮菜单键)。钉 #fp-legend
+    # 不写 .legend 裸名 —— .legend { 拼串头名是充电地图全局规则, 不抢
+    assert "#fp-legend { width: max-content; top: 14px; }" in html
     # 图例退役净: 虚线样例/两行进度/次数帽不许回潮
     for gone in ('class="lg-guess"', "<span>可能走过 (推断)</span>",
                  'id="fp-lg-max"', 'id="fp-lg-prog"', "<span>走过次数</span>"):

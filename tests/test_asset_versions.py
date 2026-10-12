@@ -17,7 +17,8 @@ def test_guard_assets_versioned_on_shell(auth):
     for ref, v in (("js/tesla-viewport.js", 4), ("js/tesla-sheet-drag.js", 5),
                    ("js/view/charging-detail.js", 16),  # v16: Esc 一层一关 (v15 统计区三格)
                    ("css/tesla-charging-sheet.css", 11),  # v11: 总价一格 + 充电时间格; v10: pill 最右
-                   ("css/tesla-trips-sheet.css", 36),    # v36: 大屏手机一列 (顶置 toast 列内口径
+                   ("css/tesla-trips-sheet.css", 37),    # v37: 宽度查询折叠 (选中信息独占一行恒生效);
+                                                 #   v36: 大屏手机一列 (顶置 toast 列内口径
                                                  #   + 驾驶员钮 40vw 封顶 192px);
                                                  #   v35: 弹层批整批破缓存 +1 (车机 immutable
                                                          # 吃住 2a2533f 开发中间态, 强制重下; 内容
@@ -25,10 +26,12 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # (3.10.0); v33: 弹层底行横排「详细行程」
                                                          # 并排 (已出批, 随第四页方案撤回); v31: 三页独立
                    ("css/tesla-trips-playback.css", 9),  # 播放条住回轨迹页 (翻页不收不还)
-                   ("css/tesla-chargemap-map.css", 7),  # v7: sh-grid margin 显式钉住 (足迹
+                   ("css/tesla-chargemap-map.css", 8),  # v8: 图例挪画布右上 (左下让位恒定菜单键);
+                                                         #   v7: sh-grid margin 显式钉住 (足迹
                                                          # css 裸规则拆净, 泄漏值收编); v6: 图例
                                                          # 搬画布内左下角 (极值随视野算)
-                   ("css/tesla-map-canvas.css", 22),    # v22: 首回构造蒙版 (#fp-build z40 + 进度条);
+                   ("css/tesla-map-canvas.css", 23),    # v23: 图例/日期浮标挪画布右上 (左下让位恒定菜单键);
+                                                         #   v22: 首回构造蒙版 (#fp-build z40 + 进度条);
                                                          #   v21: 驾驶员筛选并播放条行 + 进度条封顶
                                                          #   220px + 日期浮标去磨砂 (性能);
                                                          #   v20: 播放条挪地图卡外脚下
@@ -60,8 +63,9 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/trips-preload-vector.js", 3),  # 走廊一页一会话只扫一遍 (sweptCorridors)
                    ("js/view/trips-export-video.js", 4),  # v4: Esc 收预览 (v3 只留高德)
                    ("js/view/trips-playback-loop.js", 12),       # 恒一位小数防抖 + 流式节拍开播定死
-                   ("js/view/trips-sheet-open.js", 12),          # v12: 破缓存批 (见 tesla-trips-sheet.css 行);
-                                                                  # v11: openTrip 挂第四页 (gtrPageSync);
+                   ("js/view/trips-sheet-open.js", 12),          # v12: 破缓存批
+                                                                  #   (见 tesla-trips-sheet.css 行);
+                                                                  #   v11: openTrip 挂第四页 (gtrPageSync);
                                                                   # v10: 三页独立: 直方图开弹层即取 +
                                                                   # playTrack(defer) 先于地图预载
                    ("js/view/trips-playback-overlays.js", 8),
@@ -89,38 +93,47 @@ def test_guard_assets_versioned_on_shell(auth):
                                                           # v11: 快慢充 pill 常驻卡右上角,
                                                           # Tesla 字标立到它左边
                    # ⑤ 视图 css 撤 body 尺寸 + 菜单封顶吃 --shell-h 的 9 份
-                   ("css/tesla-charging-page.css", 3),      # v3: 大屏手机一列 (.fl 标签列内封顶)
-                   ("css/tesla-stats.css", 11),          # v11: 常去地点 12 根 (注释对齐)
+                   ("css/tesla-charging-page.css", 4),      # v4: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
+                                                          #   v3: 大屏手机一列 (.fl 标签列内封顶)
+                   ("css/tesla-stats.css", 12),          # v12: 720 多栏退役 (统计卡恒两列/图卡恒单列); 独立页死块退役;
+                                                         #   v11: 常去地点 12 根 (注释对齐)
                                                          # + 电池健康页复用统计卡/图卡 (共用底座)
                                                          # + .bh-note 口径脚注 + 表格退役 + id 规则改类
                                                          #   (行程统计复用) + 月度降高/滑块轨道/网格 dim
                                                          # + v9: 名字图加高; v10: ts-loc 340 (全量出柱)
-                   ("css/tesla-groups.css", 11),  # v11: 大屏手机一列 (顶置 toast 列内口径);
+                   ("css/tesla-groups.css", 12),  # v12: 宽度查询折叠 (列表 12px 恒生效); 独立页死块退役;
+                                                 #   v11: 大屏手机一列 (顶置 toast 列内口径);
                                                  # v10: 破缓存批 (见上); v9: sec-head 顶距 0 + 跨度格字号特异性真收一档
                                                  # + 斜杠断行保底
                    ("css/tesla-group-trips.css", 5),  # v5: 进页即多选 (右上选圈, 未选降透明;
                                                          # 页头/说明/行内按钮撤净, 底条常驻取消/确定);
                                                          # v4: 破缓存批; v3: 整行可点反馈 (v2 第四页版;
                                                          # v1 二级页版已出批)
-                   ("css/tesla-changelog.css", 2),
-                   ("css/tesla-trips-page.css", 7),      # v7: 大屏手机一列 (.fl 标签列内封顶);
+                   ("css/tesla-changelog.css", 3),  # v3: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役
+                   ("css/tesla-trips-page.css", 8),      # v8: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
+                                                 #   v7: 大屏手机一列 (.fl 标签列内封顶);
                                                  # v6: sec-head 顶距 0 (标题统一一条线)
-                   ("css/tesla-map-page.css", 4),        # v4: sec-head 顶距 0 (标题统一一条线)
-                   ("css/tesla-chargemap-page.css", 4),  # v4: sec-head 顶距 0 (标题统一一条线)
-                   ("css/tesla-live-page.css", 2),
+                   ("css/tesla-map-page.css", 5),        # v5: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
+                                                         #   v4: sec-head 顶距 0 (标题统一一条线)
+                   ("css/tesla-chargemap-page.css", 5),  # v5: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役;
+                                                         #   v4: sec-head 顶距 0 (标题统一一条线)
+                   ("css/tesla-live-page.css", 3),  # v3: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役
                    ("css/tesla-live-driving.css", 20),  # v20: 平均电耗/最高车速两格退役 (剩
                                                          #   里程/已耗电); v19: 真底边对齐 +
                                                          #   填充条满格收口防溢
                    ("js/view/live-page.js", 9),         # v9: 平均电耗/最高车速两格接线拆净;
                                                          #   v8: 表盘上限 180 (刻度角度随
                                                          #   GAUGE_MAX 算); v7: 指针 + 已行驶
-                   ("js/view/trips-sheet-driver.js", 16),  # v16: 破缓存批 (见上); v15: 头部「详细行程」钮撤 (改第四页, 3.10.0);
+                   ("js/view/trips-sheet-driver.js", 16),  # v16: 破缓存批 (见上);
+                                                          #   v15: 头部「详细行程」钮撤 (改第四页, 3.10.0);
                                                           # v14: 头部按钮版 (已出批, 随第四页方案撤回)
                                                           # v13: Esc 收选单 (v12 电耗一位/段标题)
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
-                   ("css/tesla-base.css", 12),          # v12: 列上收口 overflow:hidden —— 屏外层
+                   ("css/tesla-base.css", 13),          # v13: 宽度查询全折叠 + 悬浮菜单键恒定锚
+                                                         #   (bottom 恒 bar-h+32, 地图让位块退役);
+                                                         #   v12: 列上收口 overflow:hidden —— 屏外层
                                                          #   (placed-sheet/抽屉) 宽屏只出列不出
                                                          #   视口, 桌面每页右侧漏地点详情/改名;
                                                          #   v11: 大屏手机一列 (#shell 480px 居中
@@ -139,7 +152,8 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   嫌深); v8: 车辆选择卡住抽屉顶
                    ("css/tesla-filter-bar.css", 5),     # 菜单圆键退役 (#menu-key 拆净,
                                                          # #bar-row.no-chips 整条收起)
-                   ("css/tesla-settings.css", 25),      # v25: 大屏手机一列 (顶置 toast 列内口径);
+                   ("css/tesla-settings.css", 26),      # v26: 宽度查询折叠; 独立页死块退役;
+                                                         #   v25: 大屏手机一列 (顶置 toast 列内口径);
                                                          #   v24: 「获取方式」折叠块
                                                          #   撤下 (说明集中 README);
                                                          #   v23: 折叠块
@@ -252,13 +266,16 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/charging-cards.js", 12),   # v11: Tesla 字标改附加标 (快/慢充 pill 旁并排)
                                                           # v12: pill 换回最右 (卡右上角), 字标居其左
                                                           # + tesla-common v5: TESLA_MARK 字标常量在此
-                   ("js/view/groups-page.js", 9),       # v9: 破缓存批 (见上); v8: 每次进都重拉 (明细页会改分组; v7 bindGestures 回 drawer)
+                   ("js/view/groups-page.js", 9),       # v9: 破缓存批 (见上);
+                                                          #   v8: 每次进都重拉 (明细页会改分组;
+                                                          #   v7 bindGestures 回 drawer)
                    ("js/view/group-trips-stream.js", 4),  # v4: 钩集住这 (gtrSel/gtrResetSel, 组内全钩起步)
                                                           # + 行渲染选圈 (页头/加移按钮撤); v3: 破缓存批;
                                                           # v2: 第四页版 (gtrStart/gtrLoad 复位标记);
                                                           # v1: 二级页版 (已出批, 与 page.js 一起退役)
                    ("js/view/group-trips-marks.js", 4),   # v4: 打/撤钩多选落定 (钩集与原组差整批提交);
-                                                          # v3: 破缓存批; v2: 整行可点 (v1 只有钮可点, 用户报「item 点不了」)
+                                                          # v3: 破缓存批; v2: 整行可点
+                                                          #   (v1 只有钮可点, 用户报「item 点不了」)
                    ("js/view/changelog-view.js", 4),    # bindGestures 回 drawer
                    ("js/view/trips-list-page.js", 7),   # bindGestures 回 drawer
                    ("js/view/chargemap-time-filters.js", 10),  # v10: 屏缘缝条 (v9: ptrMove 整视图;

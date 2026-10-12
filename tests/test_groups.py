@@ -75,7 +75,7 @@ def test_groups_card_span_not_clipped(auth):
     assert ".ct-cell { flex: 1; min-width: 0;" in trips_css   # 行程卡均分不动
     assert ".ct-cell .val {" in trips_css   # 特异性对手 (0,2,0): 跨度规则必须更高
     html = served_page(auth, SHELL)
-    assert "css/tesla-groups.css?v=10" in html   # v10: 跟 3.10.0 弹层批破缓存 +1 (v9: sec-head 顶距 0, v8 落后一版)
+    assert "css/tesla-groups.css?v=12" in html   # v12: 宽度查询折叠 (v11: 大屏手机一列, v10: 3.10.0 弹层批破缓存 +1)
 
 
 # ---------------------------------------------------------------- 分组明细 (3.10.0)
