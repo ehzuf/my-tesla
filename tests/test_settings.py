@@ -7,6 +7,7 @@
 import httpx
 import pytest
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
 from app import database
@@ -105,6 +106,38 @@ def test_settings_tmdb_rollback_when_verify_fails(  # pylint: disable=redefined-
         "postgresql+psycopg://u:p@10.0.0.1:5432/teslamate"]    # 失败换回
     d = auth.get("/tesla/api/settings").json()["tmdb"]
     assert d["host"] == "10.0.0.1"   # 设置行已回滚
+
+
+def test_settings_test_endpoint_verdicts(  # pylint: disable=redefined-outer-name
+        auth, owndb, rebuild_recorder, monkeypatch):
+    """首启引导「测试连接」(/settings/test, 2026-10-12 数据源步测试闸):
+    候选实测不落库不换引擎 —— 空字段回落现值 (与保存同一口径), 通/不通
+    都给整句人话; 库里的设置行与应用引擎全程不动。"""
+    pings: list[str] = []
+    boom = False
+
+    def fake_ping(url):
+        pings.append(url)
+        if boom:
+            raise SQLAlchemyError("连接超时")
+
+    monkeypatch.setattr(settings_store, "_ping_db", fake_ping)
+    r = auth.post("/tesla/api/settings/test",
+                  json={"tmdb_host": "10.9.8.7", "tmdb_port": "6543"})
+    assert r.status_code == 200
+    assert r.json() == {"ok": True, "detail": "正常"}
+    assert pings and "10.9.8.7" in pings[-1] and ":6543/" in pings[-1]
+    # 空字段回落现值: 只给 host, 其余用设置行/env 拼连接串
+    r = auth.post("/tesla/api/settings/test", json={"tmdb_host": "10.1.2.3"})
+    assert r.json()["ok"] is True
+    assert "10.1.2.3" in pings[-1] and "10.9.8.7" not in pings[-1]
+    # 不通: 报错整句带给人看
+    boom = True
+    r = auth.post("/tesla/api/settings/test", json={"tmdb_host": "x"})
+    assert r.json() == {"ok": False, "detail": "连接超时"}
+    # 全程没落库没换引擎
+    assert owndb.get(AppSetting, 1).tmdb_host == ""
+    assert rebuild_recorder == []
 
 
 def test_engine_url_unconfigured_falls_back_to_sentinel(  # pylint: disable=redefined-outer-name

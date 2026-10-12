@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from ... import database
 from .. import drivers_store, repository, settings_store, tracks_cache
-from ..schemas import SettingsState, SettingsUpdate, DriverInfo, DriverIn, DriverUpdate
+from ..schemas import (SettingsState, SettingsUpdate, DriverInfo, DriverIn,
+                       DriverUpdate, TmdbTest, TmdbTestIn)
 from ...schemas import OkResponse
 
 
@@ -32,6 +33,15 @@ def save_settings(body: SettingsUpdate,
         threading.Thread(target=tracks_cache.warm,
                          args=(database.session_factory(),), daemon=True).start()
     return state
+
+
+@settingsapi.post("/settings/test", response_model=TmdbTest)
+def test_settings_tmdb(body: TmdbTestIn,
+                       own: Session = Depends(database.get_own_db)) -> TmdbTest:
+    """首启引导数据源步「测试连接」: 候选实测 (空字段回落现值), 不落库
+    不换引擎 —— 通过了前端才解锁「下一步」。"""
+    ok, detail = settings_store.test_tmdb(own, body)
+    return TmdbTest(ok=ok, detail=detail)
 
 
 @settingsapi.get("/drivers")

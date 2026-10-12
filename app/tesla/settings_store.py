@@ -8,14 +8,14 @@ TeslaMate 连接改动会换引擎重连 (database.rebuild_engine) 并实测 SEL
 """
 import os
 
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from .. import database
 from .models import AppSetting
-from .schemas import (AmapSettings, SettingsState,
-                      SettingsUpdate, TeslaMateSettings)
+from .schemas import (AmapSettings, SettingsState, SettingsUpdate,
+                      TeslaMateSettings, TmdbTestIn)
 
 _FIELDS = ("tmdb_host", "tmdb_port", "tmdb_user", "tmdb_password", "tmdb_name",
            "amap_key", "amap_security_code", "amap_web_key")
@@ -74,6 +74,33 @@ def effective_tmdb(own: Session) -> database.DbConnectValues:
 def engine_url(own: Session) -> str:
     """TeslaMate 连接串 (设置行 > env): 启动建引擎用。"""
     return database.build_db_url(effective_tmdb(own))
+
+
+def _ping_db(url: str) -> None:
+    """候选连接串实测 SELECT 1: 用完即弃的临时引擎, 不碰应用的引擎。"""
+    eng = create_engine(url, connect_args={"connect_timeout": 5})
+    try:
+        with eng.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    finally:
+        eng.dispose()
+
+
+def test_tmdb(own: Session, body: TmdbTestIn) -> tuple[bool, str]:
+    """实测候选 TeslaMate 连接 (首启引导数据源步「测试连接」): 空字段回落
+    现值 —— 与保存同一口径; 只试不落库, 应用引擎不动。"""
+    cur = effective_tmdb(own)
+    url = database.build_db_url(database.DbConnectValues(
+        host=body.tmdb_host or cur.host,
+        port=body.tmdb_port or cur.port,
+        user=body.tmdb_user or cur.user,
+        password=body.tmdb_password or cur.password,
+        name=body.tmdb_name or cur.name))
+    try:
+        _ping_db(url)
+    except (SQLAlchemyError, ValueError) as exc:
+        return False, str(getattr(exc, "orig", None) or exc)[:200]
+    return True, "正常"
 
 
 def amap_values(own: Session) -> tuple[str | None, str | None]:

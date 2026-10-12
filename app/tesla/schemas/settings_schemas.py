@@ -30,6 +30,25 @@ class SettingsState(BaseModel):
     amap: AmapSettings
 
 
+class TmdbTestIn(BaseModel):
+    """「测试连接」请求 (首启引导数据源步): TeslaMate 五项候选, 留空 =
+    用现值 —— 与保存同一口径。"""
+
+    tmdb_host: str = ""
+    tmdb_port: str = ""
+    tmdb_user: str = ""
+    tmdb_password: str = ""
+    tmdb_name: str = ""
+
+
+class TmdbTest(BaseModel):
+    """「测试连接」应答: 与 Web 服务 Key 测试 (AmapKeyTest) 同一形状 ——
+    ok = 连得上, detail 是整句人话 (通过就是「正常」, 前端直接转述)。"""
+
+    ok: bool
+    detail: str
+
+
 class SettingsUpdate(BaseModel):
     """保存设置: 字段留空 = 保持现值 (密码/Key 不回显, 前端重填才算改)。"""
 
