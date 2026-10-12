@@ -164,23 +164,14 @@
 .tp-pager::-webkit-scrollbar { display: none; }
 /* 弹层底一行 (2026-09-23 用户点名: 最下方的空白放当前页标题 + 白点页标,
    类似 iOS 桌面的白点): 标题跟当前页走 (轨迹页「行驶轨迹」/ 动态页「行
-   驶数据」), 三枚圆点亮当前页 —— trips-sheet-stats.js 切页时同步换字换
-   点; 2026-09-24 用户点名竖排 (圆点在上标题在下) + 点整块切下一页 (末
-   页绕回第一页); 同日用户点名标题字放大 (12→14px 加粗 —— 它是页面
-   标题, 不是脚注) */
-/* 弹层底一行 (2026-09-23 用户点名: 页标题 + iOS 桌面同款白点页标;
-   2026-09-24 点名竖排: 圆点在上标题在下, 点整块切下一页 → cursor);
-   3.10.0 外层改横排 .tp-foot-row —— 页标区照旧居中, 右侧并排「详细
-   行程」入口 (分组页打开的弹层才有, 用户点名跟三个页标题并列, 不放
-   右上角头部); 入口藏起时只剩页标区, 布局与旧版分毫不差 */
-.tp-foot-row { flex: none; display: flex; align-items: center; justify-content: center;
-               gap: 28px; padding: 8px 0 2px; }
-.tp-foot { display: flex; flex-direction: column; align-items: center;
-           justify-content: center; gap: 6px;
+   驶数据」/ 统计页「行驶统计」), 圆点亮当前页 —— trips-sheet-stats.js 切
+   页时同步换字换点 (第四枚页标随第四页「详细行程」挂上/摘下, 样式同款);
+   2026-09-24 用户点名竖排 (圆点在上标题在下) + 点整块切下一页 (末页绕
+   回第一页) → cursor; 同日点名标题字放大 (12→14px 加粗 —— 它是页面标
+   题, 不是脚注)。第四页本体样式在 tesla-group-trips.css */
+.tp-foot { flex: none; display: flex; flex-direction: column; align-items: center;
+           justify-content: center; gap: 6px; padding: 8px 0 2px;
            cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.tp-foot-act { flex: none; font-size: 14px; font-weight: 600; color: var(--blue);
-               padding: 6px 10px; border-radius: 999px; }
-.tp-foot-act:active { opacity: .6; }
 .tp-foot-lb { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .tp-dots { flex: none; display: inline-flex; align-items: center; gap: 5px; }
 .tp-dots i { width: 6px; height: 6px; border-radius: 50%;

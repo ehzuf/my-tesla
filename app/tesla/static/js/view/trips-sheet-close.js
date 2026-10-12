@@ -8,7 +8,7 @@
 // 文件名沿用旧名 (命名普查按 basename 折叠)。
 /* global $, getJSON, bindSheetDrag, bindSheetSettle, openMerged, openTrip,
           stopAnim, curSess: writable, sheetTrip: writable,
-          curKey: writable, sheetFrom: writable, VIEWS, currentView */
+          curKey: writable, sheetFrom: writable, VIEWS, currentView, gtrDetach */
 /* exported hideSheet, openByKey, sheetTrip, sheetFrom */   // sheetFrom 只写不读 (深链记宿主/关闭清空, 读方在镜像), exported 豁免
 "use strict";
 /* ---------- 深链入口: 壳冷启消费 ?id=/?ids= 后调用 (分享链接直开) ---------- */
@@ -40,6 +40,7 @@ async function openByKey(key) {
 function hideSheet() {
   stopAnim();
   if (curSess) { curSess.alive = false; curSess = null; }
+  gtrDetach();   // 第四页「详细行程」摘下 (页标/提示字还原, 停在第四页则收回统计页)
   $("#sheet").classList.remove("show");
   $("#backdrop").classList.remove("show");
   sheetTrip = null;
@@ -62,9 +63,10 @@ $("#backdrop").addEventListener("click", closeTrip);
 /* 下滑关闭 (tesla-sheet-drag 壳级, iOS 安全规矩见彼处注释): 把手点一下
    也关; 上部信息区 (日期时长/驾驶员/统计格) 与左滑过去的动态页/统计页
    (各自三张图卡, 纯展示无控件 —— 统计页 2026-09-27 用户点名漏了) 拖下
-   收起, 点一下不关。播放条与地图不在此列 —— 那是控件区。动态/统计页
-   在横滑分页里: 横滑切页由 tesla-sheet-drag 的轴向仲裁让给原生 snap
-   (横向占优即解绑弹回), 横滑切页与下拉关闭互不抢手势。 */
+   收起, 点一下不关。播放条与地图不在此列 —— 那是控件区; 第四页「详细
+   行程」也不在 —— 竖向长列表要自己滚 (同地图页), 关层走把手/蒙版/Esc。
+   动态/统计页在横滑分页里: 横滑切页由 tesla-sheet-drag 的轴向仲裁让给
+   原生 snap (横向占优即解绑弹回), 横滑切页与下拉关闭互不抢手势。 */
 bindSheetDrag($("#sheet"), $("#grab"), closeTrip, true);
 for (const z of document.querySelectorAll(
   "#sheet .sh-head, #sheet .sh-cells, #sheet .tp-stats, #sheet .tp-hist"))

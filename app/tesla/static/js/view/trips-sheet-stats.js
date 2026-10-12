@@ -2,7 +2,9 @@
 // 「往左划显示行程统计页面」→「统计改成动态, 整个页面都换掉」→ 2026-09-23
 // 点名「不需要动画, 直接展示全貌」):
 // 轨迹页 (地图) ↔ 动态页 ↔ 统计页 的原生 snap 横滑整页对
-// 换, 弹层底一行页标题 + 白点页标 (tp-foot, 2026-09-23 用户点名用最下方
+// 换 (3.10.0 起分组弹层多挂第四页「详细行程」: 页与第四枚页标随载荷 gid
+// 挂上/摘下, 页数按可见页现算 —— hidden 的子元素不占页位), 弹层底一行
+// 页标题 + 白点页标 (tp-foot, 2026-09-23 用户点名用最下方
 // 的空白: 类似 iOS 桌面的白点, 几页几个点、点亮当前页; 2026-09-24 点名
 // 竖排 —— 圆点在上标题在下, 点整块切下一页, 末页绕回第一页; 右上角页
 // 标题同日退役让位给驾驶员); 地图横滑归地图平移, 头部/数字带/播放条横滑
@@ -51,7 +53,7 @@
 // 变化 (换会话/流式追加/直方图到了) 重建, 平时零重绘; 翻页飞行中记静默
 // 窗, 重活等落定 (2026-09-27 用户报「卡卡的」主线程元凶: 飞行途中全量
 // 重画)。播放侧在会话对象上多挂 ts/it/cum/ecum 一行, 本模块不进播放循环。
-/* global TrackUtil, FormatUtil, curSess, getJSON */
+/* global TrackUtil, FormatUtil, curSess, getJSON, gtrStart */
 /* exported TripStats */
 /* UMD 挂载层: node (测试 require) 只拿纯函数; 浏览器加载后接线 DOM
    (c8 标记忽略的理由与 track-animation.js 同款)。 */
@@ -93,7 +95,7 @@ function boot(root, pure) {
   if (!pager || !sheet) return;
   const EMPTY = doc.getElementById("tps-empty");
   const EMPTYH = doc.getElementById("tps-empty-h");   // 统计页自己的空态
-  const FOOT_LB = ["行驶轨迹", "行驶数据", "行驶统计"];   // 弹层底一行页标题 (tp-foot-lb)
+  const FOOT_LB = ["行驶轨迹", "行驶数据", "行驶统计", "详细行程"];   // 底行页标题 (第四页分组弹层才有)
   const footLb = doc.getElementById("tp-foot-lb");
   const footDots = doc.querySelectorAll("#tp-dots i");   // 白点页标, 亮当前页
   let page = 0, rafOn = false, builtFor = null, builtN = 0;
@@ -125,10 +127,12 @@ function boot(root, pure) {
   /* 点底行页标区 (圆点+标题整块) = 切下一页, 末页绕回第一页循环
      (2026-09-24 用户点名); scrollTo 会触发上面的 scroll, page/标题/rAF
      随之同步 */
-  const N_PAGES = pager.children.length || 1;
+  /* 页数按可见页现算 (3.10.0 第四页「详细行程」随分组弹层挂上/摘下:
+     hidden 的子元素不占页位 —— 计数漏过滤会让末页绕回滚进空白) */
+  const nPages = () => [...pager.children].filter(el => !el.hidden).length || 1;
   const foot = doc.getElementById("tp-foot");
   if (foot) foot.addEventListener("click", () => {
-    const next = (page + 1) % N_PAGES;
+    const next = (page + 1) % nPages();
     pager.scrollTo({ left: next * pager.clientWidth, behavior: "smooth" });
   });
   /* 横滑转发 (头部 + 数字带 + 播放条): 地图自己吃横滑 (平移), 这三处要
@@ -153,7 +157,7 @@ function boot(root, pure) {
       if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
       /* 三页通用 (2026-09-23 加统计页): 左滑下一页/右滑上一页, 到头不滚
          —— 末页绕回只留给底行页标区点击那一路 */
-      pager.scrollTo({ left: Math.min(N_PAGES - 1, Math.max(0, page + (dx < 0 ? 1 : -1)))
+      pager.scrollTo({ left: Math.min(nPages() - 1, Math.max(0, page + (dx < 0 ? 1 : -1)))
                                * pager.clientWidth, behavior: "smooth" });
     }, { passive: true });
   }
@@ -180,7 +184,7 @@ function boot(root, pure) {
       const dx = t.clientX - x0, dy = t.clientY - y0;
       if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
       if (Math.abs(pager.scrollLeft - startPage * pager.clientWidth) > 4) return;
-      pager.scrollTo({ left: Math.min(N_PAGES - 1, Math.max(0, startPage + (dx < 0 ? 1 : -1)))
+      pager.scrollTo({ left: Math.min(nPages() - 1, Math.max(0, startPage + (dx < 0 ? 1 : -1)))
                                * pager.clientWidth, behavior: "smooth" });
     };
     zone.addEventListener("touchend", fwd, { passive: true });
@@ -486,6 +490,25 @@ function boot(root, pure) {
     curIt = it;
     if (it.hist === undefined) fetchTrackHist(it);
   };
+
+  /* 第四页「详细行程」(3.10.0 用户点名: 跟行驶轨迹/行驶数据/行驶统计并
+     列, 左右滑切页): 分组页打开的弹层载荷带 gid 才挂 (多选合并/深链没
+     有), openTrip 每开都同步一次。挂上 = 页与第四枚页标亮 + 数据开拉;
+     摘下 = 页标收起 + ptr 共享提示字还原 + 人正停第四页时收回统计页
+     (滚动监听自会跟上页位)。关弹层 hideSheet 走 gtrDetach 同一条路 */
+  const gtrPage = doc.getElementById("tp-gtr");
+  const gtrDot = footDots[3];
+  const gtrHint = doc.getElementById("ptr-hint");
+  root.gtrPageSync = it => {
+    if (!gtrPage) return;
+    const on = !!(it && it.gid != null);
+    gtrPage.hidden = !on;
+    if (gtrDot) gtrDot.hidden = !on;
+    if (gtrHint) gtrHint.textContent = on ? "松开加载更早" : "松开刷新";
+    if (on) gtrStart(it.gid);
+    else if (page > 2) pager.scrollLeft = 2 * pager.clientWidth;
+  };
+  root.gtrDetach = () => root.gtrPageSync(null);
 
   /* 速度档直方图取数: 单条秒回, 分组首开几秒 (每段原料服务端算好落自有
      库缓存, 之后永久秒回)。数据到了 tick 自会画 (会话没起也画 —— 统计页

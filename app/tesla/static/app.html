@@ -26,11 +26,11 @@
 <link rel="stylesheet" href="/tesla/static/css/tesla-charging-sheet.css?v=11">
 <link rel="stylesheet" href="/tesla/static/css/tesla-stats.css?v=11">
 <link rel="stylesheet" href="/tesla/static/css/tesla-groups.css?v=9">
-<link rel="stylesheet" href="/tesla/static/css/tesla-group-trips.css?v=1">
+<link rel="stylesheet" href="/tesla/static/css/tesla-group-trips.css?v=2">
 <link rel="stylesheet" href="/tesla/static/css/tesla-changelog.css?v=2">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-page.css?v=6">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-cards.css?v=2">
-<link rel="stylesheet" href="/tesla/static/css/tesla-trips-sheet.css?v=33">
+<link rel="stylesheet" href="/tesla/static/css/tesla-trips-sheet.css?v=34">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-playback.css?v=9">
 <link rel="stylesheet" href="/tesla/static/css/tesla-map-page.css?v=4">
 <link rel="stylesheet" href="/tesla/static/css/tesla-map-canvas.css?v=22">
@@ -321,30 +321,6 @@
         <div class="err-box" id="gp-errbox" hidden>
           <p id="gp-errmsg">分组加载失败</p>
           <button type="button" class="retry" id="gp-retry">重试</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 分组明细视图 (3.10.0): 分组点开后的二级页, 不进抽屉菜单 (零历史
-         路由, 左上角 ‹ 回分组列表) —— 组内外行程一列时间正序 (id 升序 =
-         落库序 = 出发序), 默认窗口 = 组内全部; 顶部下拉加载更前的组外行程,
-         尾部触底加载更后 (两端提示行 JS 控显隐); 就地加入/移出, 连续性由
-         服务端守 (加 = 区间外延吸收, 移 = 只收头尾)。id 加 gtr- 前缀。 -->
-    <section class="view" id="view-group-trips" data-view="group-trips" hidden>
-      <div class="view-scroll" id="gtr-scroll">
-        <div class="sec-head">
-          <button type="button" class="gtr-back" id="gtr-back" aria-label="返回分组列表">‹</button>
-          <h2 id="gtr-name">分组行程</h2>
-          <span class="count-badge" id="gtr-count"></span>
-        </div>
-        <div class="gtr-tip">组内行程时间正序 · 两端拉动可加载相邻行程</div>
-        <div class="gtr-top" id="gtr-top" hidden>下拉加载更早的行程</div>
-        <div class="gtr-list" id="gtr-list"></div>
-        <div class="gtr-tail" id="gtr-tail" hidden>上拉加载更后的行程</div>
-        <div class="spin" id="gtr-spin" hidden></div>
-        <div class="err-box" id="gtr-errbox" hidden>
-          <p id="gtr-errmsg">分组行程加载失败</p>
-          <button type="button" class="retry" id="gtr-retry">重试</button>
         </div>
       </div>
     </section>
@@ -1055,19 +1031,45 @@
                全程无关) -->
           <p class="tps-empty" id="tps-empty-h">统计读取中…</p>
         </section>
+        <!-- 第四页「详细行程」(3.10.0 用户点名: 跟行驶轨迹/行驶数据/行驶
+             统计并列, 左右滑切页): 分组页打开的弹层才有 (载荷带 gid ——
+             多选合并/深链没有), 整页与第四枚页标一起由 JS 挂上/摘下; 组内外
+             行程一列时间正序 (id 升序 = 落库序 = 出发序), 默认窗口 = 组内全
+             部, 两端拉动加载相邻行程; 加/移先点行标记 (本地预览翻转), 页底
+             「取消/确认」落定才写库。id 加 gtr- 前缀。 -->
+        <section class="tp-gtr" id="tp-gtr" hidden>
+          <div class="gtr-scroll" id="gtr-scroll">
+            <div class="gtr-head">
+              <span class="gtr-name" id="gtr-name">分组行程</span>
+              <span class="count-badge" id="gtr-count"></span>
+            </div>
+            <div class="gtr-tip">组内行程时间正序 · 两端拉动可加载相邻行程</div>
+            <div class="gtr-top" id="gtr-top" hidden>下拉加载更早的行程</div>
+            <div class="gtr-list" id="gtr-list"></div>
+            <div class="gtr-tail" id="gtr-tail" hidden>上拉加载更后的行程</div>
+            <div class="spin" id="gtr-spin" hidden></div>
+            <div class="err-box" id="gtr-errbox" hidden>
+              <p id="gtr-errmsg">分组行程加载失败</p>
+              <button type="button" class="retry" id="gtr-retry">重试</button>
+            </div>
+          </div>
+          <!-- 标记条: 有标记才亮 (浮在页底, 长列表滚到底也够得着) ——
+               取消整批撤销 / 确认一次提交 -->
+          <div class="gtr-bar" id="gtr-bar" hidden>
+            <span class="gtr-bar-lb" id="gtr-bar-lb"></span>
+            <button type="button" class="gtr-bar-no" id="gtr-cancel">取消</button>
+            <button type="button" class="gtr-bar-ok" id="gtr-ok">确认</button>
+          </div>
+        </section>
       </div>
       <!-- 弹层底一行 (2026-09-23 用户点名: 最下方的空白放当前页标题 +
            白点页标, 类似 iOS 桌面的白点): 轨迹页「行驶轨迹」/ 动态页
-           「行驶数据」/ 统计页「行驶统计」, 三枚圆点亮当前页; 2026-09-24
-           点名竖排 (圆点在上标题在下) 且点整块切下一页 (末页绕回);
-           3.10.0 外层改横排, 页标区右侧并排「详细行程」入口 (分组页打开
-           的弹层才有; 用户点名跟三个页标题并列, 不放右上角头部) -->
-      <div class="tp-foot-row">
-        <div class="tp-foot" id="tp-foot">
-          <span class="tp-dots" id="tp-dots"><i class="on"></i><i></i><i></i></span>
-          <span class="tp-foot-lb" id="tp-foot-lb">行驶轨迹</span>
-        </div>
-        <button type="button" class="tp-foot-act" id="sh-group-btn" hidden>详细行程</button>
+           「行驶数据」/ 统计页「行驶统计」, 白点亮当前页; 2026-09-24 点名
+           竖排 (圆点在上标题在下) 且点整块切下一页 (末页绕回)。第四枚
+           页标 (详细行程) 随第四页 JS 挂上/摘下, 平时藏起不占位 -->
+      <div class="tp-foot" id="tp-foot">
+        <span class="tp-dots" id="tp-dots"><i class="on"></i><i></i><i></i><i hidden></i></span>
+        <span class="tp-foot-lb" id="tp-foot-lb">行驶轨迹</span>
       </div>
     </div>
   </div>
@@ -1122,8 +1124,8 @@
 <script src="/tesla/static/js/view/trips-stats-charts.js?v=12"></script>
 <script src="/tesla/static/js/view/battery-page.js?v=2"></script>
 <script src="/tesla/static/js/view/groups-page.js?v=8"></script>
-<script src="/tesla/static/js/view/group-trips-page.js?v=2"></script>
-<script src="/tesla/static/js/view/group-trips-stream.js?v=1"></script>
+<script src="/tesla/static/js/view/group-trips-stream.js?v=2"></script>
+<script src="/tesla/static/js/view/group-trips-marks.js?v=1"></script>
 <script src="/tesla/static/js/view/changelog-view.js?v=4"></script>
 <script src="/tesla/static/js/view/trips-list-page.js?v=7"></script>
 <script src="/tesla/static/js/view/trips-list-url.js?v=2"></script>
@@ -1139,11 +1141,11 @@
 <script src="/tesla/static/js/view/trips-playback-session.js?v=14"></script>
 <script src="/tesla/static/js/view/trips-preload-tiles.js?v=3"></script>
 <script src="/tesla/static/js/view/trips-preload-vector.js?v=3"></script>
-<script src="/tesla/static/js/view/trips-sheet-driver.js?v=14"></script>
-<script src="/tesla/static/js/view/trips-sheet-open.js?v=10"></script>
+<script src="/tesla/static/js/view/trips-sheet-driver.js?v=15"></script>
+<script src="/tesla/static/js/view/trips-sheet-open.js?v=11"></script>
 <script src="/tesla/static/js/view/trips-export-video.js?v=4"></script>
-<script src="/tesla/static/js/view/trips-sheet-close.js?v=12"></script>
-<script src="/tesla/static/js/view/trips-sheet-stats.js?v=41"></script>
+<script src="/tesla/static/js/view/trips-sheet-close.js?v=13"></script>
+<script src="/tesla/static/js/view/trips-sheet-stats.js?v=42"></script>
 <script src="/tesla/static/js/view/chargemap-page.js?v=1"></script>
 <script src="/tesla/static/js/view/chargemap-heatmap.js?v=5"></script>
 <script src="/tesla/static/js/view/chargemap-time-filters.js?v=10"></script>

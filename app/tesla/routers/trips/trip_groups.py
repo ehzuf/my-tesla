@@ -1,15 +1,15 @@
 """轨迹分组 API: 查/存/改名/删 (逻辑分组, 存自有库, 行程原数据不动) +
-分组明细 (组内行程窗口 + 就地加/移, 3.10.0)。"""
+分组明细 (组内行程窗口 + 批量改成员, 3.10.0)。"""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .... import database
 from ... import repository
 from ...schemas import (
+    GroupChangesIn,
     GroupMemberUpdate,
     GroupTripsPage,
     TripGroupIn,
-    TripGroupMemberIn,
     TripGroupRename,
     TripGroupInfo,
 )
@@ -84,28 +84,17 @@ def group_trips_window(group_id: int, before: int | None = None,
         raise HTTPException(404, str(exc)) from exc
 
 
-@router.post("/groups/{group_id}/add")
-def group_add_trip(group_id: int, body: TripGroupMemberIn,
-                   db: Session = Depends(database.get_db),
-                   own: Session = Depends(database.get_own_db)) -> GroupMemberUpdate:
-    """分组加一段: 区间外延到该行程, 中间的已结束行程整段吸收 (连续性靠
-    构造保证); 返回更新后的分组条目 + 本次新吸收的行程 id。"""
+@router.post("/groups/{group_id}/changes")
+def group_change_members(group_id: int, body: GroupChangesIn,
+                         db: Session = Depends(database.get_db),
+                         own: Session = Depends(database.get_own_db)) -> GroupMemberUpdate:
+    """分组改成员 (确认提交一批 —— 前端点行只是标记预览, 落定才整批发
+    来): 加 = 区间外延到新段、中间已结束行程整段吸收 (连续性靠构造保
+    证); 移 = 只从两端收窄 (中间挖洞会断开), 至少保留 2 段。返回更新后
+    的分组条目 + 全部翻转了状态的行程 id。"""
     try:
-        return repository.add_trip_to_group(db, own, group_id, body.id)
-    except repository.NotFound as exc:
-        raise HTTPException(404, str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from exc
-
-
-@router.post("/groups/{group_id}/remove")
-def group_remove_trip(group_id: int, body: TripGroupMemberIn,
-                      db: Session = Depends(database.get_db),
-                      own: Session = Depends(database.get_own_db)) -> GroupMemberUpdate:
-    """分组移一段: 只许收头尾 (中间挖洞会断开连续), 至少保留 2 段;
-    返回更新后的分组条目 + 被移掉的行程 id。"""
-    try:
-        return repository.remove_trip_from_group(db, own, group_id, body.id)
+        return repository.apply_group_changes(db, own, group_id,
+                                              body.adds, body.removes)
     except repository.NotFound as exc:
         raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:

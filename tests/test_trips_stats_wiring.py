@@ -20,19 +20,21 @@ def test_stats_module_wiring(auth):
     for frag in [
         # 转发保底 scrollTo 强制切页 (手势没被原生认出来的那次); 三页通用
         # (2026-09-23 加统计页): 左滑下一页/右滑上一页, 到头不滚
-        'pager.scrollTo({ left: Math.min(N_PAGES - 1, Math.max(0, page + (dx < 0 ? 1 : -1)))',
+        'pager.scrollTo({ left: Math.min(nPages() - 1, Math.max(0, page + (dx < 0 ? 1 : -1)))',
         # 弹层底一行 (2026-09-23 用户点名: 页标题 + iOS 桌面同款白点页标)
         # 切页换字 + 亮当前页的点; 页位唯一回显 (右上角页标题 2026-09-24
-        # 退役让位给驾驶员)
-        'const FOOT_LB = ["行驶轨迹", "行驶数据", "行驶统计"];',
+        # 退役让位给驾驶员); 第四页「详细行程」分组弹层才有 (3.10.0)
+        'const FOOT_LB = ["行驶轨迹", "行驶数据", "行驶统计", "详细行程"];',
         'footLb.textContent = FOOT_LB[page] || FOOT_LB[0];',
         'footDots.forEach((el, k) => el.classList.toggle("on", k === page));',
         # 点底行页标区 (圆点+标题整块) 循环切页: 下一页, 末页绕回第一页
         # (2026-09-24 用户点名; 2026-09-22 点名的是右上角页标题, 该位
-        # 同日让给驾驶员)
+        # 同日让给驾驶员); 页数按可见页现算 (3.10.0 第四页 hidden 起步,
+        # 分组弹层才挂上 —— hidden 子元素不占页位)
+        'const nPages = () => [...pager.children].filter(el => !el.hidden).length || 1;',
         'const foot = doc.getElementById("tp-foot");',
         'foot.addEventListener("click"',
-        'const next = (page + 1) % N_PAGES;',
+        'const next = (page + 1) % nPages();',
         'pager.scrollTo({ left: next * pager.clientWidth, behavior: "smooth" });',
         # 横滑转发: 头部 (一直没主) + 数字带/播放条 (2026-09-25 挪出分页到
         # 公共带, 原生滚页没了, 转发是主路 —— 更早裹在分页里时它就是 iOS
@@ -140,11 +142,11 @@ def test_stats_module_wiring(auth):
     assert "curSess = s;" in sess
     sheet_css = auth.get("/tesla/static/css/tesla-trips-sheet.css").text
     assert "no-band" not in sheet_css
-    # 版本号 (改过的都带上, 老缓存不掺和; 2026-09-27 三页独立批)
-    assert "view/trips-sheet-stats.js?v=41" in html    # v41: 三页独立 (curSess 直读/直方图开弹层即取/静默窗/整带收放退役)
+    # 版本号 (改过的都带上, 老缓存不掺和; 3.10.0 第四页批)
+    assert "view/trips-sheet-stats.js?v=42" in html    # v42: 第四页挂/摘 (nPages 现算/第四枚页标/ptr 提示字换字)
     assert "js/trackutil.js?v=5" in html   # v5: 原始轨迹层退役 (扁平版函数)
     assert "view/trips-playback-session.js?v=14" in html    # defer 起播: 数据会话先挂, begin 才进播放态
-    assert "view/trips-sheet-close.js?v=12" in html    # 统计页 tp-hist 入下拉关闭区
-    assert "view/trips-sheet-open.js?v=10" in html    # 编排重排: 直方图开弹层即取, playTrack(defer) 先于预载
-    assert "css/tesla-trips-sheet.css?v=33" in html    # v33: 底行横排 (v31 整带收放撤掉, 布局恒定)
+    assert "view/trips-sheet-close.js?v=13" in html    # v13: hideSheet 摘第四页 (gtrDetach)
+    assert "view/trips-sheet-open.js?v=11" in html    # v11: openTrip 挂第四页 (gtrPageSync)
+    assert "css/tesla-trips-sheet.css?v=34" in html    # v34: 底行还原单页标 (v33 底行横排版随第四页方案撤回)
     assert "css/tesla-trips-playback.css?v=9" in html

@@ -1,16 +1,17 @@
-// view/group-trips-stream.js — 分组明细页 (3.10.0) 2/2: 流 —— 行渲染
-// (组内外同列, 组外降透明 + 加入钮; 组内徽标, 两端行才有移出钮), 默认
-// 窗口 = 组内全部 (id 升序 = 落库序 = 出发序, 时间正序), 两端拉动加载组外
-// 候选 (顶部下拉 prepend 视口钉原首行, 尾部触底 IO + 首屏不满链式续载),
-// 就地加/移 (连续性服务端守: 加 = 区间外延整段吸收, 移 = 只收头尾;
-// 返回的 changed 只翻已加载行的状态, 拉动加载的页不丢, 不整页重拉)。
-/* global $, esc, num, toast, fmtCardDate, fmtDur, getJSON, postJSON,
-          gtrGid, PRELOAD_PX */
-/* exported gtrLoad, gtrLoadBefore */
+// view/group-trips-stream.js — 弹层第四页「详细行程」(3.10.0) 2/3: 流 —
+// 行渲染 (组内外同列, 组外降透明; 组内徽标, 落点态与标记钮的判定在
+// group-trips-marks), 默认窗口 = 组内全部 (id 升序 = 落库序 = 出发序,
+// 时间正序), 两端拉动加载组外候选 (顶部下拉 prepend 视口钉原首行, 尾部
+// 触底 IO + 首屏不满链式续载)。加/移不直接写库: 点行只是标记 (预览翻
+// 转), 页底「取消/确认」落定 (group-trips-marks)。
+/* global $, esc, num, fmtCardDate, fmtDur, getJSON, toast, bindGestures,
+          PRELOAD_PX, gtrEff, gtrEnds, gtrClearMarks */
+/* exported gtrStart, gtrLoadBefore, gtrRefreshRows */   // 后两个供 marks 侧调
 "use strict";
 
 const GTR_PAGE = 24;    // 两端拉动一次拉多少条组外候选
 
+let gtrGid = null;      // 当前分组 (挂页时 gtrStart 带来)
 let gtrStream = [];     // 已加载行程 (id 升序), 与 #gtr-list 子元素一一对应
 let gtrGroup = null;    // 当前分组条目 (页头段数 + 成员端点判定用)
 let gtrMoreB = false, gtrMoreA = false;   // 两端还有没有组外候选 (服务端口径)
@@ -25,22 +26,17 @@ function gtrShortPlace(region, full) {
   return pp.length ? pp.join(" · ") : full;
 }
 
-/* 组成员的两端 id (移出钮只给这两行; ids 服务端保证升序全展开) */
-function gtrEnds() {
-  const ids = gtrGroup ? gtrGroup.ids : [];
-  return ids.length ? [ids[0], ids[ids.length - 1]] : [];
-}
-
 function gtrRow(it) {
   const el = document.createElement("article");
-  el.className = "card-t gtr-row" + (it.in_group ? " in" : "");
+  const inG = gtrEff(it);
+  el.className = "card-t gtr-row" + (inG ? " in" : "");
   el.dataset.id = it.id;
   const [lo, hi] = gtrEnds();
   const fromP = gtrShortPlace(it.from_region, it.from);
   const toP = gtrShortPlace(it.to_region, it.to);
-  /* 按钮: 组外 → 加入 (点谁区间就外延到谁); 组内两端 → 移出 (中间行没有,
-     挖洞会断开连续); 组内中间 → 无按钮 */
-  const acts = !it.in_group
+  /* 标记钮: 组外 → 加入 (标记后区间外延到它, 中间的服务端整段吸收);
+     组内两端 → 移出 (标记后收回); 组内中间 → 无钮 (挖洞会断开连续) */
+  const acts = !inG
     ? '<div class="gtr-acts"><button type="button" class="gtr-add">加入分组</button></div>'
     : (it.id === lo || it.id === hi)
       ? '<div class="gtr-acts"><button type="button" class="gtr-rm">移出分组</button></div>'
@@ -48,7 +44,7 @@ function gtrRow(it) {
   el.innerHTML = `
     <div class="ct-top">
       <span class="ct-date">${esc(fmtCardDate(it.start))}</span>
-      ${it.in_group ? '<span class="gtr-badge">组内</span>' : ""}
+      ${inG ? '<span class="gtr-badge">组内</span>' : ""}
     </div>
     <div class="ct-cells">
       <div class="ct-cell"><div class="lb">里程</div>
@@ -78,9 +74,14 @@ function gtrMarquee() {
 }
 addEventListener("resize", () => setTimeout(gtrMarquee, 200));
 
-function gtrRender() {
+/* 页头: 分组名 + 段数 (确认保存后段数跟着新) */
+function gtrHead() {
   $("#gtr-name").textContent = gtrGroup ? gtrGroup.name : "分组行程";
   $("#gtr-count").textContent = gtrGroup ? `${gtrGroup.n} 段` : "";
+}
+
+function gtrRender() {
+  gtrHead();
   $("#gtr-list").innerHTML = "";
   for (const it of gtrStream) $("#gtr-list").appendChild(gtrRow(it));
   $("#gtr-top").hidden = !gtrMoreB;    // 两端提示行: 还有候选才亮, 拉空即收
@@ -90,11 +91,12 @@ function gtrRender() {
   gtrMarquee();
 }
 
-/* 默认窗口: 组内全部 (进页/重试/换车都走这), 复位两端候选旗标 */
+/* 默认窗口: 组内全部 (挂页/重试都走这), 复位标记与两端候选旗标 */
 async function gtrLoad() {
   if (gtrBusy || !gtrGid) return;
   gtrBusy = true;
   gtrStream = []; gtrGroup = null;
+  gtrClearMarks();
   $("#gtr-errbox").hidden = true;
   $("#gtr-spin").hidden = false;
   try {
@@ -153,46 +155,39 @@ async function gtrLoadAfter() {
     gtrLoadAfter();
 }
 
-/* 哨兵常驻: 视图藏起 (display:none) 不相交, 不会偷跑 */
+/* 哨兵常驻: 页藏起 (display:none) 不相交, 不会偷跑 */
 new IntersectionObserver(es => {
   if (es[0].isIntersecting) gtrLoadAfter();
 }, { rootMargin: PRELOAD_PX + "px" }).observe($("#gtr-tail"));
 
-/* 就地翻状态: 只重画与目标态不符的行 (组内外类 / 按钮有无), 其余已加载
+/* 就地翻行: 只重画与落点态不符的行 (组内外类 / 标记钮有无), 其余已加载
    行原样保留 —— 分页拉的页不丢, 不整页重拉 */
 function gtrRefreshRows() {
   const [lo, hi] = gtrEnds();
   for (const el of [...$("#gtr-list").children]) {
     const it = gtrStream.find(x => x.id === +el.dataset.id);
     if (!it) continue;
-    const wantBtn = !it.in_group ? "add" : (it.id === lo || it.id === hi) ? "rm" : "";
-    if (el.classList.contains("in") !== it.in_group ||
+    const inG = gtrEff(it);
+    const wantBtn = !inG ? "add" : (it.id === lo || it.id === hi) ? "rm" : "";
+    if (el.classList.contains("in") !== inG ||
         wantBtn === "add" !== !!el.querySelector(".gtr-add") ||
         wantBtn === "rm" !== !!el.querySelector(".gtr-rm"))
       el.replaceWith(gtrRow(it));
   }
+  gtrHead();
   gtrMarquee();
 }
 
-/* 加入/移出: 点钮即写库 (按钮拦截在先, 行本身不可点); 返回的 changed 在
-   已加载行上翻状态 (加 = 新吸收的全部段, 吸收的未加载段下次拉动自会带
-   对状态来), 页头段数跟新; 失败原样 toast 服务端的口径话 */
-$("#gtr-list").addEventListener("click", async e => {
-  const t = e.target;
-  if (!(t instanceof Element) || !t.isConnected) return;
-  const row = t.closest(".gtr-row");
-  if (!row) return;
-  const it = gtrStream.find(x => x.id === +row.dataset.id);
-  if (!it) return;
-  const add = t.closest(".gtr-add");
-  if (!add && !t.closest(".gtr-rm")) return;
-  try {
-    const upd = await postJSON(
-      `/tesla/trips/api/groups/${gtrGid}/${add ? "add" : "remove"}`, { id: it.id });
-    gtrGroup = upd.group;
-    const changed = new Set(upd.changed);
-    for (const x of gtrStream) if (changed.has(x.id)) x.in_group = !!add;
-    gtrRefreshRows();
-    toast(add ? "已加入分组" : "已移出分组");
-  } catch (err) { toast(err.message || "操作失败"); }
-});
+/* 挂页 (trips-sheet-stats 的 gtrPageSync 调, 弹层开着分组行程): 复位
+   标记与已加载窗口, 拉组内全部 */
+function gtrStart(gid) {
+  if (gid == null) return;
+  gtrGid = gid;
+  gtrLoad();
+}
+
+/* 重试 (错误盒) 与手势: 竖滑滚列表 / 顶部到顶下拉加载更早; 横滑让给分
+   页器原生滚页 (drawer 关 —— 弹层里没有抽屉手势), 方向锁仲裁各认各的 */
+$("#gtr-retry").addEventListener("click", () => gtrLoad());
+bindGestures($("#gtr-scroll"), { drawer: false, ptr: true,
+  onRefresh: () => gtrLoadBefore() });

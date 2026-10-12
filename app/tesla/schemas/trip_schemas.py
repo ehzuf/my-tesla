@@ -1,4 +1,6 @@
-"""行程域接口模型: 列表条目/过路费回传/驾驶员标注/地区树/轨迹/合并轨迹/分组/断档补路。"""
+"""行程域接口模型: 列表条目/过路费回传/驾驶员标注/地区树/轨迹/合并轨迹/断档补路。
+(分组模型拆去 trip_group_schemas, 2026-10-12 满 200 行硬上限。)
+"""
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -136,64 +138,6 @@ class MergedTrack(BaseModel):
     wh_per_km: float | None = None  # 平均电耗 (Wh/km, 按总里程)
     from_: str = Field(alias="from")
     to: str
-
-
-class TripGroupIn(BaseModel):
-    """存分组: 名字 + 行程 id 列表 (至少 2 段; 上限 2026-09-25 用户点名撤掉,
-    大分组靠区间写法与逐段流式扛)。"""
-    name: str = Field(min_length=1, max_length=30)
-    ids: list[int] = Field(min_length=2)
-
-
-class TripGroupRename(BaseModel):
-    """分组改名 (只改名字, 成员不动)。"""
-    name: str = Field(min_length=1, max_length=30)
-
-
-class TripGroupInfo(BaseModel):
-    """分组条目: 段数/里程/日期跨度按当前行程数据现算; 起止/时长/最高速/
-    电耗汇总与合并播放的流式汇总头同口径 (弹层一开就显数, 不等地图)。"""
-    id: int
-    name: str
-    ids: list[int]
-    n: int
-    km: float
-    span: str
-    start: str | None = None      # 首段出发 (本地时间, 与汇总头同格式)
-    end: str | None = None
-    min: int | None = None        # 各段时长和 (分钟)
-    speed_max: int | None = None
-    kwh: float | None = None      # 总电耗 (各段续航差×换算系数之和)
-    wh_per_km: float | None = None   # 平均电耗 (按总里程)
-
-
-class TripGroupMemberIn(BaseModel):
-    """分组加/移一段: 行程 id。"""
-    id: int
-
-
-class GroupTripRow(TripItem):
-    """分组明细页的行程条目: 行程卡字段 + 在组标记 (组外候选行也走这,
-    前端降透明画 + 给加入钮)。"""
-    in_group: bool
-
-
-class GroupTripsPage(BaseModel):
-    """分组明细窗口: 分组条目 (页头段数/里程) + 行程条目 (id 升序 = 时间
-    正序; id 即行程落库序, 与出发序一致, 连续区间本就按 id 定义) + 两端
-    还有没有可拉的 (更前/更后的组外行程)。"""
-    group: TripGroupInfo
-    items: list[GroupTripRow]
-    has_more_before: bool
-    has_more_after: bool
-
-
-class GroupMemberUpdate(BaseModel):
-    """加/移一段后的返回: 更新后的分组条目 + 本次变化的行程 id (加 = 新
-    吸收进组的全部段 —— 区间外延可能不止点的那一段; 移 = 被移掉的那段)。
-    前端拿它在已加载的行上就地翻状态, 不整页重拉 (拉动加载的页不丢)。"""
-    group: TripGroupInfo
-    changed: list[int]
 
 
 class GapFillRequest(BaseModel):

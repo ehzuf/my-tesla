@@ -69,9 +69,9 @@ def test_nav_groups_match_dom(auth):
     keys = [k for _, pages in groups for k in pages]
     pos = [html.index(f'data-view="{k}"') for k in keys]
     assert pos == sorted(pos), "视图顺序与 NAV_GROUPS 不符"
-    # 3.10.0 分组明细是二级页 (弹层「详细行程」进, ‹ 回分组列表), 不进
-    # 抽屉菜单 —— data-view 计数比 NAV_GROUPS 多这 1 个
-    assert html.count('data-view="') == 16               # 对账没丢页没多页
+    # 3.10.0 分组明细「详细行程」住进行程弹层当第四页 (跟行驶轨迹/行驶数
+    # 据/行驶统计并列), 不再是二级页 —— data-view 计数回到与 NAV_GROUPS 齐
+    assert html.count('data-view="') == 15               # 对账没丢页没多页
 
 
 # ---------------------------------------------------------------- 开合与拖拽
@@ -113,7 +113,7 @@ def test_gesture_surfaces_and_edges(auth):
     类画布手势全给引擎 —— 右划开抽屉入口折到画布左缘 40px 窄条 (10-01
     用户报左缘手指常落卡外; #lv-gutter 10-04 / #cm-gutter 10-05 补缝条)。"""
     js = page_js(auth, SHELL)
-    assert js.count("{ drawer: true, ptr: true,") == 18  # 3.10.0 +分组明细页
+    assert js.count("{ drawer: true, ptr: true,") == 17  # 第四页 gtr-scroll 走 drawer: false (分页器内)
     for edge in ("cm-edge", "cm-gutter", "fp-edge", "fp-gutter", "lv-edge"):
         assert f'bindGestures($("#{edge}"), {{ drawer: true }});' in js, \
             f"{edge} 边条绑定缺"
@@ -183,9 +183,9 @@ def test_navigation_plain_hidden(auth):
     for gone in ("TABS", "hideGroup", "showGroup", "pagerEl", ".scrollTo("):
         assert gone not in nav, f"组路由残留: {gone}"
     html = served_page(auth, SHELL)
-    assert html.count('<section class="view"') == 16    # 15 抽屉页 + 分组明细二级页
+    assert html.count('<section class="view"') == 15    # 15 抽屉页 (第四页方案前曾 +1 分组明细二级页)
     assert 'class="view" id="view-live" data-view="live">' in html   # 唯一亮着
-    assert len(re.findall(r'<section class="view"[^>]* hidden>', html)) == 15
+    assert len(re.findall(r'<section class="view"[^>]* hidden>', html)) == 14
 
 
 def test_boot_default_live(auth):

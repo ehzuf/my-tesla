@@ -73,7 +73,7 @@ def test_changelog_entries_endpoint(auth):
         assert e["items"] == [{"kind": it.kind, "text": it.text}
                               for it in v.items]
     # 头条是主打: 新功能或修的主 bug; 纯打磨的批次整版都是改进, 不硬凑
-    # (3.10.0 头条是新增「分组详细行程页: 车里就能加/移行程」;
+    # (3.10.0 头条是新增「分组弹层第四页「详细行程」: 先标记后确认」;
     # 3.9.0 头条是新增「历史路线构造进度蒙版」;
     # 3.8.1 整版都是改进「Web 服务 Key 必填 + 设置说明撤下」;
     # 3.8.0 头条是新增「--cert-file/--key-file 直接指定证书」;

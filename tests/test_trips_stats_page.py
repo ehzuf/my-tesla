@@ -33,10 +33,11 @@ def test_stats_pager_markup(auth):
         '<button type="button" class="sh-drv" id="sh-drv-btn" aria-label="切换驾驶员" hidden></button>',
         # 弹层底一行 (2026-09-23 用户点名: 最下方的空白放当前页标题 + 白点
         # 页标, 类似 iOS 桌面的白点): 轨迹页「行驶轨迹」/ 动态页「行驶数
-        # 据」/ 统计页「行驶统计」, 三枚圆点亮当前页 (JS 切页同步);
+        # 据」/ 统计页「行驶统计」, 圆点亮当前页 (JS 切页同步); 第四枚页标
+        # 随第四页「详细行程」(3.10.0 分组弹层才有, hidden 起步 JS 挂上);
         # 2026-09-24 用户点名竖排 —— 圆点在上标题在下, 点整块切下一页
         '<div class="tp-foot" id="tp-foot">',
-        '<span class="tp-dots" id="tp-dots"><i class="on"></i><i></i><i></i></span>',
+        '<span class="tp-dots" id="tp-dots"><i class="on"></i><i></i><i></i><i hidden></i></span>',
         '<span class="tp-foot-lb" id="tp-foot-lb">行驶轨迹</span>',
         # 第三页「行驶统计」(2026-09-23 用户点名, 同日点名拆两张卡, 2026-09-24
         # 对账官方口径换三张): 速度直方图 / 各档里程 / 各档平地电耗各一张卡
@@ -110,14 +111,11 @@ def test_stats_pager_css(auth):
         "padding: 10px 20px calc(env(safe-area-inset-bottom) + 8px);",
         # 弹层底一行 (2026-09-23 用户点名: 页标题 + iOS 桌面同款白点页标;
         # 2026-09-24 点名竖排: 圆点在上标题在下, 点整块切下一页 → cursor;
-        # 3.10.0 外层横排 .tp-foot-row: 页标区居中 + 「详细行程」入口并排
-        # 右侧 (分组打开的弹层才有; 入口藏起时布局与旧版分毫不差))
-        ".tp-foot-row { flex: none; display: flex; align-items: center; justify-content: center;",
-        "gap: 28px; padding: 8px 0 2px; }",
-        ".tp-foot { display: flex; flex-direction: column; align-items: center;",
-        "justify-content: center; gap: 6px;",
+        # 3.10.0 外层横排版 (页标区居中 + 「详细行程」入口并排) 随第四页
+        # 方案撤回 —— 还原单页标竖排, 第四页本体样式在 tesla-group-trips.css)
+        ".tp-foot { flex: none; display: flex; flex-direction: column; align-items: center;",
+        "justify-content: center; gap: 6px; padding: 8px 0 2px;",
         "cursor: pointer; -webkit-tap-highlight-color: transparent; }",
-        ".tp-foot-act { flex: none; font-size: 14px; font-weight: 600; color: var(--blue);",
         # 页标文字是页面标题不是脚注 (2026-09-24 用户点名放大: 12→14 加粗)
         ".tp-foot-lb { font-size: 14px; font-weight: 600; color: var(--ink-2); }",
         ".tp-dots {",

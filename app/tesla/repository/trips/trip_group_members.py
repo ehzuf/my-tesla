@@ -1,10 +1,11 @@
-"""分组明细: 组内行程窗口与加/移成员 (分组 = 连续区间)。
+"""分组明细: 组内行程窗口与批量改成员 (分组 = 连续区间)。
 
 区间口径与合并播放一致 (分享链接只记「首-尾」, 服务端按区间展开全部已
 结束行程): 加一段 = 区间外延到该行程, 中间的已结束行程整段吸收 —— 连续
 性靠构造保证, 不可能挖出洞; 移一段 = 只许收头尾 (中间挖洞会断开)。
 窗口按 id 升序 (id 即行程落库序, 与出发序一致), 组内行 in_group=true,
-组外候选行也一并给 (前端降透明画 + 加入钮, 拉动加载沿两端翻页)。
+组外候选行也一并给 (前端降透明画 + 加标记钮, 拉动加载沿两端翻页)。
+改成员是「先标记后确认」的整批提交 (前端点行只是预览标记, 确认才发)。
 """
 from sqlalchemy import select
 from sqlalchemy.orm import Session, aliased
@@ -97,43 +98,38 @@ def group_trip_window(session: Session, own: Session, group_id: int,
                           has_more_after=_closed_after(session, edge_hi))
 
 
-def add_trip_to_group(session: Session, own: Session,
-                      group_id: int, drive_id: int) -> GroupMemberUpdate:
-    """分组加一段: 区间外延到该行程, 中间的已结束行程整段吸收 (changed
-    列出全部新吸收段, 不止点的那一段)。"""
+def apply_group_changes(session: Session, own: Session, group_id: int,
+                        adds: list[int],
+                        removes: list[int]) -> GroupMemberUpdate:
+    """分组改成员 (确认提交一批): 先吸收 —— 区间外延到全部新加段, 中间的
+    已结束行程整段吸收; 再收窄 —— 移除集只许吃掉两端 (剩余成员必须是新
+    区间的连续中段, 中间挖洞会断开), 至少保留 2 段 (与建组口径一致)。
+    changed 列出全部翻转了状态的 id (新吸收的 + 被移走的), 前端就地在已
+    加载行上翻, 不整页重拉。"""
     group = own.get(TripGroup, group_id)
     if group is None:
         raise NotFound("分组不存在")
-    drive = session.get(Drive, drive_id)
-    if drive is None or drive.end_date is None:
-        raise NotFound("行程不存在或未结束")
+    add_set, rm_set = set(adds), set(removes)
+    if add_set & rm_set:
+        raise ValueError("同一行程不能既加入又移出")
+    for drive_id in sorted(add_set | rm_set):
+        d = session.get(Drive, drive_id)
+        if d is None or d.end_date is None:
+            raise NotFound("行程不存在或未结束")
     lo, hi = _stored_range(group)
     effective = set(closed_drive_ids_between(session, lo, hi))
-    if drive_id in effective:
-        raise ValueError("该行程已在分组里")
-    new_ids = closed_drive_ids_between(session, min(lo, drive_id), max(hi, drive_id))
-    changed = [i for i in new_ids if i not in effective]
-    group.ids = ",".join(str(i) for i in new_ids)
+    if add_set & effective:
+        raise ValueError("要加入的行程已在分组里")
+    members = (set(closed_drive_ids_between(session, min(lo, *add_set), max(hi, *add_set)))
+               if add_set else effective)
+    if rm_set - members:
+        raise ValueError("要移出的行程不在分组里")
+    rest = sorted(i for i in members if i not in rm_set)
+    if len(rest) < 2:
+        raise ValueError("分组至少要保留 2 段")
+    if rest != [i for i in sorted(members) if rest[0] <= i <= rest[-1]]:
+        raise ValueError("只能移出最前或最后的行程")
+    changed = sorted((set(rest) - effective) | (effective - set(rest)))
+    group.ids = ",".join(str(i) for i in rest)
     own.commit()
     return GroupMemberUpdate(group=_group_info(session, group), changed=changed)
-
-
-def remove_trip_from_group(session: Session, own: Session,
-                           group_id: int, drive_id: int) -> GroupMemberUpdate:
-    """分组移一段: 只许收头尾 (中间挖洞会断开连续); 至少保留 2 段 (与
-    建组口径一致)。移后存库 ids 仍是新区间的全展开。"""
-    group = own.get(TripGroup, group_id)
-    if group is None:
-        raise NotFound("分组不存在")
-    lo, hi = _stored_range(group)
-    effective = closed_drive_ids_between(session, lo, hi)
-    if drive_id not in effective:
-        raise ValueError("该行程不在分组里")
-    if len(effective) <= 2:
-        raise ValueError("分组至少要保留 2 段")
-    if drive_id not in (effective[0], effective[-1]):
-        raise ValueError("只能移出最前或最后的行程")
-    group.ids = ",".join(str(i) for i in effective if i != drive_id)
-    own.commit()
-    return GroupMemberUpdate(group=_group_info(session, group),
-                             changed=[drive_id])

@@ -149,44 +149,62 @@ def test_group_window_default_and_pagination(auth, db):
                     "?before=99").status_code == 404         # 脏游标
 
 
-def test_group_add_absorbs(auth, db):
-    """加一段: 区间外延到该行程, 中间的已结束行程整段吸收 (changed 列出
-    全部新吸收段), 未结束的不吸; 已在组里 400; 不存在/未结束 404。"""
+def test_group_changes_absorb(auth, db):
+    """加段 (确认整批): 区间外延到新段, 中间的已结束行程整段吸收 (changed
+    列出全部新吸收段), 未结束的不吸; 已在组里/既加又移 400; 不存在/未结
+    束/未知分组 404。"""
     _seed_window(db)
     g = auth.post("/tesla/trips/api/groups", json={"name": "尾巴", "ids": [18, 19]}).json()
 
-    r = auth.post(f"/tesla/trips/api/groups/{g['id']}/add", json={"id": 13})
+    r = auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                  json={"adds": [13], "removes": []})
     assert r.status_code == 200
     upd = r.json()
     assert upd["changed"] == [13, 14, 15, 17]              # 16 未结束不吸收, 17 在新区间里整段吸
     assert upd["group"]["ids"] == [13, 14, 15, 17, 18, 19]
     assert upd["group"]["n"] == 6
 
-    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/add",
-                     json={"id": 14}).status_code == 400      # 已被吸收进组
-    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/add",
-                     json={"id": 16}).status_code == 404      # 进行中
-    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/add",
-                     json={"id": 99}).status_code == 404
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                     json={"adds": [14]}).status_code == 400      # 已被吸收进组
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                     json={"adds": [16]}).status_code == 404      # 进行中
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                     json={"adds": [99]}).status_code == 404
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                     json={"adds": [12], "removes": [12]}).status_code == 400   # 既加又移
+    assert auth.post("/tesla/trips/api/groups/999/changes",
+                     json={"adds": [12]}).status_code == 404
 
 
-def test_group_remove_ends_only(auth, db):
-    """移一段: 只许收头尾 (中间挖洞 400), 至少保留 2 段 (与建组口径一致);
-    移后存库 ids 仍是新区间的全展开; 不在组里 400; 未知分组 404。"""
+def test_group_changes_shrink(auth, db):
+    """移段 (确认整批): 只许从两端收窄 (中间挖洞 400), 至少保留 2 段 (与
+    建组口径一致); 移后存库 ids 仍是新区间的全展开; 加移同批发 = 先吸收
+    再收窄, changed 对的是改前旧组。"""
     _seed_window(db)
     g = auth.post("/tesla/trips/api/groups", json={"name": "中段", "ids": [12, 13, 14]}).json()
 
-    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/remove",
-                     json={"id": 13}).status_code == 400      # 中间段
-    r = auth.post(f"/tesla/trips/api/groups/{g['id']}/remove", json={"id": 12})
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                     json={"removes": [13]}).status_code == 400      # 中间段
+    r = auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                  json={"removes": [12]})
     assert r.json()["changed"] == [12]
     assert r.json()["group"]["ids"] == [13, 14]
-    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/remove",
-                     json={"id": 13}).status_code == 400      # 只剩 2 段
-    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/remove",
-                     json={"id": 99}).status_code == 400      # 不在组里
-    assert auth.post("/tesla/trips/api/groups/999/remove",
-                     json={"id": 13}).status_code == 404
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                     json={"removes": [13]}).status_code == 400      # 只剩 2 段
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                     json={"removes": [11]}).status_code == 400      # 已结束但在组外
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/changes",
+                     json={"removes": [99]}).status_code == 404      # 行程不存在
+
+    # 加移同批: 吸收 12~15 (16 进行中跳过) 后再收掉 12 —— 剩连续中段
+    g2 = auth.post("/tesla/trips/api/groups", json={"name": "同批", "ids": [17, 18]}).json()
+    r = auth.post(f"/tesla/trips/api/groups/{g2['id']}/changes",
+                  json={"adds": [12], "removes": [17]})
+    assert r.status_code == 400      # 17 吸收后成了中间段: 挖洞
+    r = auth.post(f"/tesla/trips/api/groups/{g2['id']}/changes",
+                  json={"adds": [12], "removes": [18]})
+    assert r.json()["group"]["ids"] == [12, 13, 14, 15, 17]
+    assert r.json()["changed"] == [12, 13, 14, 15, 18]
 
 
 def test_group_save_normalizes_to_range(auth, db):

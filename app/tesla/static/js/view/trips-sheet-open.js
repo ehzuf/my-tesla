@@ -9,7 +9,8 @@
    sheetFrom, tripMap: writable, trackCache, skipAnim, anim, followZoomOn: writable,
    zoomUserLock: writable, zoomUserZoom: writable, followZoom, tileTemplate,
    preloadTiles, preloadVectorTrack, TrackUtil, playTrack, hideSheet,
-   playbarPending, fillSheetHeader, fillSheetHeaderPending, setupDriverPicker */
+   playbarPending, fillSheetHeader, fillSheetHeaderPending, setupDriverPicker,
+   gtrPageSync */
 /* exported openTrip, loadMergedStream, sheetTrip, followZoomOn, zoomUserZoom */
 "use strict";
 async function openTrip(it, fromUrl) {
@@ -34,6 +35,10 @@ async function openTrip(it, fromUrl) {
      行程身份, 与轨迹下载/地图预载全程无关 —— 开弹层就发起 (trips-sheet-stats
      的入口, it.hist 落在行程条目上 = 重开秒出) */
   tripHistKick(it);
+  /* 第四页「详细行程」(3.10.0): 分组页打开的弹层载荷带 gid —— 页与第四
+     枚页标挂上, 数据同拍开拉; 多选合并/深链没有 gid, 页摘下 (关弹层由
+     hideSheet 的 gtrDetach 收尾) */
+  gtrPageSync(it);
   $("#sheet").classList.add("show");
   $("#backdrop").classList.add("show");
   tripMsg("正在加载轨迹…", true);
