@@ -109,7 +109,7 @@ header {
   .nav-menu { position: static; }
   .nav-menu .menu, .filters .nav-menu .menu { left: 12px; right: 12px; }
 }
-.filt .fl { max-width: 30vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filt .fl { max-width: min(30vw, 144px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* 144=列宽480的30% */
 /* 起终点省市区级联: 菜单限高滚动 (区县可能有十几项), 返回行/面包屑/层级行 */
 .nav-menu .menu.loc-menu { max-height: min(420px, 62vh); overflow-y: auto; min-width: 176px; }
 .nav-menu .menu .loc-crumb { font-size: 11px; color: var(--ink-3); padding: 4px 12px 2px;

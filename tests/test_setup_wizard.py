@@ -189,7 +189,8 @@ def test_setup_page_wiring(  # pylint: disable=redefined-outer-name
     """三步版接线: 三张表单 + 完成跳转 data-done + 脚本接口指向; 不允许
     跳过 (无跳过钮), 起步步数跟着缺口走。步骤条三项可点任意跳步回改,
     数据源/地图两步的测试闸 (测通才解锁主按钮) 在 setup-gates.js
-    (2026-10-12 用户口径「要测试, 测试好之后才能下一步」)。"""
+    (2026-10-12 用户口径「要测试, 测试好之后才能下一步」; 同日再点名
+    「测试」钮也要必填项填全才亮, 灰着点不动)。"""
     html = client.get("/setup").text
     assert 'data-done="/tesla"' in html
     for fid in ("form1", "form2", "form3"):
@@ -208,11 +209,12 @@ def test_setup_page_wiring(  # pylint: disable=redefined-outer-name
     for rid in ("amap-key", "amap-web"):
         m = re.search(rf'<input id="{rid}"[^>]*>', html)
         assert m and "required" not in m.group(0), rid
-    # 测试闸按钮行: 次级「测试」+ 锁着起步的主按钮 (测通才解锁)
-    assert ('<button type="button" class="btn ghost" id="tm-test">测试连接'
-            "</button>") in html
-    assert ('<button type="button" class="btn ghost" id="amap-test">测试'
-            "</button>") in html
+    # 测试闸按钮行: 次级「测试」+ 锁着起步的主按钮 (测通才解锁); 测试钮
+    # 自己也是灰的起步 —— 必填项填全 (setup-gates 现算) 才亮
+    assert ('<button type="button" class="btn ghost" id="tm-test" disabled>'
+            "测试连接</button>") in html
+    assert ('<button type="button" class="btn ghost" id="amap-test" disabled>'
+            "测试</button>") in html
     assert html.count('<button class="btn" type="submit" disabled>') == 2
     assert "back2" not in html          # 「上一步」方案 (同日早版) 整链退役
     assert "三步配齐才能进入" not in html
@@ -223,10 +225,11 @@ def test_setup_page_wiring(  # pylint: disable=redefined-outer-name
         assert gone not in html, gone
     # 地图 Key 探针住适配层 (与设置页同一支): 引导页也挂上
     assert '<script src="/tesla/static/js/tesla-map-adapter.js?v=' in html
-    js = client.get("/static/setup.js?v=8").text
+    js = client.get("/static/setup.js?v=9").text
     assert '"/api/setup-admin"' in js
     assert "web_key_masked" in js                # 预填时给现值掩码
     assert "tmPassSet" in js                     # 密码快拦状态 (没存过不许空着测)
+    assert "amapKeySet" in js                    # 地图 Key 现值状态 (测试钮点亮用)
     # 步骤条可点 + 409 = 管理员步早已完成直接进下一步 (步骤可回跳后,
     # 不再是「别的设备抢跑」赶去登录页)
     assert 'li.addEventListener("click", () => showStep(i))' in js
@@ -234,7 +237,7 @@ def test_setup_page_wiring(  # pylint: disable=redefined-outer-name
     assert 'data-done' in js and "dataset.done" in js
     assert ".skip" not in js and "setup-status" in js
     assert 'missing.includes("account")' in js
-    gates = client.get("/static/setup-gates.js?v=2").text
+    gates = client.get("/static/setup-gates.js?v=3").text
     assert '"/tesla/api/settings/test"' in gates     # 数据源候选实测端点
     assert '"/tesla/api/settings"' in gates          # 主按钮 = 保存 + 前进
     assert 'amap_web_key: v("amap-web")' in gates    # Web 服务 Key 随同提交
@@ -260,6 +263,14 @@ def test_setup_page_wiring(  # pylint: disable=redefined-outer-name
     assert 'if (r.status === 401) { await noSession(forms[2]); return; }' in gates
     assert "请先完成第一步「建立管理员」" in gates
     assert '"/login?next=/setup"' in gates
+    # 测试钮明暗 (2026-10-12 用户点名「要填写全了才亮起按钮」): 数据源要
+    # 地址/用户/库名 (+ 没存过密码时的密码), 地图要两把 Key (框里或现值);
+    # 进门定一遍 + 输入一改 + 测试收尾 + setup.js 预填完都重算
+    assert "const tmReady = () => {" in gates
+    assert "const amapReady = () => {" in gates
+    assert "const refreshTestButtons = () => {" in gates
+    assert "refreshTestButtons();   // 进门先按现状定" in gates
+    assert 'if (typeof refreshTestButtons === "function") refreshTestButtons();' in js
 
 
 def test_login_js_probes_setup(client):
@@ -288,5 +299,15 @@ def test_standalone_branding():
         text = (STATIC_DIR / page).read_text(encoding="utf-8")
         assert f"{what} · My Tesla" in text     # 页面标题随仓
         assert "<h1>My Tesla</h1>" in text      # 卡片大标题
+    # 图标 = 红底白 T 标 (2026-10-12 用户点名「红白配色, 边缘留 margin」):
+    # 登录/注册页从 My Home 拷来的 🔑/⚡ (蓝绿渐变底) 退役, 门厅三页同一枚
+    for page in ("login.html", "register.html", "setup.html"):
+        text = (STATIC_DIR / page).read_text(encoding="utf-8")
+        assert '<path fill="#fff" d="M12 5.362' in text, page
+    for css in ("login-page.css", "register-page.css"):
+        body = (STATIC_DIR / "css" / css).read_text(encoding="utf-8")
+        assert "linear-gradient(160deg, #f23a40, #b3121a)" in body, css
+        assert ".icon svg { width: 36px; height: 36px; display: block; }" in body, css
+        assert "#3987e5, #1fa349" not in body, css   # 蓝绿渐变底退役
     assert '"My Tesla 注册邀请:"' in \
         (STATIC_DIR / "link-delivery.js").read_text(encoding="utf-8")

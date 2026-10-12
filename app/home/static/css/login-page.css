@@ -29,10 +29,10 @@ body {
 }
 .icon {
   width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 16px;
-  background: linear-gradient(160deg, #3987e5, #1fa349);
+  background: linear-gradient(160deg, #f23a40, #b3121a);   /* Tesla 红 (T 标底) */
   display: flex; align-items: center; justify-content: center;
-  font-size: 30px;
 }
+.icon svg { width: 36px; height: 36px; display: block; }   /* T 标 36px, 四边留白 14px */
 h1 { font-size: 21px; font-weight: 700; letter-spacing: -.3px; }
 .sub { font-size: 13px; color: var(--ink-2); margin: 5px 0 22px; }
 .field {

@@ -156,7 +156,7 @@ header {
   .nav-menu { position: static; }
   .nav-menu .menu, .filters .nav-menu .menu { left: 12px; right: 12px; }
 }
-.filt .fl { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filt .fl { max-width: min(34vw, 160px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* 160≈列宽480的34% */
 .chips { display: flex; gap: 7px; flex: none; align-items: center; }
 .chip {
   padding: 5px 11px; border-radius: 999px; font-size: 12.5px; white-space: nowrap;

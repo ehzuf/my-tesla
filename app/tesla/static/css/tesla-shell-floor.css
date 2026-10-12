@@ -23,7 +23,8 @@ main { max-width: none; margin: 0; padding: 0; }
 #toast {
   position: fixed; left: 50%; bottom: calc(var(--bar-clear) + 6px); top: auto;
   transform: translateX(-50%) translateY(8px); z-index: var(--z-toast);
-  max-width: 82vw; padding: 9px 18px; border-radius: 999px;
+  max-width: 82%;   /* 列宽的 82%: 大屏封在列内 (手机上与 82vw 等价) */
+  padding: 9px 18px; border-radius: 999px;
   background: rgba(58,58,60,.95); color: var(--ink-1); font-size: 13px;
   text-align: center; opacity: 0; transition: opacity .25s, transform .25s;
   pointer-events: none;

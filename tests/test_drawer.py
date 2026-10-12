@@ -187,7 +187,9 @@ def test_drawer_edge_unified(auth):
     左缘带: 滚动器 drawer 支线只认起手 >40px 的。"""
     js = _js(auth, DRAWER_JS)
     for frag in ("const DRAWER_EDGE = 40;", "function bindDrawerEdge()",
-                 "t.clientX > DRAWER_EDGE",       # 只管左缘带
+                 # 只管列左缘带: drawerEdgeX 减掉大屏居中的列偏移 (手机恒 0)
+                 "drawerEdgeX(t.clientX) > DRAWER_EDGE",
+                 "const drawerEdgeX = x => {",
                  'input[type="range"], .drawer-edge, ',   # 滑块/边条/弹层让位
                  '"#drawer, #drawer-mask, .sheet, #placed-sheet"',
                  "e.preventDefault();",            # 认下后掐原生滚动
@@ -195,11 +197,14 @@ def test_drawer_edge_unified(auth):
                  "bindDrawerEdge();"):             # bootDrawer 挂上
         assert frag in js, f"左缘统一呼出缺 {frag}"
     ges = _js(auth, "js/tesla-gesture.js")
-    # 滚动器 drawer 支线让出左缘带; .drawer-edge 例外 (边条/缝条自己认)
-    assert '(sx > DRAWER_EDGE || el.classList.contains("drawer-edge"))' in ges, \
+    # 滚动器 drawer 支线让出左缘带 (列内口径); .drawer-edge 例外 (边条/缝条
+    # 自己认)
+    assert "drawerEdgeX(sx) > DRAWER_EDGE" in ges, \
         "手势仲裁没让出左缘带"
-    assert "DRAWER_EDGE" in ges.split("/* global")[1].split("*/")[0], \
-        "DRAWER_EDGE 没进手势仲裁的全局声明"
+    assert 'el.classList.contains("drawer-edge")' in ges
+    for name in ("DRAWER_EDGE", "drawerEdgeX"):
+        assert name in ges.split("/* global")[1].split("*/")[0], \
+            f"{name} 没进手势仲裁的全局声明"
 
 
 # ---------------------------------------------------------------- 导航通路

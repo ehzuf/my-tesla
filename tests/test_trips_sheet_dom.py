@@ -72,9 +72,10 @@ def test_trips_sheet_header_one_row(auth):
         "it && it.gname ? it.gname : \"连续轨迹\"",
         "grid-template-columns: minmax(0, 1fr) auto;",   # 左串弹性 + 右栏驾驶员
         "border-radius: 3px; background: #48484a; margin: 0 auto;",
-        # 纯文字按钮: 蓝色示意可点, 背景/边框全撤, 最宽 40vw 别挤走日期
+        # 纯文字按钮: 蓝色示意可点, 背景/边框全撤, 最宽 40vw (大屏封顶
+        # 192px = 列宽 480 的 40%) 别挤走日期
         "color: var(--blue);", "background: none; border: 0;",
-        "max-width: 40vw;",
+        "max-width: min(40vw, 192px);",
         # 点击弹底部选单换人 (与卡片 pill 同一张); 标注写库后就地刷按钮文案
         '$("#sh-drv-btn").addEventListener("click"',
         "syncDrvBtn(it);", "if (it === sheetTrip) syncDrvBtn(it);",

@@ -83,6 +83,21 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 button, a, summary { touch-action: manipulation; }
 img { display: block; }
 
+/* ---------- 大屏适配: 手机一列 (2026-10-12) ----------
+   大屏 (平板/桌面) 上整个应用收成手机宽的一列居中 —— 用户口径「大屏
+   照手机布局做」, 不再控件糊满全屏。transform 造包含块: 壳内 fixed 件
+   (抽屉/悬浮键/筛选条/弹层/toast) 全锚到列内而非整个视口; 手机上列宽
+   = 屏宽, 几何分毫不动。列外就是 body 底色。坐标换算的 js 侧: 左缘呼
+   出带 (tesla-drawer drawerEdgeX) 与筛选弹层锚定 (tesla-filter-bar)。 */
+#shell {
+  flex: 1; width: 100%; min-height: 0;   /* 接管 body 原来的 flex 列:
+     main 的 flex:1 与底部让位都在列内照旧 */
+  max-width: 480px; margin: 0 auto;
+  display: flex; flex-direction: column;
+  position: relative;
+  transform: translateZ(0);              /* 包含块: fixed 子孙锚列内 */
+}
+
 /* ---------- 主区与视图层 ---------- */
 main {
   flex: 1; width: 100%; min-height: 0;   /* min-height:0: flex 子不缩就滚不动 */
@@ -112,7 +127,8 @@ main {
 #toast {
   position: fixed; left: 50%; bottom: calc(var(--bar-clear) + 6px);
   transform: translateX(-50%) translateY(8px); z-index: var(--z-toast);
-  max-width: 82vw; padding: 9px 18px; border-radius: 999px;
+  max-width: 82%;   /* 列宽的 82%: 手机上列=屏宽与原 82vw 等价, 大屏封在列内 */
+  padding: 9px 18px; border-radius: 999px;
   background: rgba(58,58,60,.95); color: var(--ink-1); font-size: 13px;
   text-align: center; opacity: 0; transition: opacity .25s, transform .25s;
   pointer-events: none;

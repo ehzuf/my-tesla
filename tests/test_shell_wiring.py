@@ -30,7 +30,8 @@ def test_shell_skeleton(auth):
     退役, 2026-10-12 以独立悬浮键 #menu-fab 复活 —— Safari 左缘右划是
     系统后退手势, 边缘呼出在 Safari 用不了)。"""
     html = auth.get(SHELL).text
-    for token in ('id="top-clear-probe"', 'id="view-charging"',
+    for token in ('id="shell"',          # 大屏手机一列 (2026-10-12): 全壳包裹
+                  'id="top-clear-probe"', 'id="view-charging"',
                   'data-view="charging"', 'id="filter-bar"',
                   'id="fb-pop"',
                   'id="drawer-mask"', '<aside id="drawer"', 'id="toast"',

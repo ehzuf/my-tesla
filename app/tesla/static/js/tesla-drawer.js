@@ -18,7 +18,8 @@
 /* global $, layerMotion, VIEWS, navigate, closeFbPop, bindSheetSettle,
           GESTURE_SLOP, getJSON */
 /* exported openDrawer, closeDrawer, drawerDragMove, drawerDragEnd,
-            syncDrawerNav, bootDrawer, setMapGate, mapGateOpen, DRAWER_EDGE */
+            drawerEdgeX, syncDrawerNav, bootDrawer, setMapGate, mapGateOpen,
+            DRAWER_EDGE */
 
 /* ---------- 导航分组 (顺序按用户原话: 状态/行程/充电/设置) ----------
    ic = 分组行图标; 单页组 (状态) 不需要 —— 直接渲染成叶行 */
@@ -236,12 +237,19 @@ async function initMapGate() {
    抽屉自己的拖拽收)。滚动器那路同步让位: 手势仲裁的 drawer 支线只认
    起手 >40px 的 (≤40px 归这里), 见 tesla-gesture。 */
 const DRAWER_EDGE = 40;
+// 左缘带的列内换算 (大屏适配): #shell 居中后应用左缘 ≠ 视口左缘, 手势
+// x 要减掉列左偏移才算「距应用左缘多远」; 手机上偏移恒 0, 口径不变。
+// tesla-gesture 的让位判定同用这一支 (两处各算各的容易走岔)
+const drawerEdgeX = x => {
+  const shell = document.getElementById("shell");
+  return x - (shell ? shell.getBoundingClientRect().left : 0);
+};
 function bindDrawerEdge() {
   let tid = -1, sx = 0, sy = 0, mode = "";
   document.addEventListener("touchstart", e => {
     if (tid !== -1 || drawerShown) return;         // 一次只跟一根, 开着不抢
     const t = e.changedTouches[0];
-    if (t.clientX > DRAWER_EDGE) return;           // 只管左缘带
+    if (drawerEdgeX(t.clientX) > DRAWER_EDGE) return;   // 只管列左缘带
     if (e.target.closest('input[type="range"], .drawer-edge, ' +
                          "#drawer, #drawer-mask, .sheet, #placed-sheet")) return;
     tid = t.identifier; sx = t.clientX; sy = t.clientY; mode = "";

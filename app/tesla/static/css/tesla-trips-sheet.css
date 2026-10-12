@@ -51,7 +51,8 @@
 #toast {
   position: fixed; top: calc(env(safe-area-inset-top) + 60px); left: 50%;
   transform: translateX(-50%) translateY(-8px); z-index: 99;
-  max-width: 80vw; font-size: 13px; color: #fff; text-align: center;
+  max-width: 80%;   /* 列宽的 80%: 大屏封在列内 (手机上与 80vw 等价) */
+  font-size: 13px; color: #fff; text-align: center;
   background: rgba(10,10,12,.85);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   border-radius: 999px; padding: 9px 16px;
@@ -117,7 +118,7 @@
   appearance: none; -webkit-appearance: none;
   font: inherit; font-size: 13px; font-weight: 600; color: var(--blue);
   height: 25px; line-height: 25px; background: none; border: 0; padding: 0 4px;
-  flex: none; max-width: 40vw; justify-self: end;
+  flex: none; max-width: min(40vw, 192px); justify-self: end;   /* 192=列宽480的40% */
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .sh-cells {   /* 数字带 = 轨迹页自己的一行 (2026-09-27 用户点名三页独立:

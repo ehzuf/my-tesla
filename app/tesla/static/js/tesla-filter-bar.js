@@ -45,13 +45,19 @@ function setBarView(viewKey) {
   refreshBarChips();
 }
 
-/* 弹层锚定: chip 上方 10px, 左右夹在屏内; 实在放不下兜底到 chip 下方 */
+/* 弹层锚定: chip 上方 10px, 左右夹在列内; 实在放不下兜底到 chip 下方。
+   #fb-pop 是壳内 fixed 件 (大屏适配后锚 #shell 列), 坐标全换算到列内
+   —— x 减列左偏移、夹取用列宽; 手机上列=全屏, 与原视口口径等价。
+   y 不用换算: 列顶 = 视口顶 (列满高居中只偏水平) */
 function anchorPop(pop, btn) {
+  const shell = document.getElementById("shell");
+  const sl = shell ? shell.getBoundingClientRect().left : 0;
+  const sw = shell ? shell.clientWidth : document.documentElement.clientWidth;
   const r = btn.getBoundingClientRect();
   pop.style.left = "0px"; pop.style.top = "0px";   // 先归位再量自身宽高
   const pw = pop.offsetWidth, ph = pop.offsetHeight;
-  let x = r.left + r.width / 2 - pw / 2;
-  x = Math.min(Math.max(x, 10), window.innerWidth - pw - 10);
+  let x = r.left - sl + r.width / 2 - pw / 2;
+  x = Math.min(Math.max(x, 10), sw - pw - 10);
   let y = r.top - ph - 10;
   if (y < 10) y = r.bottom + 10;
   pop.style.left = x + "px";
