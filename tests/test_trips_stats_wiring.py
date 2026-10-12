@@ -146,5 +146,5 @@ def test_stats_module_wiring(auth):
     assert "view/trips-playback-session.js?v=14" in html    # defer 起播: 数据会话先挂, begin 才进播放态
     assert "view/trips-sheet-close.js?v=12" in html    # 统计页 tp-hist 入下拉关闭区
     assert "view/trips-sheet-open.js?v=10" in html    # 编排重排: 直方图开弹层即取, playTrack(defer) 先于预载
-    assert "css/tesla-trips-sheet.css?v=32" in html    # v32: 头部按钮组 (v31 整带收放撤掉, 布局恒定)
+    assert "css/tesla-trips-sheet.css?v=33" in html    # v33: 底行横排 (v31 整带收放撤掉, 布局恒定)
     assert "css/tesla-trips-playback.css?v=9" in html

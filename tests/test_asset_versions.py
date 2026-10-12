@@ -17,9 +17,9 @@ def test_guard_assets_versioned_on_shell(auth):
     for ref, v in (("js/tesla-viewport.js", 4), ("js/tesla-sheet-drag.js", 5),
                    ("js/view/charging-detail.js", 16),  # v16: Esc 一层一关 (v15 统计区三格)
                    ("css/tesla-charging-sheet.css", 11),  # v11: 总价一格 + 充电时间格; v10: pill 最右
-                   ("css/tesla-trips-sheet.css", 32),    # v32: 弹层头部按钮组 .sh-head-btns (3.10.0
-                                                         # 「详细行程」入口与驾驶员同排); v31: 三页
-                                                         # 独立: 整带收放规则撤掉 (布局恒定)
+                   ("css/tesla-trips-sheet.css", 33),    # v33: 弹层底行横排, 「详细行程」与页
+                                                         # 标题并排 (3.10.0); v32 未出批 (头部按钮组
+                                                         # 方案被用户点名换位, 同日撤); v31: 三页独立
                    ("css/tesla-trips-playback.css", 9),  # 播放条住回轨迹页 (翻页不收不还)
                    ("css/tesla-chargemap-map.css", 7),  # v7: sh-grid margin 显式钉住 (足迹
                                                          # css 裸规则拆净, 泄漏值收编); v6: 图例
@@ -219,7 +219,7 @@ def test_guard_assets_versioned_on_shell(auth):
                                                           # v12: pill 换回最右 (卡右上角), 字标居其左
                                                           # + tesla-common v5: TESLA_MARK 字标常量在此
                    ("js/view/groups-page.js", 8),       # v8: 每次进都重拉 (明细页会改分组; v7 bindGestures 回 drawer)
-                   ("js/view/group-trips-page.js", 1),  # v1: 分组明细页底座 (3.10.0, 新建)
+                   ("js/view/group-trips-page.js", 2),  # v2: 入口挪弹层底行 (v1 头部版未出批)
                    ("js/view/group-trips-stream.js", 1),  # v1: 分组明细页流 (3.10.0, 新建)
                    ("js/view/changelog-view.js", 4),    # bindGestures 回 drawer
                    ("js/view/trips-list-page.js", 7),   # bindGestures 回 drawer

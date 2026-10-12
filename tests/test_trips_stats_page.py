@@ -109,10 +109,15 @@ def test_stats_pager_css(auth):
         "flex: 1; min-height: 0; display: flex;",
         "padding: 10px 20px calc(env(safe-area-inset-bottom) + 8px);",
         # 弹层底一行 (2026-09-23 用户点名: 页标题 + iOS 桌面同款白点页标;
-        # 2026-09-24 点名竖排: 圆点在上标题在下, 点整块切下一页 → cursor)
-        ".tp-foot { flex: none; display: flex; flex-direction: column; align-items: center;",
-        "justify-content: center; gap: 6px; padding: 8px 0 2px;",
+        # 2026-09-24 点名竖排: 圆点在上标题在下, 点整块切下一页 → cursor;
+        # 3.10.0 外层横排 .tp-foot-row: 页标区居中 + 「详细行程」入口并排
+        # 右侧 (分组打开的弹层才有; 入口藏起时布局与旧版分毫不差))
+        ".tp-foot-row { flex: none; display: flex; align-items: center; justify-content: center;",
+        "gap: 28px; padding: 8px 0 2px; }",
+        ".tp-foot { display: flex; flex-direction: column; align-items: center;",
+        "justify-content: center; gap: 6px;",
         "cursor: pointer; -webkit-tap-highlight-color: transparent; }",
+        ".tp-foot-act { flex: none; font-size: 14px; font-weight: 600; color: var(--blue);",
         # 页标文字是页面标题不是脚注 (2026-09-24 用户点名放大: 12→14 加粗)
         ".tp-foot-lb { font-size: 14px; font-weight: 600; color: var(--ink-2); }",
         ".tp-dots {",

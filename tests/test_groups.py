@@ -83,30 +83,35 @@ def test_groups_card_span_not_clipped(auth):
 def test_group_trips_view_skeleton(auth):
     """分组明细视图骨架 (3.10.0): 分组点开后的二级页 —— 组内外行程一列
     (返回钮/两端加载提示行/转圈/错误重试), 不进抽屉菜单 (零历史路由, ‹ 回
-    分组列表); 合并弹层头部挂「详细行程」入口 (右键钮包 .sh-head-btns,
-    头部两栏网格塞不下第三颗裸按钮)。"""
+    分组列表); 弹层底行挂「详细行程」入口 (用户点名跟行驶轨迹/行驶数据/
+    行驶统计三个页标题并列, 不放右上角头部 —— 外层 .tp-foot-row 横排,
+    入口是页标区的兄弟节点, 点击不冒进 #tp-foot 的切页监听)。"""
     html = served_page(auth, SHELL)
     for frag in ['data-view="group-trips"', 'id="gtr-back"', 'id="gtr-name"',
                  'id="gtr-count"', 'id="gtr-top"', 'id="gtr-list"',
                  'id="gtr-tail"', 'id="gtr-spin"', 'id="gtr-errbox"',
                  'id="gtr-retry"', 'aria-label="返回分组列表"',
-                 'id="sh-group-btn"', ">详细行程</button>", 'class="sh-head-btns"',
+                 'class="tp-foot-act" id="sh-group-btn"', '>详细行程</button>',
+                 'class="tp-foot-row"',
                  'css/tesla-group-trips.css?v=1',
-                 '<script src="/tesla/static/js/view/group-trips-page.js?v=1"></script>',
+                 '<script src="/tesla/static/js/view/group-trips-page.js?v=2"></script>',
                  '<script src="/tesla/static/js/view/group-trips-stream.js?v=1"></script>']:
         assert frag in html, f"分组明细视图缺少 {frag}"
+    # 入口在弹层底行页标区之后 (并排右侧), 头部只有驾驶员一颗按钮
+    assert html.index('id="tp-foot"') < html.index('id="sh-group-btn"')
+    assert "sh-head-btns" not in html
     # 二级页不进抽屉菜单 (入口只有弹层按钮)
     drawer_js = auth.get("/tesla/static/js/tesla-drawer.js").text
     assert '"group-trips"' not in drawer_js
 
 
 def test_group_trips_view_interactions(auth):
-    """分组明细视图脚本 (3.10.0): 弹层「详细行程」带 gid 跳明细页 (载荷只
+    """分组明细视图脚本 (3.10.0): 弹层底行「详细行程」带 gid 跳明细页 (载荷只
     有分组页打开才有 gid —— 多选合并/深链没有, 按钮整颗藏); 默认窗口 =
     组内全部时间正序; 顶部下拉加载更前 (prepend 后 scrollTop 回补不跳位,
     ptr 提示字进页换「松开加载更早」), 尾部触底 IO 加载更后 (链式续载);
     就地加入/移出只翻已加载行 (changed 集合 + 端点重判), 不整页重拉。"""
-    page_js = auth.get("/tesla/static/js/view/group-trips-page.js?v=1").text
+    page_js = auth.get("/tesla/static/js/view/group-trips-page.js?v=2").text
     for frag in ['function openGroupTrips(gid)', 'navigate("group-trips")',
                  'if (!gtrGid) { navigate("groups"); return; }',   # 恢复停留没上下文: 弹回分组列表
                  'if (curKey != null) closeTrip();',

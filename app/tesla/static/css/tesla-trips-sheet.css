@@ -120,10 +120,6 @@
   flex: none; max-width: 40vw; justify-self: end;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* 右上角按钮组 (3.10.0): 「详细行程」+ 驾驶员两颗同排 —— 头部网格只有
-   两栏 (minmax(0,1fr) auto), 第三颗裸塞会折行挤垮头部; 包一层 flex
-   容器占住 auto 栏, justify-self 挪到这层 (按钮自身的不再生效也无妨) */
-.sh-head-btns { display: flex; align-items: center; gap: 8px; justify-self: end; }
 .sh-cells {   /* 数字带 = 轨迹页自己的一行 (2026-09-27 用户点名三页独立:
   布局恒定 —— 地图/图卡大小全程不变; 2026-09-25 三页等高修平时曾挪出分页
   当公共带 + 二三页整带收放, 带子一收一还地图就变一次大小 ——
@@ -172,9 +168,19 @@
    点; 2026-09-24 用户点名竖排 (圆点在上标题在下) + 点整块切下一页 (末
    页绕回第一页); 同日用户点名标题字放大 (12→14px 加粗 —— 它是页面
    标题, 不是脚注) */
-.tp-foot { flex: none; display: flex; flex-direction: column; align-items: center;
-           justify-content: center; gap: 6px; padding: 8px 0 2px;
+/* 弹层底一行 (2026-09-23 用户点名: 页标题 + iOS 桌面同款白点页标;
+   2026-09-24 点名竖排: 圆点在上标题在下, 点整块切下一页 → cursor);
+   3.10.0 外层改横排 .tp-foot-row —— 页标区照旧居中, 右侧并排「详细
+   行程」入口 (分组页打开的弹层才有, 用户点名跟三个页标题并列, 不放
+   右上角头部); 入口藏起时只剩页标区, 布局与旧版分毫不差 */
+.tp-foot-row { flex: none; display: flex; align-items: center; justify-content: center;
+               gap: 28px; padding: 8px 0 2px; }
+.tp-foot { display: flex; flex-direction: column; align-items: center;
+           justify-content: center; gap: 6px;
            cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.tp-foot-act { flex: none; font-size: 14px; font-weight: 600; color: var(--blue);
+               padding: 6px 10px; border-radius: 999px; }
+.tp-foot-act:active { opacity: .6; }
 .tp-foot-lb { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .tp-dots { flex: none; display: inline-flex; align-items: center; gap: 5px; }
 .tp-dots i { width: 6px; height: 6px; border-radius: 50%;

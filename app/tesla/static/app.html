@@ -30,7 +30,7 @@
 <link rel="stylesheet" href="/tesla/static/css/tesla-changelog.css?v=2">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-page.css?v=6">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-cards.css?v=2">
-<link rel="stylesheet" href="/tesla/static/css/tesla-trips-sheet.css?v=32">
+<link rel="stylesheet" href="/tesla/static/css/tesla-trips-sheet.css?v=33">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-playback.css?v=9">
 <link rel="stylesheet" href="/tesla/static/css/tesla-map-page.css?v=4">
 <link rel="stylesheet" href="/tesla/static/css/tesla-map-canvas.css?v=22">
@@ -966,13 +966,7 @@
          高速费行先撤掉 (后端估价与存量照留) -->
     <div class="sh-head sheet-drag">
       <div class="sh-title"><span id="sh-date">–</span><span class="sh-sub" id="sh-time"></span></div>
-      <!-- 右上角按钮组 (3.10.0 起两颗): 详细行程 (分组页打开的合并弹层才有,
-           点开分组明细页) + 驾驶员。包一层 .sh-head-btns —— 头部是两栏网格
-           (1fr auto), 裸塞第三颗按钮会换行挤垮头部 -->
-      <div class="sh-head-btns">
-        <button type="button" class="sh-drv" id="sh-group-btn" hidden>详细行程</button>
-        <button type="button" class="sh-drv" id="sh-drv-btn" aria-label="切换驾驶员" hidden></button>
-      </div>
+      <button type="button" class="sh-drv" id="sh-drv-btn" aria-label="切换驾驶员" hidden></button>
     </div>
     <!-- 地图↔动态↔统计横滑分页 (2026-09-22 用户点名「往左划显示行程统计
          页面」→ 后点名「统计改成动态, 整个页面都换掉」): 原生 snap 滚动,
@@ -1065,10 +1059,15 @@
       <!-- 弹层底一行 (2026-09-23 用户点名: 最下方的空白放当前页标题 +
            白点页标, 类似 iOS 桌面的白点): 轨迹页「行驶轨迹」/ 动态页
            「行驶数据」/ 统计页「行驶统计」, 三枚圆点亮当前页; 2026-09-24
-           点名竖排 (圆点在上标题在下) 且点整块切下一页 (末页绕回) -->
-      <div class="tp-foot" id="tp-foot">
-        <span class="tp-dots" id="tp-dots"><i class="on"></i><i></i><i></i></span>
-        <span class="tp-foot-lb" id="tp-foot-lb">行驶轨迹</span>
+           点名竖排 (圆点在上标题在下) 且点整块切下一页 (末页绕回);
+           3.10.0 外层改横排, 页标区右侧并排「详细行程」入口 (分组页打开
+           的弹层才有; 用户点名跟三个页标题并列, 不放右上角头部) -->
+      <div class="tp-foot-row">
+        <div class="tp-foot" id="tp-foot">
+          <span class="tp-dots" id="tp-dots"><i class="on"></i><i></i><i></i></span>
+          <span class="tp-foot-lb" id="tp-foot-lb">行驶轨迹</span>
+        </div>
+        <button type="button" class="tp-foot-act" id="sh-group-btn" hidden>详细行程</button>
       </div>
     </div>
   </div>
@@ -1123,7 +1122,7 @@
 <script src="/tesla/static/js/view/trips-stats-charts.js?v=12"></script>
 <script src="/tesla/static/js/view/battery-page.js?v=2"></script>
 <script src="/tesla/static/js/view/groups-page.js?v=8"></script>
-<script src="/tesla/static/js/view/group-trips-page.js?v=1"></script>
+<script src="/tesla/static/js/view/group-trips-page.js?v=2"></script>
 <script src="/tesla/static/js/view/group-trips-stream.js?v=1"></script>
 <script src="/tesla/static/js/view/changelog-view.js?v=4"></script>
 <script src="/tesla/static/js/view/trips-list-page.js?v=7"></script>
