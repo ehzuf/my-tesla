@@ -1,4 +1,5 @@
 """设置 API: 地图配置 + 驾驶员管理 (自有库; 驾驶员 CRUD 在 drivers_store)。"""
+import logging
 import threading
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -11,6 +12,10 @@ from ...schemas import OkResponse
 
 
 settingsapi = APIRouter(prefix="/tesla/api")
+
+# 蹭 uvicorn 的输出道: app 自身没有日志配置, 挂这里日志才落 nas-run.log
+# (跟访问日志同屏, 2026-10-12 向导验证排障用)
+_log = logging.getLogger("uvicorn.error")
 
 
 @settingsapi.get("/settings")
@@ -41,6 +46,12 @@ def test_settings_tmdb(body: TmdbTestIn,
     """首启引导数据源步「测试连接」: 候选实测 (空字段回落现值), 不落库
     不换引擎 —— 通过了前端才解锁「下一步」。"""
     ok, detail = settings_store.test_tmdb(own, body)
+    # 排障日志: 浏览器到底送了什么候选 + 实测结果 (密码永不入日志; 空字段
+    # 实际回落的服务端现值, 报错详情里带的地址就是它实际连的)
+    _log.info("引导测试连接: host=%s port=%s user=%s name=%s -> ok=%s (%s)",
+              body.tmdb_host or "(空=现值)", body.tmdb_port or "(空=现值)",
+              body.tmdb_user or "(空=现值)", body.tmdb_name or "(空=现值)",
+              ok, detail)
     return TmdbTest(ok=ok, detail=detail)
 
 
