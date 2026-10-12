@@ -85,6 +85,12 @@ def test_sheets_open_state_transform_none(auth):
                 "#place-sheet.show", "#placed-sheet.show"):
         assert f"{sel} {{ transform: none; }}" in page, f"{sel} 开态不是 none"
     assert "transform: translateY(0); }" not in page, "有弹层开态仍是 translateY(0)"
+    # 屏外藏层只许「出列」不许「露屏」(3.10.0 大屏一列当夜桌面实报: 每页
+    # 右侧漏地点详情/改名) —— placed 右滑页 translateX(100%) 在宽视口上
+    # 仍在屏内, #shell 收口 overflow:hidden 把 fixed 子孙裁在列缘 (手机上
+    # 列=屏, 裁剪缘=屏缘与原视口裁剪等价)
+    i = page.index("#shell {")
+    assert "overflow: hidden" in page[i:page.index("}", i)], "#shell 没收口"
 
 
 def test_sheets_height_consume_shell_h(auth):

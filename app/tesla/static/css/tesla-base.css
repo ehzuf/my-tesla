@@ -88,13 +88,19 @@ img { display: block; }
    照手机布局做」, 不再控件糊满全屏。transform 造包含块: 壳内 fixed 件
    (抽屉/悬浮键/筛选条/弹层/toast) 全锚到列内而非整个视口; 手机上列宽
    = 屏宽, 几何分毫不动。列外就是 body 底色。坐标换算的 js 侧: 左缘呼
-   出带 (tesla-drawer drawerEdgeX) 与筛选弹层锚定 (tesla-filter-bar)。 */
+   出带 (tesla-drawer drawerEdgeX) 与筛选弹层锚定 (tesla-filter-bar)。
+   列上必须收口 (overflow: hidden): 屏外隐藏层 (#placed-sheet 右滑页
+   translateX(100%) / 抽屉 translateX(-100%)) 只是「出了列」, 宽视口上
+   列外仍是屏内 —— 桌面 Chrome 每页右侧漏出地点详情/改名就是这病 (3.10.0
+   部署当晚用户点名); transform 后 fixed 子孙归列管, 列缘一裁, 手机上
+   裁剪缘=屏缘与原视口裁剪等价。 */
 #shell {
   flex: 1; width: 100%; min-height: 0;   /* 接管 body 原来的 flex 列:
      main 的 flex:1 与底部让位都在列内照旧 */
   max-width: 480px; margin: 0 auto;
   display: flex; flex-direction: column;
   position: relative;
+  overflow: hidden;                       /* 列缘收口: 屏外层只许出列, 不许露屏 */
   transform: translateZ(0);              /* 包含块: fixed 子孙锚列内 */
 }
 

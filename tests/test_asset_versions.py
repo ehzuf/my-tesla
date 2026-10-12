@@ -120,7 +120,10 @@ def test_guard_assets_versioned_on_shell(auth):
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
-                   ("css/tesla-base.css", 11),          # v11: 大屏手机一列 (#shell 480px 居中
+                   ("css/tesla-base.css", 12),          # v12: 列上收口 overflow:hidden —— 屏外层
+                                                         #   (placed-sheet/抽屉) 宽屏只出列不出
+                                                         #   视口, 桌面每页右侧漏地点详情/改名;
+                                                         #   v11: 大屏手机一列 (#shell 480px 居中
                                                          #   + transform 造包含块 + toast 列内口径);
                                                          #   v10: 菜单键挪左下角 + 开抽屉藏键;
                                                          #   v9: 全局悬浮菜单键 #menu-fab (Safari
