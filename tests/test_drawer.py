@@ -33,13 +33,15 @@ def _nav_groups(js):
 def test_drawer_anatomy(auth):
     """左抽屉: 蒙版 + 本体 (内容宽 min(180px, 88vw) —— 两轮收窄, 刚够排
     下最长标签), 纯导航 —— 只有 #drw-nav 一个孩子。菜单圆键 2026-09-27
-    退役 (用户点名「设置按钮就不需要了」—— 任意页右划/地图左缘条都能
-    呼出抽屉)。刷新按钮不回潮 (每个视图都能下拉刷新, 是冗余入口)。"""
+    退役, 2026-10-12 以独立悬浮键 #menu-fab 复活 (Safari 左缘右划是系统
+    后退手势, 边缘呼出在 Safari 用不了); 旧名 menu-key 是进 #bar-row 的
+    旧机制, 不许回潮 (新键不动任何现有控件布局)。刷新按钮不回潮 (每个
+    视图都能下拉刷新, 是冗余入口)。"""
     page = served_page(auth, SHELL)
     for token in ('id="drawer-mask"', '<aside id="drawer"',
                   'class="drw-nav" id="drw-nav"', 'id="bar-row"'):
         assert token in page, f"抽屉骨架缺 {token}"
-    assert 'id="menu-key"' not in page and "#menu-key {" not in page   # 圆键退役
+    assert 'id="menu-key"' not in page and "#menu-key {" not in page   # 旧圆键不回潮
     assert page.index('id="fb-pop"') < page.index('id="drawer-mask"')   # 层序
     i = page.index("\n#drawer {")   # 行首锚: 避开 base.css 的 layer-anim 选择器
     block = page[i:page.index("}", i)]
@@ -77,19 +79,45 @@ def test_nav_groups_match_dom(auth):
 # ---------------------------------------------------------------- 开合与拖拽
 def test_drawer_open_close_wiring(auth):
     """开合两路: 点蒙版收 / Esc 收 (剥层链中环, 关了就
-    stopImmediatePropagation 拦住往下传); 开 = 任意页右划 (地图页左缘条,
-    菜单圆键 2026-09-27 退役后唯一呼出入口)。开抽屉顺带收筛选弹层。"""
+    stopImmediatePropagation 拦住往下传); 开 = 全局悬浮菜单键 #menu-fab
+    (2026-10-12 复活: Safari 左缘右划是系统后退, 边缘呼出在 Safari 用不
+    了) + 任意页右划 (地图页左缘条)。开抽屉顺带收筛选弹层。"""
     js = _js(auth, DRAWER_JS)
     for frag in ('$("#drawer-mask").addEventListener("click", closeDrawer)',
                  'if (e.key !== "Escape" || !drawerShown) return;',
                  "e.stopImmediatePropagation();", "closeFbPop();"):
         assert frag in js, f"开合接线缺 {frag}"
-    assert '$("#menu-key")' not in js, "菜单圆键接线没拆干净"
+    assert '$("#menu-fab").addEventListener("click", openDrawer);' in js
+    assert '$("#menu-key")' not in js, "旧圆键接线不许回潮 (新键是 #menu-fab)"
     # Esc 链挂载顺序: 详情链 (视图脚本加载期) → 抽屉 → 筛选弹层 —— 一层
     # Esc 只关一层, bootDrawer 必须先于 bindFilterBar 挂
     boot = _js(auth, "js/tesla-app-boot.js")
     assert boot.index("bootDrawer();") < boot.index("bindFilterBar();")
     assert "→ 抽屉 → 筛选弹层" in boot
+
+
+def test_menu_fab_floating(auth):
+    """全局悬浮菜单键 (2026-10-12): 独立悬浮 —— 不进 #bar-row, 不动
+    no-chips/no-bar 几何 (用户口径「不改变任何界面的控件布局」); fixed
+    右下角踩 --bar-clear (no-bar 视图自动落低), 地图双页 main:has 让位
+    抬高一档 (避开足迹地图回放条/充电地图 pills 行, 纯 CSS 不给 navigate
+    加钩子); 层序 --z-bar, 弹层/蒙版都在上面盖住它, 不用自己管藏显。"""
+    page = served_page(auth, SHELL)
+    assert page.count('id="menu-fab"') == 1                    # 全壳唯一
+    assert '<button type="button" id="menu-fab" aria-label="打开菜单">' in page
+    assert page.index('id="menu-fab"') < page.index('<div id="bar-row">')  # 条外
+    i = page.index("#menu-fab {")
+    block = page[i:page.index("}", i)]
+    for frag in ("position: fixed", "right: 14px",
+                 "bottom: calc(var(--bar-clear) + 12px)",
+                 "z-index: var(--z-bar)", "width: var(--bar-h)"):
+        assert frag in block, f"悬浮键几何缺 {frag}"
+    assert "main:has(#view-map:not([hidden])) ~ #menu-fab" in page
+    assert "main:has(#view-chargemap:not([hidden])) ~ #menu-fab" in page
+    assert "bottom: calc(var(--bar-clear) + 70px);" in page    # 地图双页让位
+    assert "body.layer-anim #menu-fab," in page                # 磨砂幽灵收编
+    # 不掺和屏底条几何: no-chips/no-bar 机制原样 (钉在 test_global_chips_retired)
+    assert 'document.body.classList.toggle("no-bar", noChips);' in page_js(auth, SHELL)
 
 
 def test_drawer_drag_wiring(auth):
@@ -198,10 +226,11 @@ def test_boot_default_live(auth):
 
 def test_selecting_hides_bottom_stack(auth):
     """多选态藏屏底悬浮条 (#bar-row, 圆键退役后只剩筛选条) —— selbar 占
-    屏底槽; 磨砂幽灵对策 (layer-anim) 两选择器 (筛选条/抽屉)。"""
+    屏底槽 (悬浮菜单键 #menu-fab 在条上方一档, 不与 selbar 重叠, 不用
+    藏); 磨砂幽灵对策 (layer-anim) 三选择器 (悬浮键/筛选条/抽屉)。"""
     page = served_page(auth, SHELL)
     assert "body.selecting #bar-row { display: none; }" in page
-    for sel in ("#filter-bar,", "#drawer {"):
+    for sel in ("#menu-fab,", "#filter-bar,", "#drawer {"):
         assert f"body.layer-anim {sel}" in page
 
 

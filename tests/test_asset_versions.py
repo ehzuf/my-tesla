@@ -116,7 +116,9 @@ def test_guard_assets_versioned_on_shell(auth):
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
-                   ("css/tesla-base.css", 8),           # v8: --content-top 落全局上边界 --top-clear
+                   ("css/tesla-base.css", 9),           # v9: 全局悬浮菜单键 #menu-fab (Safari
+                                                         #   左缘右划=系统后退, 边缘呼出失效);
+                                                         #   v8: --content-top 落全局上边界 --top-clear
                                                          # (状态页顶进模糊地带修掉, 全 app 标题
                                                          # 同一水平线, music 同款)
                                                          # + 菜单圆键退役后无 chips 视图底部让位收起
@@ -154,7 +156,8 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   补进族规则 (v8: 左缘边条 40px)
                    ("js/tesla-navigation.js", 4),       # v4: 足迹地图闸 (navigate 拦旁路);
                                                          #   v3: 视图直挂 hidden + 冷启首跳藏净
-                   ("js/tesla-drawer.js", 11),          # v11: 左缘右划统一呼出
+                   ("js/tesla-drawer.js", 12),          # v12: 悬浮菜单键 #menu-fab 接线;
+                                                         #   v11: 左缘右划统一呼出
                                                          #   (bindDrawerEdge 壳级
                                                          #   document 捕获段,
                                                          #   所有页面通用);

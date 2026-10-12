@@ -119,10 +119,39 @@ main {
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ---------- 全局悬浮菜单键 (2026-10-12) ----------
+   Safari 左缘右划是系统后退手势, 边缘呼出抽屉在 Safari 用不了 —— 独立
+   悬浮键兜底, 任何视图常驻 (点击开抽屉, 接线在 tesla-drawer)。刻意不进
+   #bar-row 也不动 no-chips/no-bar 几何 (用户口径: 全局悬浮, 不改变任何
+   现有控件布局): fixed 挂右下角, 底距踩 --bar-clear (no-bar 视图自动落
+   低), 层序 --z-bar —— 筛选弹层/抽屉蒙版/全屏弹层都在它上面, 盖住即
+   不可点, 不用自己管藏显。地图双页让位: 足迹地图屏底是回放条 (行尾有
+   驾驶员筛选 chip), 充电地图脚下是居中 pills 行 (窄屏右端贴边) ——
+   main:has 看当前视图 (纯 CSS, 不给 navigate 加钩子) 抬高一档避开。 */
+#menu-fab {
+  position: fixed; right: 14px; bottom: calc(var(--bar-clear) + 12px);
+  z-index: var(--z-bar);
+  width: var(--bar-h); height: var(--bar-h); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-1);
+  background: rgba(44,44,46,.7);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  transform: translateZ(0);   /* 自家合成层: 邻居层动起来时防复印 */
+}
+#menu-fab:active { transform: translateZ(0) scale(.92); }
+main:has(#view-map:not([hidden])) ~ #menu-fab,
+main:has(#view-chargemap:not([hidden])) ~ #menu-fab {
+  bottom: calc(var(--bar-clear) + 70px);   /* 抬过回放条/pills 行 */
+}
+
 /* ---------- 层运动反制 (frosted-ghost) ----------
-   层动起来时变换层会从 fixed+磨砂件 (筛选条/抽屉) 底下扫过 —— WebKit 吐
-   重影的配方; 对策 = 运动期暂撤磨砂换实底 (tesla-common.js 的 layerMotion
-   管加类, 停稳自摘), music 同款。 */
+   层动起来时变换层会从 fixed+磨砂件 (筛选条/悬浮菜单键/抽屉) 底下扫过
+   —— WebKit 吐重影的配方; 对策 = 运动期暂撤磨砂换实底
+   (tesla-common.js 的 layerMotion 管加类, 停稳自摘), music 同款。 */
+body.layer-anim #menu-fab,
 body.layer-anim #filter-bar,
 body.layer-anim #drawer {
   -webkit-backdrop-filter: none;

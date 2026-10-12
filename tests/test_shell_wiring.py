@@ -27,14 +27,16 @@ def test_unauth_redirected_to_login(client):
 def test_shell_skeleton(auth):
     """壳骨架: 12 视图直挂 main + 顶带留白 + 各固定层的标记都在
     (3.3.0 定稿: 筛选条 + 左抽屉; tab-dock 整编退役; 菜单圆键 2026-09-27
-    退役 —— 边缘右划呼出抽屉全覆盖, 用户点名撤)。"""
+    退役, 2026-10-12 以独立悬浮键 #menu-fab 复活 —— Safari 左缘右划是
+    系统后退手势, 边缘呼出在 Safari 用不了)。"""
     html = auth.get(SHELL).text
     for token in ('id="top-clear-probe"', 'id="view-charging"',
                   'data-view="charging"', 'id="filter-bar"',
                   'id="fb-pop"',
-                  'id="drawer-mask"', '<aside id="drawer"', 'id="toast"'):
+                  'id="drawer-mask"', '<aside id="drawer"', 'id="toast"',
+                  'id="menu-fab"'):
         assert token in html, f"壳缺骨架标记 {token}"
-    assert 'id="menu-key"' not in html, "菜单圆键回潮了 (边缘右划已全覆盖)"
+    assert 'id="menu-key"' not in html, "旧圆键 (进 bar-row) 不许回潮 (新键 #menu-fab 独立悬浮)"
     # tab-dock 时代的标记不许回潮 (底部常驻页签/组包裹/二级横滑)
     for gone in ('id="tab-dock"', 'class="tab-group"', 'class="sub-pager"',
                  'class="sub-tabs"', "tesla-tab-dock", "syncTabDock"):
