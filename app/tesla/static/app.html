@@ -26,7 +26,7 @@
 <link rel="stylesheet" href="/tesla/static/css/tesla-charging-sheet.css?v=11">
 <link rel="stylesheet" href="/tesla/static/css/tesla-stats.css?v=11">
 <link rel="stylesheet" href="/tesla/static/css/tesla-groups.css?v=10">
-<link rel="stylesheet" href="/tesla/static/css/tesla-group-trips.css?v=4">
+<link rel="stylesheet" href="/tesla/static/css/tesla-group-trips.css?v=5">
 <link rel="stylesheet" href="/tesla/static/css/tesla-changelog.css?v=2">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-page.css?v=6">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-cards.css?v=2">
@@ -1039,11 +1039,6 @@
              「取消/确认」落定才写库。id 加 gtr- 前缀。 -->
         <section class="tp-gtr" id="tp-gtr" hidden>
           <div class="gtr-scroll" id="gtr-scroll">
-            <div class="gtr-head">
-              <span class="gtr-name" id="gtr-name">分组行程</span>
-              <span class="count-badge" id="gtr-count"></span>
-            </div>
-            <div class="gtr-tip">组内行程时间正序 · 两端拉动可加载相邻行程</div>
             <div class="gtr-top" id="gtr-top" hidden>下拉加载更早的行程</div>
             <div class="gtr-list" id="gtr-list"></div>
             <div class="gtr-tail" id="gtr-tail" hidden>上拉加载更后的行程</div>
@@ -1053,12 +1048,11 @@
               <button type="button" class="retry" id="gtr-retry">重试</button>
             </div>
           </div>
-          <!-- 标记条: 有标记才亮 (浮在页底, 长列表滚到底也够得着) ——
-               取消整批撤销 / 确认一次提交 -->
-          <div class="gtr-bar" id="gtr-bar" hidden>
-            <span class="gtr-bar-lb" id="gtr-bar-lb"></span>
+          <!-- 底部常驻「取消/确定」: 进入即多选打钩态 (钩 = 分组成员, 组内
+               默认全钩; 点行打/撤钩不写库) —— 取消整批回原样, 确定一次落定 -->
+          <div class="gtr-bar" id="gtr-bar">
             <button type="button" class="gtr-bar-no" id="gtr-cancel">取消</button>
-            <button type="button" class="gtr-bar-ok" id="gtr-ok">确认</button>
+            <button type="button" class="gtr-bar-ok" id="gtr-ok">确定</button>
           </div>
         </section>
       </div>
@@ -1124,8 +1118,8 @@
 <script src="/tesla/static/js/view/trips-stats-charts.js?v=12"></script>
 <script src="/tesla/static/js/view/battery-page.js?v=2"></script>
 <script src="/tesla/static/js/view/groups-page.js?v=9"></script>
-<script src="/tesla/static/js/view/group-trips-stream.js?v=3"></script>
-<script src="/tesla/static/js/view/group-trips-marks.js?v=3"></script>
+<script src="/tesla/static/js/view/group-trips-stream.js?v=4"></script>
+<script src="/tesla/static/js/view/group-trips-marks.js?v=4"></script>
 <script src="/tesla/static/js/view/changelog-view.js?v=4"></script>
 <script src="/tesla/static/js/view/trips-list-page.js?v=7"></script>
 <script src="/tesla/static/js/view/trips-list-url.js?v=2"></script>

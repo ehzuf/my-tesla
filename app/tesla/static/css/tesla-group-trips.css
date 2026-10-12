@@ -3,9 +3,9 @@
    枚页标由 trips-sheet-stats 挂上/摘下), 组内外行程一列时间正序。卡片
    骨架复用 tesla-trips-cards 的 .card-t/.ct-* (与分组列表页同法), 这里
    只补第四页自己的件: 页本体 (竖向长列表 —— 手势放行双轴: 横给分页器
-   滚页, 竖给列表滚)/ 组外行降透明 / 组内徽标 / 加移标记大按钮 (车机触
-   屏, 目标 44px) / 两端加载提示行 / 页底「取消/确认」标记条。
-   设计令牌与 .spin/.err-box/.count-badge 在 tesla-groups.css (壳内同一套)。 */
+   滚页, 竖给列表滚)/ 选圈 (进入即多选态, 钩 = 分组成员, 行程列表多选
+   同款几何)/ 未选行降透明 / 页底常驻「取消/确定」落定条。
+   设计令牌与 .spin/.err-box 在 tesla-groups.css (壳内同一套)。 */
 
 /* 页本体: 与 tp-stats/tp-hist 同为分页器整页 (整页宽 + snap 对齐), 但装
    的是竖向长列表 —— 自己滚; 手势放行双轴 (pan-x pan-y): 横滑交分页器
@@ -22,53 +22,41 @@
   -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;
 }
 
-/* 页内头行: 分组名 + 段数 (弹层头部也有名字, 这里再带上是翻过三页后的
-   落点上下文; 段数确认保存后跟着新) */
-.gtr-head { display: flex; align-items: baseline; gap: 8px; padding: 10px 16px 0; }
-.gtr-name { font-size: 17px; font-weight: 600; color: var(--ink-1); }
-
-/* 顶部口径说明 (一行小字) */
-.gtr-tip { padding: 2px 16px 6px; font-size: 12.5px; color: var(--ink-3); }
-
-/* 列表: 间距与分组列表同款; 底衬垫高给浮着的标记条留位 (有标记才亮,
-   没有标记时多点空白无妨 —— 滚到底的内容不被遮) */
+/* 列表: 间距与分组列表同款; 底衬垫高给常驻落定条留位 (滚到底的内容
+   不被遮) */
 .gtr-list { display: flex; flex-direction: column; gap: 10px;
   padding: 8px 14px calc(env(safe-area-inset-bottom) + 88px); }
 
 /* 两端加载提示行 (顶部下拉/尾部上拉的静态引导, JS 控显隐与文案) */
 .gtr-top, .gtr-tail { text-align: center; font-size: 12px; color: var(--ink-3); }
 
-/* 组外行整体降透明 (卡片骨架照常, 一眼分清组内外) */
-.gtr-row:not(.in) .ct-top,
-.gtr-row:not(.in) .ct-cells,
-.gtr-row:not(.in) .ct-addr { opacity: .45; }
-
-/* 整行可点 (点行 = 打/撤标记, 与全 app 列表行同一习惯): 给指针/按压
+/* 整行可点 (点行 = 打/撤钩, 与全 app 列表行同一习惯): 给指针/按压
    反馈, 没反馈用户以为点不了 */
 .gtr-row { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .gtr-row:active { opacity: .7; }
 
-/* 组内徽标 (顶行右侧, 行程卡驾驶员 pill 同款小 pill, 蓝底示组内) */
-.gtr-badge {
-  flex: none; font-size: 10.5px; color: #7db3f0;
-  background: rgba(57,135,229,.16); padding: 2.5px 9px; border-radius: 999px;
+/* 未选行整体降透明 (卡片骨架照常, 钩一眼分清选没选) */
+.gtr-row:not(.in) .ct-top,
+.gtr-row:not(.in) .ct-cells,
+.gtr-row:not(.in) .ct-addr { opacity: .45; }
+
+/* 选圈 (行右上, 行程列表多选同款几何): 进入即多选态, 钩 = 分组成员
+   —— 组内行默认全钩; 未选空圈, 选中蓝底白钩 */
+.gtr-row .pick {
+  display: inline-block; flex: none; width: 22px; height: 22px;
+  border-radius: 50%; border: 1.5px solid rgba(255,255,255,.25);
+  box-sizing: border-box;
+}
+.gtr-row.in { border-color: rgba(57,135,229,.55); background: #20242b; }
+.gtr-row.in .pick { border-color: var(--blue); background: var(--blue); }
+.gtr-row.in .pick::after {
+  content: ""; display: block; width: 9px; height: 5px; margin: 5px auto 0;
+  border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+  transform: rotate(-45deg);
 }
 
-/* 加/移标记: 整行都是点击目标 (车里点按, 行本身就够大); 按钮是当前动作
-   的可视提示 —— 加入 = 蓝实底主操作, 移出 = 红底纹弱一档 (组内两端行
-   才有, 中间行点了行会提示为什么移不得)。点的是标记不是写库, 落定在
-   页底标记条 */
-.gtr-acts { display: flex; margin-top: 9px; }
-.gtr-add, .gtr-rm {
-  flex: 1; min-height: 44px; border-radius: 12px; font-size: 14px; font-weight: 600;
-}
-.gtr-add { color: #fff; background: var(--blue); }
-.gtr-add:active { opacity: .75; }
-.gtr-rm { color: #ff6961; background: rgba(255,105,97,.12); }
-.gtr-rm:active { opacity: .75; }
-
-/* 标记条: 有标记才亮, 浮在页底 (长列表滚不到底也够得着); 取消 = 弱一档
-   的次要操作, 确认 = 蓝实底主操作, 都是大按钮 */
+/* 落定条: 常驻浮在页底 (长列表滚不到底也够得着); 取消 = 弱一档的次要
+   操作, 确定 = 蓝实底主操作, 都是大按钮, 平分整条 */
 .gtr-bar {
   position: absolute; left: 14px; right: 14px;
   bottom: calc(env(safe-area-inset-bottom) + 10px); z-index: 5;
@@ -76,9 +64,8 @@
   padding: 10px 12px; border-radius: 16px;
   background: var(--surface-2); border: 1px solid var(--hairline);
 }
-.gtr-bar-lb { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-2); }
 .gtr-bar-no, .gtr-bar-ok {
-  flex: none; min-width: 72px; min-height: 44px; border-radius: 12px;
+  flex: 1; min-height: 44px; border-radius: 12px;
   font-size: 14px; font-weight: 600;
 }
 .gtr-bar-no { color: var(--ink-2); background: rgba(235,235,245,.1); }

@@ -95,7 +95,9 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # + v9: 名字图加高; v10: ts-loc 340 (全量出柱)
                    ("css/tesla-groups.css", 10),  # v10: 破缓存批 (见上); v9: sec-head 顶距 0 + 跨度格字号特异性真收一档
                                                  # + 斜杠断行保底
-                   ("css/tesla-group-trips.css", 4),  # v4: 破缓存批 (见上); v3: 整行可点反馈 (v2 第四页版;
+                   ("css/tesla-group-trips.css", 5),  # v5: 进页即多选 (右上选圈, 未选降透明;
+                                                         # 页头/说明/行内按钮撤净, 底条常驻取消/确定);
+                                                         # v4: 破缓存批; v3: 整行可点反馈 (v2 第四页版;
                                                          # v1 二级页版已出批)
                    ("css/tesla-changelog.css", 2),
                    ("css/tesla-trips-page.css", 6),      # v6: sec-head 顶距 0 (标题统一一条线)
@@ -230,9 +232,12 @@ def test_guard_assets_versioned_on_shell(auth):
                                                           # v12: pill 换回最右 (卡右上角), 字标居其左
                                                           # + tesla-common v5: TESLA_MARK 字标常量在此
                    ("js/view/groups-page.js", 9),       # v9: 破缓存批 (见上); v8: 每次进都重拉 (明细页会改分组; v7 bindGestures 回 drawer)
-                   ("js/view/group-trips-stream.js", 3),  # v3: 破缓存批 (见上); v2: 第四页版 (gtrStart/gtrLoad 复位标记);
+                   ("js/view/group-trips-stream.js", 4),  # v4: 钩集住这 (gtrSel/gtrResetSel, 组内全钩起步)
+                                                          # + 行渲染选圈 (页头/加移按钮撤); v3: 破缓存批;
+                                                          # v2: 第四页版 (gtrStart/gtrLoad 复位标记);
                                                           # v1: 二级页版 (已出批, 与 page.js 一起退役)
-                   ("js/view/group-trips-marks.js", 3),   # v3: 破缓存批 (见上); v2: 整行可点 (v1 只有钮可点, 用户报「item 点不了」)
+                   ("js/view/group-trips-marks.js", 4),   # v4: 打/撤钩多选落定 (钩集与原组差整批提交);
+                                                          # v3: 破缓存批; v2: 整行可点 (v1 只有钮可点, 用户报「item 点不了」)
                    ("js/view/changelog-view.js", 4),    # bindGestures 回 drawer
                    ("js/view/trips-list-page.js", 7),   # bindGestures 回 drawer
                    ("js/view/chargemap-time-filters.js", 10),  # v10: 屏缘缝条 (v9: ptrMove 整视图;
