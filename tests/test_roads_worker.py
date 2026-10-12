@@ -1,7 +1,7 @@
 """roads_worker 测试: 无 key 空转 / 水位增量 (落行即占位, 同 v 不再试) /
 v2 ok 无推断行直采不重拟合 / 配额歇一小时 / 网络错误同程 3 次后放弃 /
-日配额歇到零点 (跨天清账) / 首回完成旗 (蒙版掀盖判据) / start·reset
-生命周期。AmapClient 换假件, 不发真请求。"""
+日配额歇到零点 (跨天清账) / 首回完成旗 (蒙版掀盖判据) / 热换引擎下一轮
+现取工厂 / start·reset 生命周期。AmapClient 换假件, 不发真请求。"""
 from datetime import date, datetime, timedelta
 
 from app.tesla import roads_amap, roads_worker
@@ -225,12 +225,35 @@ def test_round_gives_up_drives_do_not_block_window(db, owndb, monkeypatch):
 
 # ---------------------------------------------------------------- 生命周期
 def test_start_reset_lifecycle():
-    tesla_f, own_f = _factories()
-    roads_worker.start(tesla_f, own_f)
-    roads_worker.start(tesla_f, own_f)                  # 幂等: 不另起
+    own_f = _factories()[1]
+    roads_worker.start(own_f)
+    roads_worker.start(own_f)                           # 幂等: 不另起
     assert roads_worker.running()
     roads_worker.nudge()
     assert roads_worker._State.wake.is_set()            # pylint: disable=protected-access
     roads_worker.reset()
     assert not roads_worker.running()
+
+
+def test_loop_takes_tesla_factory_fresh_each_round(monkeypatch):
+    """TeslaMate 工厂每轮现取: 向导保存热换引擎 (rebuild) 后下一轮必须拿
+    新工厂。旧实现把启动时的工厂对象捕获进线程 —— NAS 实测 worker 对
+    docker 定位地址 + 空密码永远 password failed, 而 API (现取) 全通。"""
+    monkeypatch.setattr(roads_worker, "PEAK_DELAY_S", 0)
+    seen: list[object] = []
+
+    def fake_round(tesla_factory, _own_factory):
+        seen.append(tesla_factory)
+        if len(seen) == 2:
+            roads_worker._State.stop.set()  # pylint: disable=protected-access
+        return True, 0.0                    # 有进展: 不睡立刻下一轮
+
+    monkeypatch.setattr(roads_worker, "_round", fake_round)
+    fresh = iter(["boot-factory", "rebuilt-factory"])
+    monkeypatch.setattr(roads_worker.database, "session_factory",
+                        lambda: next(fresh))
+    roads_worker._State.stop.clear()        # pylint: disable=protected-access
+    roads_worker._loop(None)                # own 工厂由假 _round 收下
+    assert seen == ["boot-factory", "rebuilt-factory"]
+    roads_worker._State.stop.clear()        # 还原给后续用例
     assert not roads_worker._State.wake.is_set()        # pylint: disable=protected-access

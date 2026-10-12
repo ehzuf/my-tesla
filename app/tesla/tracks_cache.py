@@ -113,12 +113,14 @@ def build_manifest(tracks: list[MapTrack], own: Session) -> MapManifest:
                        rd=done, rt=len(tracks))
 
 
-def warm(factory: sessionmaker[Session]) -> None:
-    """启动时后台预热 (失败静默, 首次访问会重试)。"""
+def warm(factory: sessionmaker[Session]) -> bool:
+    """启动时后台预热 (失败返回 False 由 background 带重试; 首次访问
+    也会重试)。"""
     try:
         load_tracks(factory)
+        return True
     except (SQLAlchemyError, OSError):
-        pass
+        return False
 
 
 def _read_disk_cache() -> tuple[int, list[MapTrack]]:

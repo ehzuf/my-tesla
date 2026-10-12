@@ -1,5 +1,5 @@
 """防御路径测试: 密钥生成 / 登录限速自愈 / 容器定位回退 / 引擎守卫 /
-自有库迁移 / 统一错误契约 (503 / 400) / 轨迹缓存降级 / 地区解析兜底。
+自有库迁移 / 统一错误契约 (503 / 400) / 轨迹缓存降级与预热重试 / 地区解析兜底。
 
 这些是列表/播放主流程之外的分支, 平时不出场, 出场就是生产事故面。"""
 import json
@@ -9,7 +9,8 @@ import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import (authentication, config, database)  # pylint: disable=wrong-import-position
-from app.tesla import repository, settings_store, tracks_cache  # pylint: disable=wrong-import-position
+from app.tesla import (background, repository, settings_store,  # pylint: disable=wrong-import-position
+                       speed_hist_cache, tracks_cache)
 from app.tesla.models import Driver  # pylint: disable=wrong-import-position
 from tests.seed_factories import seed_drive  # pylint: disable=wrong-import-position
 
@@ -189,14 +190,40 @@ def test_update_driver_can_unset_default(auth, owndb):
 
 
 # ---------------------------------------------------------------- 轨迹缓存降级
-def test_tracks_cache_warm_swallows_backend_failure(monkeypatch):
-    """启动预热失败要静默 (首次访问会重试), 不能把启动线程炸了。"""
+def test_tracks_cache_warm_reports_outcome(monkeypatch):
+    """预热成败都返回布尔 (失败 False 交给 background 带重试), 不抛不炸线程。"""
+    monkeypatch.setattr(tracks_cache, "load_tracks", lambda *_: None)
+    assert tracks_cache.warm(database.session_factory()) is True
 
     def boom(_factory):
         raise SQLAlchemyError("db down")
 
     monkeypatch.setattr(tracks_cache, "load_tracks", boom)
-    tracks_cache.warm(database.session_factory())  # 不抛即通过 (工厂不会被真正使用)
+    assert tracks_cache.warm(database.session_factory()) is False  # 工厂不会被真正使用
+
+
+def test_speed_hist_warm_reports_outcome(monkeypatch):
+    """速度直方图预热同样成败返回布尔 (background 靠它决定重试/止步)。"""
+    monkeypatch.setattr(speed_hist_cache, "load_hist", lambda *_: None)
+    assert speed_hist_cache.warm(database.session_factory()) is True
+
+    def boom(*_):
+        raise SQLAlchemyError("db down")
+
+    monkeypatch.setattr(speed_hist_cache, "load_hist", boom)
+    assert speed_hist_cache.warm(database.session_factory()) is False
+
+
+def test_warm_with_retry_retries_until_success(monkeypatch):
+    """预热重试: 引擎没配对败了歇 60s 再来, 成一把即止 —— 向导保存热换
+    引擎后无需重启就有预热 (NAS 实测: 老实现败了线程就没了, 统计页首访
+    得现场积分全程)。"""
+    sleeps: list[float] = []
+    monkeypatch.setattr(background.time, "sleep", sleeps.append)
+    outcomes = iter([False, False, True])
+    monkeypatch.setattr(background.database, "session_factory", lambda: "f")
+    background._warm_with_retry(lambda _f: next(outcomes))  # pylint: disable=protected-access
+    assert sleeps == [background.WARM_RETRY_S, background.WARM_RETRY_S]
 
 
 def test_disk_cache_with_wrong_version_is_ignored():

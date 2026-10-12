@@ -109,13 +109,15 @@ def load_hist(session: Session,
         return state.hist
 
 
-def warm(factory: sessionmaker[Session]) -> None:
-    """启动时后台预热 (失败静默, 首次访问会重试)。"""
+def warm(factory: sessionmaker[Session]) -> bool:
+    """启动时后台预热 (失败返回 False 由 background 带重试; 首次访问
+    也会重试)。"""
     try:
         with factory() as session:
             load_hist(session, [i for i, _ in _finished(session)])
+        return True
     except (SQLAlchemyError, OSError):
-        pass
+        return False
 
 
 def _finished(session: Session) -> list[Any]:

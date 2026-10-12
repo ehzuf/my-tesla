@@ -3,7 +3,8 @@ drive_roads (一次性回填 ~1-2 千次调用, 之后水位增量补新行程)�
 
 节奏: 最新优先, 每轮 ≤50 程再查 (不长占库); REST 调用间隔节流 0.4s;
 配额码歇 1 小时, 自记账日上限 9000 次歇到次日零点。key 每轮现读 (设置页
-换 key 不用重启, 保存时 /roads/tick 会 nudge); 会话全短开短闭 (list/
+换 key 不用重启, 保存时 /roads/tick 会 nudge); TeslaMate 引擎工厂同样每轮
+现取 (向导保存热换引擎不用重启); 会话全短开短闭 (list/
 单程读/写各一个)。网络/服务错误不落行 (下轮重试), 同程 3 次后本进程
 放弃 —— 对账不过/抓路全灭才是落 guess 行 (几何保留虚线), 彻底没几何
 才 failed/skip (同 v 不再重算)。"""
@@ -13,6 +14,7 @@ from datetime import date, datetime, time as dtime, timedelta
 
 from sqlalchemy.orm import Session, sessionmaker
 
+from .. import database
 from . import roads_amap
 from .repository.map_roads import (adopt_v2_ok, closed_drives,
                                    done_drive_ids, drive_points, road_row,
@@ -40,15 +42,15 @@ class _State:
     day: date | None = None
 
 
-def start(tesla_factory: sessionmaker[Session],
-          own_factory: sessionmaker[Session]) -> None:
-    """起后台线程 (幂等: 已在跑不另起); 两个工厂都是 sessionmaker。"""
+def start(own_factory: sessionmaker[Session]) -> None:
+    """起后台线程 (幂等: 已在跑不另起)。own 工厂注入; TeslaMate 工厂不进
+    参数 —— 每轮现取 (热换引擎跟手)。"""
     if _State.thread is not None and _State.thread.is_alive():
         return
     _State.stop.clear()
     _State.wake.clear()
     _State.thread = threading.Thread(
-        target=_loop, args=(tesla_factory, own_factory),
+        target=_loop, args=(own_factory,),
         daemon=True, name="roads-fit")
     _State.thread.start()
 
@@ -161,14 +163,17 @@ def _round(tesla_factory: sessionmaker[Session],
     return progressed, 0.0
 
 
-def _loop(tesla_factory: sessionmaker[Session],
-          own_factory: sessionmaker[Session]) -> None:
-    """主循环: 有进展立刻下一轮, 没事歇 60s (nudge 可踢醒)。"""
+def _loop(own_factory: sessionmaker[Session]) -> None:
+    """主循环: 有进展立刻下一轮, 没事歇 60s (nudge 可踢醒)。TeslaMate
+    工厂每轮现取 —— 向导保存热换引擎后下一轮就连新地址, 不吃启动时
+    捕获的旧工厂 (NAS 实测教训: 旧工厂攥着 docker 定位地址 + 空密码,
+    rebuild 换不掉, worker 空转报错而 API 全通)。"""
     if _State.stop.wait(PEAK_DELAY_S):
         return
     while not _State.stop.is_set():
         try:
-            progressed, pause = _round(tesla_factory, own_factory)
+            progressed, pause = _round(database.session_factory(),
+                                       own_factory)
         except Exception as exc:  # pylint: disable=broad-except
             print(f"[roads] 轮次异常, 歇 {IDLE_SLEEP_S}s: {exc!r}", file=sys.stderr)
             progressed, pause = False, IDLE_SLEEP_S

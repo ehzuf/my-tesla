@@ -208,3 +208,26 @@ def test_round_gives_up_after_three_errors(db, owndb, monkeypatch):  # pylint: d
     assert not done_address_ids(owndb, place_worker.PLACE_NAME_V)
     place_worker._round(tesla_f, own_f)        # attempts 满了
     assert _FakeClient.regeo_calls == 3        # 不再调用
+
+
+def test_loop_takes_tesla_factory_fresh_each_round(monkeypatch):
+    """TeslaMate 工厂每轮现取: 热换引擎 (向导保存 rebuild) 后下一轮必须拿
+    新工厂 —— 旧实现把启动时的工厂对象捕获进线程换不掉 (同 roads_worker
+    的 NAS 教训)。"""
+    monkeypatch.setattr(place_worker, "PEAK_DELAY_S", 0)
+    seen: list[object] = []
+
+    def fake_round(tesla_factory, _own_factory):
+        seen.append(tesla_factory)
+        if len(seen) == 2:
+            place_worker._State.stop.set()  # pylint: disable=protected-access
+        return True, 0.0                    # 有进展: 不睡立刻下一轮
+
+    monkeypatch.setattr(place_worker, "_round", fake_round)
+    fresh = iter(["boot-factory", "rebuilt-factory"])
+    monkeypatch.setattr(place_worker.database, "session_factory",
+                        lambda: next(fresh))
+    place_worker._State.stop.clear()        # pylint: disable=protected-access
+    place_worker._loop(None)                # own 工厂由假 _round 收下
+    assert seen == ["boot-factory", "rebuilt-factory"]
+    place_worker._State.stop.clear()        # 还原给后续用例
