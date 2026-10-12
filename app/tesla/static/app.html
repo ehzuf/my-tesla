@@ -26,10 +26,11 @@
 <link rel="stylesheet" href="/tesla/static/css/tesla-charging-sheet.css?v=11">
 <link rel="stylesheet" href="/tesla/static/css/tesla-stats.css?v=11">
 <link rel="stylesheet" href="/tesla/static/css/tesla-groups.css?v=9">
+<link rel="stylesheet" href="/tesla/static/css/tesla-group-trips.css?v=1">
 <link rel="stylesheet" href="/tesla/static/css/tesla-changelog.css?v=2">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-page.css?v=6">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-cards.css?v=2">
-<link rel="stylesheet" href="/tesla/static/css/tesla-trips-sheet.css?v=31">
+<link rel="stylesheet" href="/tesla/static/css/tesla-trips-sheet.css?v=32">
 <link rel="stylesheet" href="/tesla/static/css/tesla-trips-playback.css?v=9">
 <link rel="stylesheet" href="/tesla/static/css/tesla-map-page.css?v=4">
 <link rel="stylesheet" href="/tesla/static/css/tesla-map-canvas.css?v=22">
@@ -320,6 +321,30 @@
         <div class="err-box" id="gp-errbox" hidden>
           <p id="gp-errmsg">分组加载失败</p>
           <button type="button" class="retry" id="gp-retry">重试</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分组明细视图 (3.10.0): 分组点开后的二级页, 不进抽屉菜单 (零历史
+         路由, 左上角 ‹ 回分组列表) —— 组内外行程一列时间正序 (id 升序 =
+         落库序 = 出发序), 默认窗口 = 组内全部; 顶部下拉加载更前的组外行程,
+         尾部触底加载更后 (两端提示行 JS 控显隐); 就地加入/移出, 连续性由
+         服务端守 (加 = 区间外延吸收, 移 = 只收头尾)。id 加 gtr- 前缀。 -->
+    <section class="view" id="view-group-trips" data-view="group-trips" hidden>
+      <div class="view-scroll" id="gtr-scroll">
+        <div class="sec-head">
+          <button type="button" class="gtr-back" id="gtr-back" aria-label="返回分组列表">‹</button>
+          <h2 id="gtr-name">分组行程</h2>
+          <span class="count-badge" id="gtr-count"></span>
+        </div>
+        <div class="gtr-tip">组内行程时间正序 · 两端拉动可加载相邻行程</div>
+        <div class="gtr-top" id="gtr-top" hidden>下拉加载更早的行程</div>
+        <div class="gtr-list" id="gtr-list"></div>
+        <div class="gtr-tail" id="gtr-tail" hidden>上拉加载更后的行程</div>
+        <div class="spin" id="gtr-spin" hidden></div>
+        <div class="err-box" id="gtr-errbox" hidden>
+          <p id="gtr-errmsg">分组行程加载失败</p>
+          <button type="button" class="retry" id="gtr-retry">重试</button>
         </div>
       </div>
     </section>
@@ -941,7 +966,13 @@
          高速费行先撤掉 (后端估价与存量照留) -->
     <div class="sh-head sheet-drag">
       <div class="sh-title"><span id="sh-date">–</span><span class="sh-sub" id="sh-time"></span></div>
-      <button type="button" class="sh-drv" id="sh-drv-btn" aria-label="切换驾驶员" hidden></button>
+      <!-- 右上角按钮组 (3.10.0 起两颗): 详细行程 (分组页打开的合并弹层才有,
+           点开分组明细页) + 驾驶员。包一层 .sh-head-btns —— 头部是两栏网格
+           (1fr auto), 裸塞第三颗按钮会换行挤垮头部 -->
+      <div class="sh-head-btns">
+        <button type="button" class="sh-drv" id="sh-group-btn" hidden>详细行程</button>
+        <button type="button" class="sh-drv" id="sh-drv-btn" aria-label="切换驾驶员" hidden></button>
+      </div>
     </div>
     <!-- 地图↔动态↔统计横滑分页 (2026-09-22 用户点名「往左划显示行程统计
          页面」→ 后点名「统计改成动态, 整个页面都换掉」): 原生 snap 滚动,
@@ -1091,14 +1122,16 @@
 <script src="/tesla/static/js/view/trips-stats-page.js?v=4"></script>
 <script src="/tesla/static/js/view/trips-stats-charts.js?v=12"></script>
 <script src="/tesla/static/js/view/battery-page.js?v=2"></script>
-<script src="/tesla/static/js/view/groups-page.js?v=7"></script>
+<script src="/tesla/static/js/view/groups-page.js?v=8"></script>
+<script src="/tesla/static/js/view/group-trips-page.js?v=1"></script>
+<script src="/tesla/static/js/view/group-trips-stream.js?v=1"></script>
 <script src="/tesla/static/js/view/changelog-view.js?v=4"></script>
 <script src="/tesla/static/js/view/trips-list-page.js?v=7"></script>
 <script src="/tesla/static/js/view/trips-list-url.js?v=2"></script>
 <script src="/tesla/static/js/view/trips-list-region-filters.js?v=1"></script>
 <script src="/tesla/static/js/view/trips-list-select.js?v=3"></script>
 <script src="/tesla/static/js/view/trips-list-groups.js?v=2"></script>
-<script src="/tesla/static/js/view/trips-sheet-page.js?v=8"></script>
+<script src="/tesla/static/js/view/trips-sheet-page.js?v=9"></script>
 <script src="/tesla/static/js/view/trips-playback-bar.js?v=2"></script>
 <script src="/tesla/static/js/view/trips-gap-routing.js?v=3"></script>
 <script src="/tesla/static/js/view/trips-playback-zoom.js?v=1"></script>
@@ -1107,7 +1140,7 @@
 <script src="/tesla/static/js/view/trips-playback-session.js?v=14"></script>
 <script src="/tesla/static/js/view/trips-preload-tiles.js?v=3"></script>
 <script src="/tesla/static/js/view/trips-preload-vector.js?v=3"></script>
-<script src="/tesla/static/js/view/trips-sheet-driver.js?v=13"></script>
+<script src="/tesla/static/js/view/trips-sheet-driver.js?v=14"></script>
 <script src="/tesla/static/js/view/trips-sheet-open.js?v=10"></script>
 <script src="/tesla/static/js/view/trips-export-video.js?v=4"></script>
 <script src="/tesla/static/js/view/trips-sheet-close.js?v=12"></script>

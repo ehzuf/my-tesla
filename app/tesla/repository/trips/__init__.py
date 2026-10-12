@@ -25,6 +25,11 @@ from .trip_groups import (
     rename_trip_group,
     save_trip_group,
 )
+from .trip_group_members import (
+    add_trip_to_group,
+    group_trip_window,
+    remove_trip_from_group,
+)
 from .trip_hist import track_hist
 from .trip_listing import (
     TripFilter,
@@ -68,7 +73,8 @@ __all__ = [
     "TRIP_TRACK_PER", "TripFilter", "_driver_condition", "_trip_item",
     "_utc_seconds",
     "annotate_drivers", "annotate_tolls", "closed_drive_ids_between", "drive_open",
-    "delete_trip_group", "driver_scope",
+    "add_trip_to_group", "delete_trip_group", "driver_scope", "group_trip_window",
+    "remove_trip_from_group",
     "get_trip", "fills_version", "list_trip_groups", "list_trip_regions", "list_trips",
     "merged_track", "merged_track_plan", "merged_track_segments",
     "place_hidden_set",

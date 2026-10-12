@@ -120,6 +120,10 @@
   flex: none; max-width: 40vw; justify-self: end;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* 右上角按钮组 (3.10.0): 「详细行程」+ 驾驶员两颗同排 —— 头部网格只有
+   两栏 (minmax(0,1fr) auto), 第三颗裸塞会折行挤垮头部; 包一层 flex
+   容器占住 auto 栏, justify-self 挪到这层 (按钮自身的不再生效也无妨) */
+.sh-head-btns { display: flex; align-items: center; gap: 8px; justify-self: end; }
 .sh-cells {   /* 数字带 = 轨迹页自己的一行 (2026-09-27 用户点名三页独立:
   布局恒定 —— 地图/图卡大小全程不变; 2026-09-25 三页等高修平时曾挪出分页
   当公共带 + 二三页整带收放, 带子一收一还地图就变一次大小 ——

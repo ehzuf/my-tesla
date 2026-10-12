@@ -1,0 +1,45 @@
+/* tesla-group-trips — 分组明细页样式 (3.10.0): 分组点开后的二级页, 组内外
+   行程一列时间正序。卡片骨架复用 tesla-trips-cards 的 .card-t/.ct-* (与
+   分组列表页同法), 这里只补明细页自己的件: 返回钮 / 组外行降透明 / 组内
+   徽标 / 加入移出大按钮 (车机触屏, 目标 44px) / 两端加载提示行。设计令牌
+   与 .sec-head/.spin/.err-box 在 tesla-groups.css (壳内各页同一套)。 */
+
+/* 返回钮: 左上角蓝色 ‹, 与页标题同行 (零历史路由, 没有物理后退) */
+.gtr-back {
+  flex: none; width: 36px; height: 36px; margin: -6px 2px -6px -8px;
+  font-size: 30px; line-height: 32px; font-weight: 600; color: var(--blue);
+  text-align: center; border-radius: 10px;
+}
+.gtr-back:active { opacity: .6; }
+
+/* 顶部口径说明 (一行小字) */
+.gtr-tip { padding: 2px 16px 6px; font-size: 12.5px; color: var(--ink-3); }
+
+/* 列表: 间距与分组列表同款 */
+.gtr-list { display: flex; flex-direction: column; gap: 10px;
+  padding: 8px 14px calc(env(safe-area-inset-bottom) + 20px); }
+
+/* 两端加载提示行 (顶部下拉/尾部上拉的静态引导, JS 控显隐与文案) */
+.gtr-top, .gtr-tail { text-align: center; font-size: 12px; color: var(--ink-3); }
+
+/* 组外行整体降透明 (卡片骨架照常, 一眼分清组内外) */
+.gtr-row:not(.in) .ct-top,
+.gtr-row:not(.in) .ct-cells,
+.gtr-row:not(.in) .ct-addr { opacity: .45; }
+
+/* 组内徽标 (顶行右侧, 行程卡驾驶员 pill 同款小 pill, 蓝底示组内) */
+.gtr-badge {
+  flex: none; font-size: 10.5px; color: #7db3f0;
+  background: rgba(57,135,229,.16); padding: 2.5px 9px; border-radius: 999px;
+}
+
+/* 加入/移出: 整行大按钮 (车里点按, 触屏目标 ≥44px); 加入 = 蓝实底主操作,
+   移出 = 红底纹弱一档 (组内两端行才有, 中间行没有按钮) */
+.gtr-acts { display: flex; margin-top: 9px; }
+.gtr-add, .gtr-rm {
+  flex: 1; min-height: 44px; border-radius: 12px; font-size: 14px; font-weight: 600;
+}
+.gtr-add { color: #fff; background: var(--blue); }
+.gtr-add:active { opacity: .75; }
+.gtr-rm { color: #ff6961; background: rgba(255,105,97,.12); }
+.gtr-rm:active { opacity: .75; }

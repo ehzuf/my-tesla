@@ -167,6 +167,35 @@ class TripGroupInfo(BaseModel):
     wh_per_km: float | None = None   # 平均电耗 (按总里程)
 
 
+class TripGroupMemberIn(BaseModel):
+    """分组加/移一段: 行程 id。"""
+    id: int
+
+
+class GroupTripRow(TripItem):
+    """分组明细页的行程条目: 行程卡字段 + 在组标记 (组外候选行也走这,
+    前端降透明画 + 给加入钮)。"""
+    in_group: bool
+
+
+class GroupTripsPage(BaseModel):
+    """分组明细窗口: 分组条目 (页头段数/里程) + 行程条目 (id 升序 = 时间
+    正序; id 即行程落库序, 与出发序一致, 连续区间本就按 id 定义) + 两端
+    还有没有可拉的 (更前/更后的组外行程)。"""
+    group: TripGroupInfo
+    items: list[GroupTripRow]
+    has_more_before: bool
+    has_more_after: bool
+
+
+class GroupMemberUpdate(BaseModel):
+    """加/移一段后的返回: 更新后的分组条目 + 本次变化的行程 id (加 = 新
+    吸收进组的全部段 —— 区间外延可能不止点的那一段; 移 = 被移掉的那段)。
+    前端拿它在已加载的行上就地翻状态, 不整页重拉 (拉动加载的页不丢)。"""
+    group: TripGroupInfo
+    changed: list[int]
+
+
 class GapFillRequest(BaseModel):
     """断档补路回传 (前端高德路径规划成功后 POST, 坐标一律 WGS-84)。
 

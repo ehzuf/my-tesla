@@ -46,7 +46,8 @@ def test_stats_view_lifecycle(auth):
 
 
 def test_groups_and_changelog_lifecycle(auth):
-    """分组/日志视图: registerView 注册, 首进才拉数据, 手势面与充电同款;
+    """分组/日志视图: registerView 注册 (分组页 3.10.0 起每次进都拉 —— 明细
+    页会改分组, 回来要新数据; 日志首进才拉), 手势面与充电同款;
     分组打开 = 壳级合并弹层直接开 (openMerged 带分组名, 分组页自己当宿主
     —— 2026-09-22 起 sheet 升壳级, 背后停在分组列表不闪行程轨迹)。"""
     js = page_js(auth, SHELL)

@@ -40,7 +40,8 @@ function openMerged(ids, fromUrl, info) {
     min: info.min, speed_max: info.speed_max,
     kwh: info.kwh, wh_per_km: info.wh_per_km } : {};
   return openTrip(Object.assign({ id: "m:" + key, merged: true, mergeKey: key,
-    gname: info && info.name || null }, extra),
+    gname: info && info.name || null,
+    gid: info && info.id != null ? info.id : null }, extra),   // 分组页打开才带 (明细页入口用)
     fromUrl);   // promise 传回 (深链失败抹参靠它)
 }
 

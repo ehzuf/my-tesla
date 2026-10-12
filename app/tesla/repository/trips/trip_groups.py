@@ -11,6 +11,7 @@ from ..charging import charge_efficiency
 from ..common import NotFound, ftime, to_local
 from ...schemas import TripGroupInfo
 from .trip_listing import _consumption
+from .trip_tracks import closed_drive_ids_between
 
 
 def _group_rows(session: Session, ids: Sequence[int]) -> list[Drive]:
@@ -29,11 +30,18 @@ def _group_ids(group: TripGroup) -> list[int]:
 def _group_info(session: Session, group: TripGroup,
                 effs: dict[int, float | None] | None = None) -> TripGroupInfo:
     """分组条目: 段数/里程/日期跨度按当前数据现算 (行程可能已被改动);
-    起止/时长/最高速/电耗汇总与合并播放的流式汇总头同口径 —— 分组页
-    一打开弹层数字带就显数, 不等地图加载 (2026-09-23 用户点名「平均
-    电耗空着, 加载完地图才显示」)。effs 跨分组共用一份换算系数 (每车
-    只查一次, 列表页一组一段查会放大到几十次)。"""
-    drives = _group_rows(session, _group_ids(group))
+    行情按「首-尾」区间全展开 (与合并播放同口径 —— 播放本就按区间展开,
+    老分组存库有洞也按播放口径计数, 不再两张皮); 起止/时长/最高速/电耗
+    汇总与合并播放的流式汇总头同口径 —— 分组页一打开弹层数字带就显数,
+    不等地图加载 (2026-09-23 用户点名「平均电耗空着, 加载完地图才显示」)。
+    effs 跨分组共用一份换算系数 (每车只查一次, 列表页一组一段查会放大到
+    几十次)。"""
+    ids = _group_ids(group)
+    drives = (list(session.scalars(
+        select(Drive)
+        .where(Drive.id >= min(ids), Drive.id <= max(ids),
+               Drive.end_date.is_not(None))
+        .order_by(Drive.start_date)).all()) if ids else [])
     km = round(sum(float(d.distance or 0) for d in drives), 1)
     # 跨度日期用紧凑斜杠写法 (2026/09/09, 2026-09-25 用户点名「还是显示不
     # 全, 日期用这种紧凑写法」): 比连字符窄一档, 斜杠还是干净的断行点 ——
@@ -72,12 +80,16 @@ def list_trip_groups(session: Session, own: Session) -> list[TripGroupInfo]:
 
 def save_trip_group(session: Session, own: Session,
                     name: str, ids: Sequence[int]) -> TripGroupInfo:
-    """存分组: ids 升序去重后落库; 含无效行程 (不存在/未结束) 则拒绝。"""
+    """存分组: 点名的 ids 先校验 (不存在/未结束则拒绝), 落库按「首-尾」
+    区间归一 —— 区间内已结束行程整段吸收 (与合并播放同口径: 播放本就按
+    区间展开, 多选隔着筛选漏掉的中间段也不例外; 3.10.0 起分组 = 连续
+    区间, 明细页的加/移同守这条)。"""
     unique = sorted(set(ids))
     rows = _group_rows(session, unique)
     if len(rows) != len(unique):
         raise NotFound("包含不存在或未结束的行程")
-    group = TripGroup(name=name, ids=",".join(str(i) for i in unique))
+    full = closed_drive_ids_between(session, unique[0], unique[-1])
+    group = TripGroup(name=name, ids=",".join(str(i) for i in full))
     own.add(group)
     own.commit()
     return _group_info(session, group)

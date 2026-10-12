@@ -12,6 +12,7 @@
 "use strict";
 
 let groups = [];      // 列表当前数据 (渲染 + 委托处理器查用)
+let gpBooted = false; // 首进标记: 只剩「首进亮转圈」一个用途 (每次进都拉, 见 gpLoad)
 
 /* 卡片结构仿行程卡 (card-t): 顶行名字 + 段数 pill, 中段统计格 (里程/跨度),
    底行改名/删除 —— 整卡可点开, 按钮拦住各自的事。 */
@@ -38,17 +39,21 @@ function render() {
 
 async function gpLoad() {
   $("#gp-errbox").hidden = true;
-  $("#gp-spin").hidden = false;
+  /* 首进 (还没有数据) 才亮转圈: 再进 (3.10.0 起每次进都重拉, 明细页改过
+     分组回来要新数据) 先看着旧列表, 拉完静默换血, 不闪白屏 */
+  if (!gpBooted || groups.length === 0) $("#gp-spin").hidden = false;
   try {
     const r = await fetch("/tesla/trips/api/groups");
     if (r.status === 401) { location.replace("/login"); return; }
     if (!r.ok) throw new Error(`${r.status}`);
     groups = await r.json();
   } catch {
-    groups = [];
-    $("#gp-spin").hidden = true;
-    $("#gp-errbox").hidden = false;
+    if (groups.length === 0) {   // 没有旧数据可看才亮错误盒, 有就先看着
+      $("#gp-spin").hidden = true;
+      $("#gp-errbox").hidden = false;
+    }
   }
+  gpBooted = true;
   render();
 }
 
@@ -128,11 +133,12 @@ $("#gp-retry").addEventListener("click", gpLoad);
 const gpScroll = $("#gp-scroll");
 bindGestures(gpScroll, { drawer: true, ptr: true, onRefresh: gpLoad });
 
-let gpBooted = false;
 registerView("groups", {
   title: "行程分组",
   el: $("#view-groups"),
-  show() { if (!gpBooted) { gpBooted = true; gpLoad(); } },
+  /* 每次进都重拉 (3.10.0): 分组明细页会就地加/移行程, 回分组列表要新
+     段数/里程 —— 转圈只在没数据时亮 (gpLoad 里门控) */
+  show() { gpLoad(); },
   /* 分组页也是弹层宿主 (壳级 sheet): 离开要收干净 —— 与行程视图 hide 同
      一套 (掐在途打开与流式下载 / 导出录制 / 弹层含地址栏镜像); sheetFrom
      先清, 主动换页不拽回; 多选态是行程页的事, 这里没有 */

@@ -11,6 +11,10 @@
 /* 弹层头部汇总 (日期/时长/里程/最高速/功耗): 单条来自卡片数据, 合并来自
    流式首行或整包缓存; 合并数据没到时先用占位, 到了再填 */
 function fillSheetHeader(it) {
+  /* 分组明细入口 (3.10.0): 分组页打开的弹层才亮「详细行程」(载荷带 gid;
+     多选合并/深链重开没有), 按钮存 gid 供点击跳明细页 */
+  $("#sh-group-btn").hidden = it.gid == null;
+  $("#sh-group-btn").dataset.gid = it.gid != null ? it.gid : "";
   if (it.gname) {    // 分组 (分组页打开): 名字当主标题, 副标题只留起始日期+时刻
     $("#sh-date").textContent = it.gname;
     $("#sh-time").textContent = mergedSub(it);
@@ -73,6 +77,8 @@ function setSegTitle(it, k, t0, elapsed) {
 /* 合并数据在路上: 弹层先开 (阻断其他操作), 头部占位; 分组名已经知道,
    先亮名字再等数据 (用户点名名字置顶) */
 function fillSheetHeaderPending(it) {
+  $("#sh-group-btn").hidden = it && it.gid == null;   // 同 fillSheetHeader (分组页打开才亮)
+  $("#sh-group-btn").dataset.gid = it && it.gid != null ? it.gid : "";
   $("#sh-date").textContent = it && it.gname ? it.gname : "连续轨迹";
   $("#sh-time").textContent = "正在下载…";
   $("#sh-km").textContent = "—";

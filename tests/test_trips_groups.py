@@ -99,6 +99,108 @@ def test_trip_group_validation(auth, db):
                       json={"name": "y"}).status_code == 404
 
 
+# ---------------------------------------------------------------- 分组明细 (3.10.0)
+def _seed_window(db):
+    """明细窗口数据: 11~15 已结束 (id 升序 = 出发升序), 16 进行中, 17~19
+    已结束 —— 中间一条未结束的, 正好钉「区间展开只吸收已结束行程」。"""
+    t = datetime(2026, 5, 1, 8, 0)
+    for i in range(9):                       # ids 11~19
+        start = t + timedelta(hours=3 * i)
+        seed_drive(db, id=11 + i, start_date=start,
+                   end_date=None if i == 5 else start + timedelta(hours=1),
+                   distance=10.0 + i)
+
+
+def test_group_window_default_and_pagination(auth, db):
+    """明细窗口: 默认给组内全部 (id 升序 = 时间正序, 全 in_group); before/
+    after 沿两端翻组外候选 (贴近的先, 未结束的不入); 两端还有没有的旗标
+    跟着本页边缘走; 参数校验 (双向同给/limit 越界 400, 未知分组/游标 404)。"""
+    _seed_window(db)
+    g = auth.post("/tesla/trips/api/groups", json={"name": "三日", "ids": [17, 18]}).json()
+
+    r = auth.get(f"/tesla/trips/api/groups/{g['id']}/trips")
+    assert r.status_code == 200
+    page = r.json()
+    assert [it["id"] for it in page["items"]] == [17, 18]    # 组内全部, 时间正序
+    assert all(it["in_group"] for it in page["items"])
+    assert page["has_more_before"] is True and page["has_more_after"] is True
+
+    r = auth.get(f"/tesla/trips/api/groups/{g['id']}/trips?before=17&limit=2").json()
+    assert [it["id"] for it in r["items"]] == [14, 15]       # 贴近的先, 16 未结束跳过
+    assert all(not it["in_group"] for it in r["items"])
+    assert r["has_more_before"] is True and r["has_more_after"] is True
+    r = auth.get(f"/tesla/trips/api/groups/{g['id']}/trips?before=14&limit=2").json()
+    assert [it["id"] for it in r["items"]] == [12, 13]
+    assert r["has_more_before"] is True                      # 还有 11
+    r = auth.get(f"/tesla/trips/api/groups/{g['id']}/trips?before=11&limit=2").json()
+    assert r["items"] == [] and r["has_more_before"] is False
+
+    r = auth.get(f"/tesla/trips/api/groups/{g['id']}/trips?after=18&limit=2").json()
+    assert [it["id"] for it in r["items"]] == [19]
+    assert r["has_more_after"] is False                      # 19 是最后一条已结束
+    assert r["has_more_before"] is True
+
+    assert auth.get(f"/tesla/trips/api/groups/{g['id']}/trips"
+                    "?before=17&after=18").status_code == 400
+    assert auth.get(f"/tesla/trips/api/groups/{g['id']}/trips"
+                    "?limit=0").status_code == 400
+    assert auth.get("/tesla/trips/api/groups/999/trips").status_code == 404
+    assert auth.get(f"/tesla/trips/api/groups/{g['id']}/trips"
+                    "?before=99").status_code == 404         # 脏游标
+
+
+def test_group_add_absorbs(auth, db):
+    """加一段: 区间外延到该行程, 中间的已结束行程整段吸收 (changed 列出
+    全部新吸收段), 未结束的不吸; 已在组里 400; 不存在/未结束 404。"""
+    _seed_window(db)
+    g = auth.post("/tesla/trips/api/groups", json={"name": "尾巴", "ids": [18, 19]}).json()
+
+    r = auth.post(f"/tesla/trips/api/groups/{g['id']}/add", json={"id": 13})
+    assert r.status_code == 200
+    upd = r.json()
+    assert upd["changed"] == [13, 14, 15, 17]              # 16 未结束不吸收, 17 在新区间里整段吸
+    assert upd["group"]["ids"] == [13, 14, 15, 17, 18, 19]
+    assert upd["group"]["n"] == 6
+
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/add",
+                     json={"id": 14}).status_code == 400      # 已被吸收进组
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/add",
+                     json={"id": 16}).status_code == 404      # 进行中
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/add",
+                     json={"id": 99}).status_code == 404
+
+
+def test_group_remove_ends_only(auth, db):
+    """移一段: 只许收头尾 (中间挖洞 400), 至少保留 2 段 (与建组口径一致);
+    移后存库 ids 仍是新区间的全展开; 不在组里 400; 未知分组 404。"""
+    _seed_window(db)
+    g = auth.post("/tesla/trips/api/groups", json={"name": "中段", "ids": [12, 13, 14]}).json()
+
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/remove",
+                     json={"id": 13}).status_code == 400      # 中间段
+    r = auth.post(f"/tesla/trips/api/groups/{g['id']}/remove", json={"id": 12})
+    assert r.json()["changed"] == [12]
+    assert r.json()["group"]["ids"] == [13, 14]
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/remove",
+                     json={"id": 13}).status_code == 400      # 只剩 2 段
+    assert auth.post(f"/tesla/trips/api/groups/{g['id']}/remove",
+                     json={"id": 99}).status_code == 400      # 不在组里
+    assert auth.post("/tesla/trips/api/groups/999/remove",
+                     json={"id": 13}).status_code == 404
+
+
+def test_group_save_normalizes_to_range(auth, db):
+    """存分组按「首-尾」区间归一 (3.10.0 分组 = 连续区间, 与合并播放同
+    口径): 中间的已结束行程整段吸收; 区间里的未结束行程不吸收。"""
+    _seed_window(db)
+    g = auth.post("/tesla/trips/api/groups", json={"name": "跨洞", "ids": [15, 17]}).json()
+    assert g["ids"] == [15, 17]                              # 16 进行中: 不吸收
+    g = auth.post("/tesla/trips/api/groups", json={"name": "顺路", "ids": [12, 14]}).json()
+    assert g["ids"] == [12, 13, 14] and g["n"] == 3          # 13 中间已结束: 吸收
+    # 老分组 (存库有洞) 的条目也按区间口径现算: 段数与播放一致
+    assert g["km"] == round((10.0 + 1) + (10.0 + 2) + (10.0 + 3), 1)
+
+
 def test_trips_page_toll_ui_removed(auth):
     """高速费先撤掉 (用户点名): 打开行程不再自动估价 (顺手省高德驾车规划
     配额), 弹层 chip/估价链全下线; 已算过的和 /toll 接口留在库里, 要恢复

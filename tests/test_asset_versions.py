@@ -17,8 +17,9 @@ def test_guard_assets_versioned_on_shell(auth):
     for ref, v in (("js/tesla-viewport.js", 4), ("js/tesla-sheet-drag.js", 5),
                    ("js/view/charging-detail.js", 16),  # v16: Esc 一层一关 (v15 统计区三格)
                    ("css/tesla-charging-sheet.css", 11),  # v11: 总价一格 + 充电时间格; v10: pill 最右
-                   ("css/tesla-trips-sheet.css", 31),    # 三页独立: 整带收放规则撤掉
-                                                         # (布局恒定, 地图/图卡大小不变)
+                   ("css/tesla-trips-sheet.css", 32),    # v32: 弹层头部按钮组 .sh-head-btns (3.10.0
+                                                         # 「详细行程」入口与驾驶员同排); v31: 三页
+                                                         # 独立: 整带收放规则撤掉 (布局恒定)
                    ("css/tesla-trips-playback.css", 9),  # 播放条住回轨迹页 (翻页不收不还)
                    ("css/tesla-chargemap-map.css", 7),  # v7: sh-grid margin 显式钉住 (足迹
                                                          # css 裸规则拆净, 泄漏值收编); v6: 图例
@@ -66,7 +67,8 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/trips-sheet-stats.js", 41),  # 三页独立: build 读 curSess (不等地图)
                                                          # + 直方图开弹层即取 (tripHistKick)
                                                          # + 翻页静默窗 + 整带收放/在途空框退役
-                   ("js/view/trips-sheet-page.js", 8),    # 解构接线 shiftStamp (时刻跟播平移)
+                   ("js/view/trips-sheet-page.js", 9),    # v9: 合并载荷带 gid (分组明细页入口);
+                                                         # v8: 解构接线 shiftStamp (时刻跟播平移)
                    ("js/view/trips-list-select.js", 3),   # 多选撤 100 段上限 (MERGE_MAX 退役)
                    ("js/trackutil.js", 5),   # v5: 扁平版 splitGapsFlat/decimateFlat 随原始轨迹层退役
                    ("js/track-animation.js", 3),
@@ -84,6 +86,7 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # + v9: 名字图加高; v10: ts-loc 340 (全量出柱)
                    ("css/tesla-groups.css", 9),   # v9: sec-head 顶距 0 + 跨度格字号特异性真收一档
                                                  # + 斜杠断行保底
+                   ("css/tesla-group-trips.css", 1),  # v1: 分组明细页 (3.10.0, 新建)
                    ("css/tesla-changelog.css", 2),
                    ("css/tesla-trips-page.css", 6),      # v6: sec-head 顶距 0 (标题统一一条线)
                    ("css/tesla-map-page.css", 4),        # v4: sec-head 顶距 0 (标题统一一条线)
@@ -95,7 +98,8 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/live-page.js", 9),         # v9: 平均电耗/最高车速两格接线拆净;
                                                          #   v8: 表盘上限 180 (刻度角度随
                                                          #   GAUGE_MAX 算); v7: 指针 + 已行驶
-                   ("js/view/trips-sheet-driver.js", 13),  # v13: Esc 收选单 (v12 电耗一位/段标题)
+                   ("js/view/trips-sheet-driver.js", 14),  # v14: 弹层头部「详细行程」随 gid 亮藏 (3.10.0);
+                                                          # v13: Esc 收选单 (v12 电耗一位/段标题)
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
@@ -214,7 +218,9 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/charging-cards.js", 12),   # v11: Tesla 字标改附加标 (快/慢充 pill 旁并排)
                                                           # v12: pill 换回最右 (卡右上角), 字标居其左
                                                           # + tesla-common v5: TESLA_MARK 字标常量在此
-                   ("js/view/groups-page.js", 7),       # bindGestures 回 drawer
+                   ("js/view/groups-page.js", 8),       # v8: 每次进都重拉 (明细页会改分组; v7 bindGestures 回 drawer)
+                   ("js/view/group-trips-page.js", 1),  # v1: 分组明细页底座 (3.10.0, 新建)
+                   ("js/view/group-trips-stream.js", 1),  # v1: 分组明细页流 (3.10.0, 新建)
                    ("js/view/changelog-view.js", 4),    # bindGestures 回 drawer
                    ("js/view/trips-list-page.js", 7),   # bindGestures 回 drawer
                    ("js/view/chargemap-time-filters.js", 10),  # v10: 屏缘缝条 (v9: ptrMove 整视图;
