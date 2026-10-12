@@ -107,11 +107,3 @@ class RoadsStatus(BaseModel):
     done: int
     total: int
     initial_done: bool
-
-
-class RoadsPosterIn(BaseModel):
-    """高清海报请求体: 当前筛选的行程 id 集 (屏上是什么, 海报就是什么)
-    + 画幅长边像素 (服务端钳到 1600..6000, 默认 4800 ≈ 300dpi 的 40cm)。"""
-
-    ids: list[int]
-    size: int = 4800

@@ -4,4 +4,3 @@ psycopg[pool,binary]
 sqlalchemy>=2.0
 tzdata
 httpx
-pillow

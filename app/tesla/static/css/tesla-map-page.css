@@ -146,17 +146,6 @@ header {
              font-variant-numeric: tabular-nums; }
 .stat .val small { font-size: 11px; font-weight: 500; color: var(--ink-2); margin-left: 2px; }
 
-/* ---------- 高清图钮 (2026-10-11「下载高清轨迹地图」) ----------
-   坐汇总行尾: 两格让路 (flex:1) 它不占 (flex:none), 高度随两格但不撑行。
-   玻璃 chip 口径 (毛玻璃面 + 发丝线), 忙态生成中… 半透明挡连点 */
-#fp-stats #fp-poster {
-  flex: none; align-self: center;
-  padding: 8px 12px; border-radius: 999px; font-size: 12.5px;
-  color: var(--ink-2); background: rgba(255,255,255,.06);
-  border: 1px solid var(--hairline);
-}
-#fp-stats #fp-poster:disabled { opacity: .5; }
-
 /* ---------- 一级标题 (3.3.0 用户令「最上面也有一级标题」, 与其他页同款) ----------
    住 .map-head 里: 侧距由 map-head 出 (16px), 这里不叠; 顶距 0 —— 全 app
    标题统一落在 --content-top 一条线 (2026-09-27)。h2 规则与充电/分组/

@@ -33,7 +33,6 @@ from .map_schemas import (
     MapSummary,
     MapTrack,
     RoadStreamRow,
-    RoadsPosterIn,
     RoadsStatus,
 )
 from .settings_schemas import (
@@ -86,7 +85,7 @@ __all__ = [
     "MapManifest", "MapManifestTrack",
     "MapSummary", "MapTrack", "MergedTrack", "MonthlyStat", "PlaceAliasUpdate",
     "PlaceHideUpdate",
-    "RegionNode", "RoadStreamRow", "RoadsPosterIn", "RoadsStatus",
+    "RegionNode", "RoadStreamRow", "RoadsStatus",
     "SettingsState", "SettingsUpdate", "TeslaMateSettings", "TollRoad",
     "TrackHist", "TripDims", "TripGroupIn", "TripGroupInfo", "TripGroupRename",
     "TripItem", "TripDriverStat", "TripLocRaw", "TripLocSpot", "TripLocStat",

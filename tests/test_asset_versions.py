@@ -86,8 +86,7 @@ def test_guard_assets_versioned_on_shell(auth):
                                                  # + 斜杠断行保底
                    ("css/tesla-changelog.css", 2),
                    ("css/tesla-trips-page.css", 6),      # v6: sec-head 顶距 0 (标题统一一条线)
-                   ("css/tesla-map-page.css", 5),        # v5: 高清图钮 (汇总行尾玻璃 chip);
-                                                         # v4: sec-head 顶距 0 (标题统一一条线)
+                   ("css/tesla-map-page.css", 4),        # v4: sec-head 顶距 0 (标题统一一条线)
                    ("css/tesla-chargemap-page.css", 4),  # v4: sec-head 顶距 0 (标题统一一条线)
                    ("css/tesla-live-page.css", 2),
                    ("css/tesla-live-driving.css", 20),  # v20: 平均电耗/最高车速两格退役 (剩
@@ -210,7 +209,6 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/map-boot.js", 13),         # v13: 换驾驶员点名重播; v12: 换筛选收播; v11: 自动
                                                          #   开播提前; v10: 收尾自动开播; v9: nudge 守卫
                    ("js/view/map-build-mask.js", 1),    # v1: 首回构造蒙版 (新建, roads/status 轮询)
-                   ("js/view/map-poster.js", 1),        # v1: 高清图钮 (新建, roads/poster 整幅 PNG)
                    ("js/view/chargemap-heatmap.js", 5), # v5: 图例极值/汇总三数/热力归一随视野算
                                                          # (视野内最大恒红端) + 图例搬画布内左下角
                    ("js/view/charging-cards.js", 12),   # v11: Tesla 字标改附加标 (快/慢充 pill 旁并排)

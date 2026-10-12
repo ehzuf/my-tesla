@@ -2,12 +2,10 @@
 tracks_cache 提供; 2026-09-29 起前端只画走过的路, 原始轨迹流端点退役)。"""
 import json
 from collections.abc import Iterator
-from datetime import date
-from urllib.parse import quote
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from ... import database
@@ -15,10 +13,8 @@ from .. import (place_worker, repository, roads_worker, settings_store,
                 tracks_cache)
 from ..roads_amap import AmapClient, AmapError, AmapQuota
 from ..roads_fit import ROAD_FIT_V
-from ..roads_poster import render as render_poster
-from ..roads_poster_grid import PosterError, RoadShape
 from ..schemas import (AmapConfig, AmapKeyTest, AmapKeyTestIn, MapManifest,
-                       MapSummary, RoadStreamRow, RoadsPosterIn, RoadsStatus)
+                       MapSummary, RoadStreamRow, RoadsStatus)
 from ...schemas import OkResponse
 from ._common import date_range_or_400
 
@@ -26,8 +22,6 @@ from ._common import date_range_or_400
 mapapi = APIRouter(prefix="/tesla/map/api")
 
 STREAM_MAX_IDS = 200   # stream 单次最多条数 (客户端 ~50 一批)
-POSTER_MAX_IDS = 20_000   # 海报单次最多行程数 (全库量级的安全垫)
-POSTER_MIN_SIZE, POSTER_MAX_SIZE = 1600, 6000   # 长边像素钳制 (内存/时长上限)
 
 
 # ---------------------------------------------------------------- 足迹地图 API
@@ -86,37 +80,6 @@ def get_roads_stream(
                 g=json.loads(row.gaps or "[]")).model_dump_json() + "\n"
 
     return StreamingResponse(lines(), media_type="application/x-ndjson")
-
-
-@mapapi.post("/roads/poster")
-def roads_poster(payload: RoadsPosterIn,
-                 db: Session = Depends(database.get_db),
-                 own: Session = Depends(database.get_own_db)) -> Response:
-    """高清海报 (2026-10-11 用户点名「下载高清轨迹地图, 大小不限, 精度拉满,
-    要求带文字」): 服务端把当前筛选的「走过的路」整幅画成 PNG —— 拟合顶点
-    全量不抽稀, 不迁就车机浏览器画布/内存上限。body 的 ids 就是屏上集合
-    (屏上怎么筛, 海报就怎么画); 行情数字同汇总条口径。"""
-    ids = list(dict.fromkeys(payload.ids))
-    if not ids:
-        raise HTTPException(400, "还没有走过的路可导出")
-    if len(ids) > POSTER_MAX_IDS:
-        raise HTTPException(400, f"一次最多 {POSTER_MAX_IDS} 程")
-    size = min(POSTER_MAX_SIZE, max(POSTER_MIN_SIZE, payload.size))
-    shapes: list[RoadShape] = []
-    for i in range(0, len(ids), 900):
-        for row in repository.roads_rows(own, ids[i:i + 900]):
-            shapes.append(RoadShape(pts=json.loads(row.pts or "[]"),
-                                    gaps=json.loads(row.gaps or "[]")))
-    stats = repository.roads_poster_stats(db, ids)
-    try:
-        png = render_poster(shapes, stats, size)
-    except PosterError as exc:
-        raise HTTPException(400, str(exc)) from None
-    name = quote(f"足迹地图_{date.today():%Y-%m-%d}.png")
-    return Response(png, media_type="image/png",
-                    headers={"Content-Disposition": 'attachment; '
-                             'filename="footprint.png"; '
-                             f"filename*=UTF-8''{name}"})
 
 
 @mapapi.get("/roads/tick")
