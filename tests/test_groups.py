@@ -95,9 +95,9 @@ def test_group_trips_page_skeleton(auth):
                  'id="gtr-cancel">取消</button>', 'id="gtr-ok">确认</button>',
                  '<span class="tp-dots" id="tp-dots"><i class="on"></i><i></i>'
                  '<i></i><i hidden></i></span>',
-                 'css/tesla-group-trips.css?v=2',
+                 'css/tesla-group-trips.css?v=3',
                  '<script src="/tesla/static/js/view/group-trips-stream.js?v=2"></script>',
-                 '<script src="/tesla/static/js/view/group-trips-marks.js?v=1"></script>']:
+                 '<script src="/tesla/static/js/view/group-trips-marks.js?v=2"></script>']:
         assert frag in html, f"分组明细第四页缺少 {frag}"
     # 第四页在分页器里: 统计页之后、底行之前 (底行页标第四枚随它亮/藏)
     assert html.index('id="tp-hist"') < html.index('id="tp-gtr"')
@@ -148,13 +148,22 @@ def test_group_trips_page_interactions(auth):
                  "onRefresh: () => gtrLoadBefore()",   # 流文件后加载: 箭头延迟解析
                  "gtrMarquee()"]:
         assert frag in stream_js, f"group-trips-stream.js 缺少 {frag}"
-    marks_js = auth.get("/tesla/static/js/view/group-trips-marks.js?v=1").text
+    marks_js = auth.get("/tesla/static/js/view/group-trips-marks.js?v=2").text
     for frag in ["function gtrEff(it)", "function gtrEnds()", "function gtrBarSync()",
-                 "已标记 ${n} 段", "gtrMarks.set(it.id, want)", "gtrMarks.delete(it.id)",
+                 "已标记 ${n} 段",
+                 # 整行可点 (点行 = 翻转标记, 与全 app 列表行同一习惯; 按钮只是
+                 # 可视提示, closest 到行即中) —— 只有钮可点被用户报「item 点不了」
+                 "const want = !gtrEff(it);",
+                 "gtrEnds().includes(it.id)",
+                 'toast("只能移出最前或最后的行程")',   # 组内中段: 移了会断连续
+                 "gtrMarks.set(it.id, want)", "gtrMarks.delete(it.id)",
                  "/tesla/trips/api/groups/${gtrGid}/changes", "{ adds, removes }",
                  "已保存分组修改", "inNew.has(x.id)",
                  "gtrLoad();"]:   # 服务端拒了整页重拉对齐真身 (标记作废)
         assert frag in marks_js, f"group-trips-marks.js 缺少 {frag}"
+    # 整行可点的按压反馈 (没反馈像点不了)
+    gtr_css = auth.get("/tesla/static/css/tesla-group-trips.css?v=3").text
+    assert ".gtr-row { cursor: pointer;" in gtr_css and ".gtr-row:active" in gtr_css
     # gid 载荷链: openMerged 只在分组页打开时带 gid (第四页随它挂上)
     merged_js = auth.get("/tesla/static/js/view/trips-sheet-page.js?v=9").text
     assert "gid: info && info.id != null ? info.id : null" in merged_js

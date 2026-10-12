@@ -43,15 +43,21 @@
 .gtr-row:not(.in) .ct-cells,
 .gtr-row:not(.in) .ct-addr { opacity: .45; }
 
+/* 整行可点 (点行 = 打/撤标记, 与全 app 列表行同一习惯): 给指针/按压
+   反馈, 没反馈用户以为点不了 */
+.gtr-row { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.gtr-row:active { opacity: .7; }
+
 /* 组内徽标 (顶行右侧, 行程卡驾驶员 pill 同款小 pill, 蓝底示组内) */
 .gtr-badge {
   flex: none; font-size: 10.5px; color: #7db3f0;
   background: rgba(57,135,229,.16); padding: 2.5px 9px; border-radius: 999px;
 }
 
-/* 加/移标记: 整行大按钮 (车里点按, 触屏目标 ≥44px); 加入 = 蓝实底主操
-   作, 移出 = 红底纹弱一档 (组内两端行才有, 中间行没有按钮) —— 点的是
-   标记不是写库, 落定在页底标记条 */
+/* 加/移标记: 整行都是点击目标 (车里点按, 行本身就够大); 按钮是当前动作
+   的可视提示 —— 加入 = 蓝实底主操作, 移出 = 红底纹弱一档 (组内两端行
+   才有, 中间行点了行会提示为什么移不得)。点的是标记不是写库, 落定在
+   页底标记条 */
 .gtr-acts { display: flex; margin-top: 9px; }
 .gtr-add, .gtr-rm {
   flex: 1; min-height: 44px; border-radius: 12px; font-size: 14px; font-weight: 600;

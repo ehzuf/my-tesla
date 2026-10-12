@@ -89,7 +89,8 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # + v9: 名字图加高; v10: ts-loc 340 (全量出柱)
                    ("css/tesla-groups.css", 9),   # v9: sec-head 顶距 0 + 跨度格字号特异性真收一档
                                                  # + 斜杠断行保底
-                   ("css/tesla-group-trips.css", 2),  # v2: 第四页版 (分页器整页 + 标记条); v1: 二级页版 (已出批)
+                   ("css/tesla-group-trips.css", 3),  # v3: 整行可点反馈 (v2 第四页版;
+                                                         # v1 二级页版已出批)
                    ("css/tesla-changelog.css", 2),
                    ("css/tesla-trips-page.css", 6),      # v6: sec-head 顶距 0 (标题统一一条线)
                    ("css/tesla-map-page.css", 4),        # v4: sec-head 顶距 0 (标题统一一条线)
@@ -225,7 +226,7 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/groups-page.js", 8),       # v8: 每次进都重拉 (明细页会改分组; v7 bindGestures 回 drawer)
                    ("js/view/group-trips-stream.js", 2),  # v2: 第四页版 (gtrStart/gtrLoad 复位标记);
                                                           # v1: 二级页版 (已出批, 与 page.js 一起退役)
-                   ("js/view/group-trips-marks.js", 1),   # v1: 标记 + 取消/确认 (3.10.0, 新建)
+                   ("js/view/group-trips-marks.js", 2),   # v2: 整行可点 (v1 只有钮可点, 用户报「item 点不了」)
                    ("js/view/changelog-view.js", 4),    # bindGestures 回 drawer
                    ("js/view/trips-list-page.js", 7),   # bindGestures 回 drawer
                    ("js/view/chargemap-time-filters.js", 10),  # v10: 屏缘缝条 (v9: ptrMove 整视图;

@@ -36,8 +36,11 @@ function gtrClearMarks() {
   gtrBarSync();
 }
 
-/* 点行 = 打/撤标记 (不写库): 加入 → 标记进组, 移出 → 标记离组; 再点回
-   原态的钮 = 撤销该行标记。行本身不可点 */
+/* 点行 = 打/撤标记 (不写库; 整行都是点击目标 —— 全 app 的列表行都点整
+   行, 只有钮可点用户报「item 点不了」): 组外行点 = 标记加入; 组内行点 =
+   标记移出, 但只许端点 (中间移会断连续, 与服务端口径同一句人话); 再点
+   已标记的行 = 撤销该行标记。底部按钮与点行同一判定 (closest 到行即
+   中, 按钮只是当前动作的可视提示) */
 $("#gtr-list").addEventListener("click", e => {
   const t = e.target;
   if (!(t instanceof Element) || !t.isConnected) return;
@@ -45,9 +48,11 @@ $("#gtr-list").addEventListener("click", e => {
   if (!row) return;
   const it = gtrStream.find(x => x.id === +row.dataset.id);
   if (!it) return;
-  const want = !!t.closest(".gtr-add");
-  if (!want && !t.closest(".gtr-rm")) return;
-  if (gtrEff(it) === want) return;
+  const want = !gtrEff(it);   // 点行 = 翻转当前落点态
+  if (!want && it.in_group && !gtrEnds().includes(it.id)) {
+    toast("只能移出最前或最后的行程");   // 组内中段: 移了会断连续
+    return;
+  }
   if (!gtrMarks) gtrMarks = new Map();
   if (it.in_group === want) gtrMarks.delete(it.id);   // 落回原态 = 撤标记
   else gtrMarks.set(it.id, want);
