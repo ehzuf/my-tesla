@@ -17,7 +17,9 @@ def test_guard_assets_versioned_on_shell(auth):
     for ref, v in (("js/tesla-viewport.js", 4), ("js/tesla-sheet-drag.js", 5),
                    ("js/view/charging-detail.js", 16),  # v16: Esc 一层一关 (v15 统计区三格)
                    ("css/tesla-charging-sheet.css", 11),  # v11: 总价一格 + 充电时间格; v10: pill 最右
-                   ("css/tesla-trips-sheet.css", 34),    # v34: 底行还原单页标竖排 + 第四枚页标
+                   ("css/tesla-trips-sheet.css", 35),    # v35: 弹层批整批破缓存 +1 (车机 immutable
+                                                         # 吃住 2a2533f 开发中间态, 强制重下; 内容
+                                                         # 零改动); v34: 底行还原单页标竖排 + 第四枚页标
                                                          # (3.10.0); v33: 弹层底行横排「详细行程」
                                                          # 并排 (已出批, 随第四页方案撤回); v31: 三页独立
                    ("css/tesla-trips-playback.css", 9),  # 播放条住回轨迹页 (翻页不收不还)
@@ -56,21 +58,25 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/trips-preload-vector.js", 3),  # 走廊一页一会话只扫一遍 (sweptCorridors)
                    ("js/view/trips-export-video.js", 4),  # v4: Esc 收预览 (v3 只留高德)
                    ("js/view/trips-playback-loop.js", 12),       # 恒一位小数防抖 + 流式节拍开播定死
-                   ("js/view/trips-sheet-open.js", 11),          # v11: openTrip 挂第四页 (gtrPageSync);
+                   ("js/view/trips-sheet-open.js", 12),          # v12: 破缓存批 (见 tesla-trips-sheet.css 行);
+                                                                  # v11: openTrip 挂第四页 (gtrPageSync);
                                                                   # v10: 三页独立: 直方图开弹层即取 +
                                                                   # playTrack(defer) 先于地图预载
                    ("js/view/trips-playback-overlays.js", 8),
                    ("js/view/trips-playback-session.js", 14),    # defer 起播: 数据会话先挂
                                                                   # (curSess), begin 才进播放态
                    ("js/view/trips-gap-routing.js", 3),
-                   ("js/view/trips-sheet-close.js", 13),  # v13: hideSheet 摘第四页 (gtrDetach);
+                   ("js/view/trips-sheet-close.js", 14),  # v14: 破缓存批 (见上);
+                                                           # v13: hideSheet 摘第四页 (gtrDetach);
                                                            # v12: Esc 收层 (v11 不刷新宿主列表)
                                                            # + 统计页 tp-hist 入下拉关闭区
-                   ("js/view/trips-sheet-stats.js", 42),  # v42: 第四页挂/摘 (nPages 现算 + 第四枚页标
+                   ("js/view/trips-sheet-stats.js", 43),  # v43: 破缓存批 (见上); v42: 第四页挂/摘
+                                                         # (nPages 现算 + 第四枚页标
                                                          # + ptr 提示字换字); v41: 三页独立: build 读
                                                          # curSess (不等地图) + 直方图开弹层即取
                                                          # (tripHistKick) + 翻页静默窗 + 整带收放/在途空框退役
-                   ("js/view/trips-sheet-page.js", 9),    # v9: 合并载荷带 gid (第四页「详细行程」随它挂);
+                   ("js/view/trips-sheet-page.js", 10),   # v10: 破缓存批 (见上);
+                                                         # v9: 合并载荷带 gid (第四页「详细行程」随它挂);
                                                          # v8: 解构接线 shiftStamp (时刻跟播平移)
                    ("js/view/trips-list-select.js", 3),   # 多选撤 100 段上限 (MERGE_MAX 退役)
                    ("js/trackutil.js", 5),   # v5: 扁平版 splitGapsFlat/decimateFlat 随原始轨迹层退役
@@ -87,9 +93,9 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # + .bh-note 口径脚注 + 表格退役 + id 规则改类
                                                          #   (行程统计复用) + 月度降高/滑块轨道/网格 dim
                                                          # + v9: 名字图加高; v10: ts-loc 340 (全量出柱)
-                   ("css/tesla-groups.css", 9),   # v9: sec-head 顶距 0 + 跨度格字号特异性真收一档
+                   ("css/tesla-groups.css", 10),  # v10: 破缓存批 (见上); v9: sec-head 顶距 0 + 跨度格字号特异性真收一档
                                                  # + 斜杠断行保底
-                   ("css/tesla-group-trips.css", 3),  # v3: 整行可点反馈 (v2 第四页版;
+                   ("css/tesla-group-trips.css", 4),  # v4: 破缓存批 (见上); v3: 整行可点反馈 (v2 第四页版;
                                                          # v1 二级页版已出批)
                    ("css/tesla-changelog.css", 2),
                    ("css/tesla-trips-page.css", 6),      # v6: sec-head 顶距 0 (标题统一一条线)
@@ -102,7 +108,7 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/live-page.js", 9),         # v9: 平均电耗/最高车速两格接线拆净;
                                                          #   v8: 表盘上限 180 (刻度角度随
                                                          #   GAUGE_MAX 算); v7: 指针 + 已行驶
-                   ("js/view/trips-sheet-driver.js", 15),  # v15: 头部「详细行程」钮撤 (改第四页, 3.10.0);
+                   ("js/view/trips-sheet-driver.js", 16),  # v16: 破缓存批 (见上); v15: 头部「详细行程」钮撤 (改第四页, 3.10.0);
                                                           # v14: 头部按钮版 (已出批, 随第四页方案撤回)
                                                           # v13: Esc 收选单 (v12 电耗一位/段标题)
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
@@ -223,10 +229,10 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/charging-cards.js", 12),   # v11: Tesla 字标改附加标 (快/慢充 pill 旁并排)
                                                           # v12: pill 换回最右 (卡右上角), 字标居其左
                                                           # + tesla-common v5: TESLA_MARK 字标常量在此
-                   ("js/view/groups-page.js", 8),       # v8: 每次进都重拉 (明细页会改分组; v7 bindGestures 回 drawer)
-                   ("js/view/group-trips-stream.js", 2),  # v2: 第四页版 (gtrStart/gtrLoad 复位标记);
+                   ("js/view/groups-page.js", 9),       # v9: 破缓存批 (见上); v8: 每次进都重拉 (明细页会改分组; v7 bindGestures 回 drawer)
+                   ("js/view/group-trips-stream.js", 3),  # v3: 破缓存批 (见上); v2: 第四页版 (gtrStart/gtrLoad 复位标记);
                                                           # v1: 二级页版 (已出批, 与 page.js 一起退役)
-                   ("js/view/group-trips-marks.js", 2),   # v2: 整行可点 (v1 只有钮可点, 用户报「item 点不了」)
+                   ("js/view/group-trips-marks.js", 3),   # v3: 破缓存批 (见上); v2: 整行可点 (v1 只有钮可点, 用户报「item 点不了」)
                    ("js/view/changelog-view.js", 4),    # bindGestures 回 drawer
                    ("js/view/trips-list-page.js", 7),   # bindGestures 回 drawer
                    ("js/view/chargemap-time-filters.js", 10),  # v10: 屏缘缝条 (v9: ptrMove 整视图;

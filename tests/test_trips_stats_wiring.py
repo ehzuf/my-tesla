@@ -142,11 +142,12 @@ def test_stats_module_wiring(auth):
     assert "curSess = s;" in sess
     sheet_css = auth.get("/tesla/static/css/tesla-trips-sheet.css").text
     assert "no-band" not in sheet_css
-    # 版本号 (改过的都带上, 老缓存不掺和; 3.10.0 第四页批)
-    assert "view/trips-sheet-stats.js?v=42" in html    # v42: 第四页挂/摘 (nPages 现算/第四枚页标/ptr 提示字换字)
+    # 版本号 (改过的都带上, 老缓存不掺和; 2026-10-12 弹层批整批破缓存 +1 —
+    # 车机 immutable 缓存曾吃住 2a2533f 开发中间态, 强制重下)
+    assert "view/trips-sheet-stats.js?v=43" in html    # v43: 破缓存批 (v42: 第四页挂/摘, nPages 现算/第四枚页标/ptr 提示字换字)
     assert "js/trackutil.js?v=5" in html   # v5: 原始轨迹层退役 (扁平版函数)
     assert "view/trips-playback-session.js?v=14" in html    # defer 起播: 数据会话先挂, begin 才进播放态
-    assert "view/trips-sheet-close.js?v=13" in html    # v13: hideSheet 摘第四页 (gtrDetach)
-    assert "view/trips-sheet-open.js?v=11" in html    # v11: openTrip 挂第四页 (gtrPageSync)
-    assert "css/tesla-trips-sheet.css?v=34" in html    # v34: 底行还原单页标 (v33 底行横排版随第四页方案撤回)
+    assert "view/trips-sheet-close.js?v=14" in html    # v14: 破缓存批 (v13: hideSheet 摘第四页 gtrDetach)
+    assert "view/trips-sheet-open.js?v=12" in html    # v12: 破缓存批 (v11: openTrip 挂第四页 gtrPageSync)
+    assert "css/tesla-trips-sheet.css?v=35" in html    # v35: 破缓存批 (v34: 底行还原单页标, v33 底行横排版随第四页方案撤回)
     assert "css/tesla-trips-playback.css?v=9" in html

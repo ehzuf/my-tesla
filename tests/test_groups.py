@@ -14,7 +14,7 @@ def test_groups_page_served(auth):
     for frag in ['data-view="groups"', 'id="gp-count-badge"', 'id="gp-spin"',
                  'id="gp-list"', 'id="gp-empty"', 'id="gp-errbox"',
                  'id="gp-retry"', 'id="toast"',
-                 '<script src="/tesla/static/js/view/groups-page.js?v=8"></script>',
+                 '<script src="/tesla/static/js/view/groups-page.js?v=9"></script>',
                  '在行程列表长按多选行程后点「存为分组」']:
         assert frag in html, f"分组视图缺少 {frag}"
     # 弹层块已升壳级 (2026-09-22): 分组页打开的合并弹层宿主是分组视图,
@@ -28,7 +28,7 @@ def test_groups_page_interactions(auth):
     sheetFrom 记来源, 关弹层原地刷新分组列表; 不跳行程视图), 改名行内
     编辑, 删除二次确认, 卡片化样式对齐行程列表 (card-t 同一套)。行内
     重渲染会脱链事件目标 —— 委托先判 isConnected (与行程页同一坑)。"""
-    js = auth.get("/tesla/static/js/view/groups-page.js?v=8").text
+    js = auth.get("/tesla/static/js/view/groups-page.js?v=9").text
     for frag in ['"/tesla/trips/api/groups"', "function rowHTML(",
                  "async function gpLoad()",
                  'sheetFrom = "groups"',
@@ -75,7 +75,7 @@ def test_groups_card_span_not_clipped(auth):
     assert ".ct-cell { flex: 1; min-width: 0;" in trips_css   # 行程卡均分不动
     assert ".ct-cell .val {" in trips_css   # 特异性对手 (0,2,0): 跨度规则必须更高
     html = served_page(auth, SHELL)
-    assert "css/tesla-groups.css?v=9" in html   # v9: sec-head 顶距 0 (v8 落后一版)
+    assert "css/tesla-groups.css?v=10" in html   # v10: 跟 3.10.0 弹层批破缓存 +1 (v9: sec-head 顶距 0, v8 落后一版)
 
 
 # ---------------------------------------------------------------- 分组明细 (3.10.0)
@@ -95,9 +95,9 @@ def test_group_trips_page_skeleton(auth):
                  'id="gtr-cancel">取消</button>', 'id="gtr-ok">确认</button>',
                  '<span class="tp-dots" id="tp-dots"><i class="on"></i><i></i>'
                  '<i></i><i hidden></i></span>',
-                 'css/tesla-group-trips.css?v=3',
-                 '<script src="/tesla/static/js/view/group-trips-stream.js?v=2"></script>',
-                 '<script src="/tesla/static/js/view/group-trips-marks.js?v=2"></script>']:
+                 'css/tesla-group-trips.css?v=4',
+                 '<script src="/tesla/static/js/view/group-trips-stream.js?v=3"></script>',
+                 '<script src="/tesla/static/js/view/group-trips-marks.js?v=3"></script>']:
         assert frag in html, f"分组明细第四页缺少 {frag}"
     # 第四页在分页器里: 统计页之后、底行之前 (底行页标第四枚随它亮/藏)
     assert html.index('id="tp-hist"') < html.index('id="tp-gtr"')
@@ -118,7 +118,7 @@ def test_group_trips_page_interactions(auth):
     批提交 (连续性服务端守: 加 = 区间外延吸收, 移 = 只收两端); 顶部下拉
     prepend 回补 scrollTop 不跳位, 尾部触底 IO 链式续载, 就地翻行不整页
     重拉。"""
-    stats_js = auth.get("/tesla/static/js/view/trips-sheet-stats.js?v=42").text
+    stats_js = auth.get("/tesla/static/js/view/trips-sheet-stats.js?v=43").text
     for frag in ['const FOOT_LB = ["行驶轨迹", "行驶数据", "行驶统计", "详细行程"];',
                  "const nPages = () => [...pager.children].filter(el => !el.hidden).length || 1;",
                  "const next = (page + 1) % nPages();",
@@ -129,11 +129,11 @@ def test_group_trips_page_interactions(auth):
                  "if (on) gtrStart(it.gid);",
                  "else if (page > 2) pager.scrollLeft = 2 * pager.clientWidth;"]:
         assert frag in stats_js, f"trips-sheet-stats.js 缺少 {frag}"
-    open_js = auth.get("/tesla/static/js/view/trips-sheet-open.js?v=11").text
+    open_js = auth.get("/tesla/static/js/view/trips-sheet-open.js?v=12").text
     assert "gtrPageSync(it);" in open_js, "openTrip 没挂第四页同步"
-    close_js = auth.get("/tesla/static/js/view/trips-sheet-close.js?v=13").text
+    close_js = auth.get("/tesla/static/js/view/trips-sheet-close.js?v=14").text
     assert "gtrDetach();" in close_js, "hideSheet 没摘第四页"
-    stream_js = auth.get("/tesla/static/js/view/group-trips-stream.js?v=2").text
+    stream_js = auth.get("/tesla/static/js/view/group-trips-stream.js?v=3").text
     for frag in ["const GTR_PAGE = 24",
                  "before=${gtrStream[0].id}&limit=${GTR_PAGE}",
                  "after=${gtrStream[gtrStream.length - 1].id}&limit=${GTR_PAGE}",
@@ -148,7 +148,7 @@ def test_group_trips_page_interactions(auth):
                  "onRefresh: () => gtrLoadBefore()",   # 流文件后加载: 箭头延迟解析
                  "gtrMarquee()"]:
         assert frag in stream_js, f"group-trips-stream.js 缺少 {frag}"
-    marks_js = auth.get("/tesla/static/js/view/group-trips-marks.js?v=2").text
+    marks_js = auth.get("/tesla/static/js/view/group-trips-marks.js?v=3").text
     for frag in ["function gtrEff(it)", "function gtrEnds()", "function gtrBarSync()",
                  "已标记 ${n} 段",
                  # 整行可点 (点行 = 翻转标记, 与全 app 列表行同一习惯; 按钮只是
@@ -162,8 +162,8 @@ def test_group_trips_page_interactions(auth):
                  "gtrLoad();"]:   # 服务端拒了整页重拉对齐真身 (标记作废)
         assert frag in marks_js, f"group-trips-marks.js 缺少 {frag}"
     # 整行可点的按压反馈 (没反馈像点不了)
-    gtr_css = auth.get("/tesla/static/css/tesla-group-trips.css?v=3").text
+    gtr_css = auth.get("/tesla/static/css/tesla-group-trips.css?v=4").text
     assert ".gtr-row { cursor: pointer;" in gtr_css and ".gtr-row:active" in gtr_css
     # gid 载荷链: openMerged 只在分组页打开时带 gid (第四页随它挂上)
-    merged_js = auth.get("/tesla/static/js/view/trips-sheet-page.js?v=9").text
+    merged_js = auth.get("/tesla/static/js/view/trips-sheet-page.js?v=10").text
     assert "gid: info && info.id != null ? info.id : null" in merged_js
