@@ -88,34 +88,36 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/trackutil.js", 5),   # v5: 扁平版 splitGapsFlat/decimateFlat 随原始轨迹层退役
                    ("js/track-animation.js", 3),
                    ("js/format.js", 6),      # 新增 shiftStamp (段首时刻平移段内行驶秒, 时刻跟播)
-                   ("css/tesla-charging-cards.css", 11),  # v10: sec-head 顶距 0 (全 app 标题统一
+                   ("css/tesla-charging-cards.css", 12),  # v10: sec-head 顶距 0 (全 app 标题统一
                                                           # --content-top 一条线, 2026-09-27)
                                                           # v11: 快慢充 pill 常驻卡右上角,
                                                           # Tesla 字标立到它左边
                    # ⑤ 视图 css 撤 body 尺寸 + 菜单封顶吃 --shell-h 的 9 份
                    ("css/tesla-charging-page.css", 4),    # v4: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
                                                           #   v3: 大屏手机一列 (.fl 标签列内封顶)
-                   ("css/tesla-stats.css", 12),          # v12: 720 多栏退役 (统计卡恒两列/图卡恒单列); 独立页死块退役;
+                   ("css/tesla-stats.css", 13),          # v12: 720 多栏退役 (统计卡恒两列/图卡恒单列); 独立页死块退役;
                                                          #   v11: 常去地点 12 根 (注释对齐)
                                                          # + 电池健康页复用统计卡/图卡 (共用底座)
                                                          # + .bh-note 口径脚注 + 表格退役 + id 规则改类
                                                          #   (行程统计复用) + 月度降高/滑块轨道/网格 dim
                                                          # + v9: 名字图加高; v10: ts-loc 340 (全量出柱)
-                   ("css/tesla-groups.css", 12),  # v12: 宽度查询折叠 (列表 12px 恒生效); 独立页死块退役;
+                   ("css/tesla-groups.css", 13),  # v12: 宽度查询折叠 (列表 12px 恒生效); 独立页死块退役;
                                                  #   v11: 大屏手机一列 (顶置 toast 列内口径);
                                                  # v10: 破缓存批 (见上); v9: sec-head 顶距 0 + 跨度格字号特异性真收一档
                                                  # + 斜杠断行保底
-                   ("css/tesla-group-trips.css", 5),  # v5: 进页即多选 (右上选圈, 未选降透明;
+                   ("css/tesla-group-trips.css", 6),  # v5: 进页即多选 (右上选圈, 未选降透明;
                                                          # 页头/说明/行内按钮撤净, 底条常驻取消/确定);
                                                          # v4: 破缓存批; v3: 整行可点反馈 (v2 第四页版;
                                                          # v1 二级页版已出批)
+                   ("css/tesla-trips-cards.css", 4),       # v4: 侧距统一 16 (#list 12→16, 卡内衬 13→14);
+                                                         #   v1-3 历史漏钉, 本批补上
                    ("css/tesla-changelog.css", 3),  # v3: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役
                    ("css/tesla-trips-page.css", 8),      # v8: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
                                                  #   v7: 大屏手机一列 (.fl 标签列内封顶);
                                                  # v6: sec-head 顶距 0 (标题统一一条线)
-                   ("css/tesla-map-page.css", 5),        # v5: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
+                   ("css/tesla-map-page.css", 6),        # v5: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
                                                          #   v4: sec-head 顶距 0 (标题统一一条线)
-                   ("css/tesla-chargemap-page.css", 5),  # v5: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役;
+                   ("css/tesla-chargemap-page.css", 6),  # v5: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役;
                                                          #   v4: sec-head 顶距 0 (标题统一一条线)
                    ("css/tesla-live-page.css", 3),  # v3: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役
                    ("css/tesla-live-driving.css", 20),  # v20: 平均电耗/最高车速两格退役 (剩
@@ -187,7 +189,7 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   .swipe-list) + .plc-sum
                                                          #   汇总行 + 红钮; v17:
                                                          #   账号三卡
-                   ("css/tesla-shell-floor.css", 10),   # v10: 大屏手机一列 (屏底 toast 列内口径);
+                   ("css/tesla-shell-floor.css", 11),   # v10: 大屏手机一列 (屏底 toast 列内口径);
                                                          #   v9: 设置族卡间纵距 + 账号/地点视图
                                                          #   补进族规则 (v8: 左缘边条 40px)
                    ("js/tesla-navigation.js", 4),       # v4: 足迹地图闸 (navigate 拦旁路);

@@ -75,7 +75,7 @@ def test_groups_card_span_not_clipped(auth):
     assert ".ct-cell { flex: 1; min-width: 0;" in trips_css   # 行程卡均分不动
     assert ".ct-cell .val {" in trips_css   # 特异性对手 (0,2,0): 跨度规则必须更高
     html = served_page(auth, SHELL)
-    assert "css/tesla-groups.css?v=12" in html   # v12: 宽度查询折叠 (v11: 大屏手机一列, v10: 3.10.0 弹层批破缓存 +1)
+    assert "css/tesla-groups.css?v=13" in html   # v12: 宽度查询折叠 (v11: 大屏手机一列, v10: 3.10.0 弹层批破缓存 +1)
 
 
 # ---------------------------------------------------------------- 分组明细 (3.10.0)
@@ -97,7 +97,7 @@ def test_group_trips_page_skeleton(auth):
                  'id="gtr-cancel">取消</button>', 'id="gtr-ok">确定</button>',
                  '<span class="tp-dots" id="tp-dots"><i class="on"></i><i></i>'
                  '<i></i><i hidden></i></span>',
-                 'css/tesla-group-trips.css?v=5',
+                 'css/tesla-group-trips.css?v=6',
                  '<script src="/tesla/static/js/view/group-trips-stream.js?v=4"></script>',
                  '<script src="/tesla/static/js/view/group-trips-marks.js?v=4"></script>']:
         assert frag in html, f"分组明细第四页缺少 {frag}"
@@ -172,7 +172,7 @@ def test_group_trips_page_interactions(auth):
                  "gtrLoad();"]:   # 服务端拒了整页重拉对齐真身 (钩集随重拉复位)
         assert frag in marks_js, f"group-trips-marks.js 缺少 {frag}"
     # 选圈样式 (行程列表多选同款几何) + 未选降透明 + 整行可点按压反馈
-    gtr_css = auth.get("/tesla/static/css/tesla-group-trips.css?v=5").text
+    gtr_css = auth.get("/tesla/static/css/tesla-group-trips.css?v=6").text
     assert ".gtr-row .pick {" in gtr_css and ".gtr-row.in .pick::after" in gtr_css
     assert ".gtr-row:not(.in)" in gtr_css
     assert ".gtr-row { cursor: pointer;" in gtr_css and ".gtr-row:active" in gtr_css

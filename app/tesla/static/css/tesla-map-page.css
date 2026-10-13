@@ -31,7 +31,7 @@ button, a, summary { touch-action: manipulation; }
 .stats { display: flex; gap: 10px; padding: 10px 14px 0; }
 .stat {
   flex: 1; background: var(--surface); border-radius: 14px;
-  padding: 9px 13px; border: 1px solid var(--hairline);
+  padding: 9px 14px; border: 1px solid var(--hairline);
 }
 .stat .lb { font-size: 11px; color: var(--ink-2); }
 .stat .val { font-size: 19px; font-weight: 650; letter-spacing: -.4px; margin-top: 2px;

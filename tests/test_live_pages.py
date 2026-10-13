@@ -165,7 +165,7 @@ def test_live_page_layout_bombproof(auth):
     assert '"出发 " + (s.start ? s.start.slice(11) : "–")' in js
     # 舞台底部让位屏底悬浮筛选条 (各视图 .view-scroll 同款 --bar-clear):
     # 原来只让 safe+10, 地图卡底下 ~50px 被悬浮条压着像缺了个角
-    assert "padding: var(--content-top) 14px var(--bar-clear);" in html
+    assert "padding: var(--content-top) 16px var(--bar-clear);" in html   # 侧距全站统一 16 (2026-10-13)
     # 地图保底高度 (面板再挤也不许把地图挤成缝) + 矮屏 (横屏手机) 收一档密度
     assert "flex: 1; min-height: 200px;" in html
     assert "@media (max-height: 560px)" in html

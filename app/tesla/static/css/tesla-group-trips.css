@@ -25,7 +25,7 @@
 /* 列表: 间距与分组列表同款; 底衬垫高给常驻落定条留位 (滚到底的内容
    不被遮) */
 .gtr-list { display: flex; flex-direction: column; gap: 10px;
-  padding: 8px 14px calc(env(safe-area-inset-bottom) + 88px); }
+  padding: 8px 16px calc(env(safe-area-inset-bottom) + 88px); }
 
 /* 两端加载提示行 (顶部下拉/尾部上拉的静态引导, JS 控显隐与文案) */
 .gtr-top, .gtr-tail { text-align: center; font-size: 12px; color: var(--ink-3); }
@@ -58,7 +58,7 @@
 /* 落定条: 常驻浮在页底 (长列表滚不到底也够得着); 取消 = 弱一档的次要
    操作, 确定 = 蓝实底主操作, 都是大按钮, 平分整条 */
 .gtr-bar {
-  position: absolute; left: 14px; right: 14px;
+  position: absolute; left: 16px; right: 16px;
   bottom: calc(env(safe-area-inset-bottom) + 10px); z-index: 5;
   display: flex; align-items: center; gap: 10px;
   padding: 10px 12px; border-radius: 16px;

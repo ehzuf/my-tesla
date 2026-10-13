@@ -9,9 +9,9 @@
 .count-badge { font-size: 16px; color: var(--ink-3); }
 /* 单列列表 (与行程页一致, 手机优先); #chg-masonry 是 3.0 壳里充电视图的
    同一容器 (壳内多视图并存, id 加前缀防撞 —— 行程页也认 #masonry 级样式) */
-#masonry, #chg-masonry { display: flex; flex-direction: column; gap: 8px; padding: 8px 14px 10px; transition: opacity .25s; }
+#masonry, #chg-masonry { display: flex; flex-direction: column; gap: 10px; padding: 8px 16px 10px; transition: opacity .25s; }
 #masonry.dim, #chg-masonry.dim { opacity: .45; pointer-events: none; }
-/* 月份分组头 (用户点名按月分组): 栏 gap 是匀的 8px, 组间气口靠 margin 顶开;
+/* 月份分组头 (用户点名按月分组): 栏 gap 是匀的 10px, 组间气口靠 margin 顶开;
    首组紧贴页头不出大缝 */
 .month-head {
   font-size: 13px; font-weight: 650; letter-spacing: -.1px; color: var(--ink-2);
@@ -20,7 +20,7 @@
 .month-head:first-child { margin-top: 0; }
 .card-s {
   background: var(--surface); border-radius: 16px; border: 1px solid var(--hairline);
-  padding: 10px 12px; cursor: pointer; overflow: hidden;
+  padding: 10px 14px; cursor: pointer; overflow: hidden;
   transition: transform .15s, background .15s;
 }
 .card-s:active { transform: scale(.975); background: #232326; }
