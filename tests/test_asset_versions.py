@@ -131,7 +131,12 @@ def test_guard_assets_versioned_on_shell(auth):
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
-                   ("css/tesla-base.css", 14),          # v14: UI 重构基座 —— 动效令牌
+                   ("css/tesla-base.css", 15),          # v15: 列表入场错峰 (rise,
+                                                         #   头 6 项递进 45ms, 容器
+                                                         #   = 全 app 内容列表/统计格/
+                                                         #   图卡/changelog/状态面板/
+                                                         #   地图统计行/设置卡);
+                                                         #   v14: UI 重构基座 —— 动效令牌 —— 动效令牌
                                                          #   (--ease-ios/--ease-swipe) + 视图入场
                                                          #   动画 (view-in 淡入上浮, backwards 不
                                                          #   留 transform) + prefers-reduced-motion

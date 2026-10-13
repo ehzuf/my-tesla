@@ -127,6 +127,38 @@ main {
 @keyframes view-in {
   from { opacity: 0; transform: translateY(10px); }
 }
+
+/* ---------- 列表入场错峰 (2026-10-13 UI 重构) ----------
+   容器直下子项淡入上浮, 头 6 项按位次递进 45ms —— 第 7 项起不再等:
+   分页追加/流式到达的远端卡即到即显, 不拖整列节奏。与 view-in 同一套
+   重启机制 (display 翻转即重跑): 切视图回来整列轻量级联, 拉刷新/筛选
+   重灌 (innerHTML 清空重排) 也吃到同一套。live 轮询只重写值层 span
+   (不在容器直下), 5 秒一轮不会重跑动画。容器清单 = 全 app 的内容列表
+   (行程/充电/分组/组详情) + 统计格两族 + 图卡族 + changelog 版本行 +
+   状态页面板排 + 两地图页顶统计行 + 设置族表单卡 */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+}
+:is(#list, #chg-masonry, .gp-list, .gtr-list, .stats-grid, .charts-grid,
+    #entries, #lv-panels, .stats) > *,
+.view-scroll > .card {
+  animation: rise .4s var(--ease-ios) backwards;
+}
+:is(#list, #chg-masonry, .gp-list, .gtr-list, .stats-grid, .charts-grid,
+    #entries, #lv-panels, .stats) > :nth-child(2),
+.view-scroll > .card:nth-child(2) { animation-delay: 45ms; }
+:is(#list, #chg-masonry, .gp-list, .gtr-list, .stats-grid, .charts-grid,
+    #entries, #lv-panels, .stats) > :nth-child(3),
+.view-scroll > .card:nth-child(3) { animation-delay: 90ms; }
+:is(#list, #chg-masonry, .gp-list, .gtr-list, .stats-grid, .charts-grid,
+    #entries, #lv-panels, .stats) > :nth-child(4),
+.view-scroll > .card:nth-child(4) { animation-delay: 135ms; }
+:is(#list, #chg-masonry, .gp-list, .gtr-list, .stats-grid, .charts-grid,
+    #entries, #lv-panels, .stats) > :nth-child(5),
+.view-scroll > .card:nth-child(5) { animation-delay: 180ms; }
+:is(#list, #chg-masonry, .gp-list, .gtr-list, .stats-grid, .charts-grid,
+    #entries, #lv-panels, .stats) > :nth-child(6),
+.view-scroll > .card:nth-child(6) { animation-delay: 225ms; }
 .view-scroll {
   flex: 1; min-height: 0;
   overflow-y: auto; -webkit-overflow-scrolling: touch;
