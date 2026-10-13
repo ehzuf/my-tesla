@@ -2,7 +2,9 @@
 取名策略 / regeo 协议 / 读侧过滤 / worker 轮次 (AmapClient 换假件)。API 级在 test_place_amap_naming。"""
 import httpx
 import pytest
+from sqlalchemy.orm import sessionmaker
 
+from app import database
 from app.tesla import place_worker, roads_amap
 from app.tesla.models import Address, AppSetting
 from app.tesla.repository.place_names import (done_address_ids,
@@ -133,7 +135,6 @@ class _FakeClient:
 
 
 def _factories():
-    from app import database  # pylint: disable=import-outside-toplevel
     return database.session_factory(), database.own_session_factory()
 
 
@@ -225,9 +226,9 @@ def test_loop_takes_tesla_factory_fresh_each_round(monkeypatch):
 
     monkeypatch.setattr(place_worker, "_round", fake_round)
     fresh = iter(["boot-factory", "rebuilt-factory"])
-    monkeypatch.setattr(place_worker.database, "session_factory",
+    monkeypatch.setattr(database, "session_factory",
                         lambda: next(fresh))
     place_worker._State.stop.clear()        # pylint: disable=protected-access
-    place_worker._loop(None)                # own 工厂由假 _round 收下
+    place_worker._loop(sessionmaker())      # own 工厂由假 _round 收下
     assert seen == ["boot-factory", "rebuilt-factory"]
     place_worker._State.stop.clear()        # 还原给后续用例

@@ -64,10 +64,10 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/view/trips-export-video.js", 4),  # v4: Esc 收预览 (v3 只留高德)
                    ("js/view/trips-playback-loop.js", 12),       # 恒一位小数防抖 + 流式节拍开播定死
                    ("js/view/trips-sheet-open.js", 12),          # v12: 破缓存批
-                                                                  #   (见 tesla-trips-sheet.css 行);
-                                                                  #   v11: openTrip 挂第四页 (gtrPageSync);
-                                                                  # v10: 三页独立: 直方图开弹层即取 +
-                                                                  # playTrack(defer) 先于地图预载
+                                                               #   (见 tesla-trips-sheet.css 行);
+                                                               #   v11: openTrip 挂第四页 (gtrPageSync);
+                                                               # v10: 三页独立: 直方图开弹层即取 +
+                                                               # playTrack(defer) 先于地图预载
                    ("js/view/trips-playback-overlays.js", 8),
                    ("js/view/trips-playback-session.js", 14),    # defer 起播: 数据会话先挂
                                                                   # (curSess), begin 才进播放态
@@ -93,7 +93,7 @@ def test_guard_assets_versioned_on_shell(auth):
                                                           # v11: 快慢充 pill 常驻卡右上角,
                                                           # Tesla 字标立到它左边
                    # ⑤ 视图 css 撤 body 尺寸 + 菜单封顶吃 --shell-h 的 9 份
-                   ("css/tesla-charging-page.css", 4),      # v4: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
+                   ("css/tesla-charging-page.css", 4),    # v4: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
                                                           #   v3: 大屏手机一列 (.fl 标签列内封顶)
                    ("css/tesla-stats.css", 12),          # v12: 720 多栏退役 (统计卡恒两列/图卡恒单列); 独立页死块退役;
                                                          #   v11: 常去地点 12 根 (注释对齐)

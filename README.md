@@ -12,7 +12,7 @@
 <br>
 ![pylint](https://img.shields.io/badge/pylint-10.00%2F10-brightgreen)
 ![mypy](https://img.shields.io/badge/mypy-strict-2A6DB2)
-![pytest](https://img.shields.io/badge/pytest-448%20passed-0A9EDC?logo=pytest&logoColor=white)
+![pytest](https://img.shields.io/badge/pytest-471%20passed-0A9EDC?logo=pytest&logoColor=white)
 ![coverage](https://img.shields.io/badge/JS%20coverage-95%25%2B-brightgreen)
 <br>
 ![ESLint](https://img.shields.io/badge/ESLint-passing-4B32C3?logo=eslint&logoColor=white)
@@ -25,52 +25,52 @@
 ## 1. ✨ 功能
 
 <p align="center">
-<a name="shot-live"><img src="docs/screenshot-live.png?v=2" width="280" alt="状态 · My Tesla (演示数据)"></a>
+<a name="shot-live"><img src="docs/screenshot-live.png?v=3" width="280" alt="状态 · My Tesla (演示数据)"></a>
 <br><b>状态</b> — 车开到哪、还剩多少电、还能跑多远, 打开即见; 行驶中蓝点实时跟车
 </p>
 
 <p align="center">
-<a name="shot-trips"><img src="docs/screenshot-trips.png" width="280" alt="行程轨迹 · My Tesla (演示数据)"></a>
+<a name="shot-trips"><img src="docs/screenshot-trips.png?v=2" width="280" alt="行程轨迹 · My Tesla (演示数据)"></a>
 <br><b>行程轨迹</b> — 每一趟去了哪、开了多久、耗了多少电, 随时翻旧账
 </p>
 
 <p align="center">
-<a name="shot-trip"><img src="docs/screenshot-trip.png" width="280" alt="单个行程 · My Tesla (演示数据)"></a>
+<a name="shot-trip"><img src="docs/screenshot-trip.png?v=2" width="280" alt="单个行程 · My Tesla (演示数据)"></a>
 <br><b>单个行程</b> — 回放这一趟怎么开的: 路线按车速着色, 横滑看速度与电耗曲线
 </p>
 
 <p align="center">
-<a name="shot-tripstats"><img src="docs/screenshot-tripstats.png" width="280" alt="行程统计 · My Tesla (演示数据)"></a>
+<a name="shot-tripstats"><img src="docs/screenshot-tripstats.png?v=2" width="280" alt="行程统计 · My Tesla (演示数据)"></a>
 <br><b>行程统计</b> — 一段时间开了多少公里、平均电耗多少, 趋势与分布一眼看完
 </p>
 
 <p align="center">
-<a name="shot-groups"><img src="docs/screenshot-groups.png" width="280" alt="行程分组 · My Tesla (演示数据)"></a>
-<br><b>行程分组</b> — 出差、周末出行各归一册, 分开算用车账
+<a name="shot-groups"><img src="docs/screenshot-groups.png?v=2" width="280" alt="行程分组 · My Tesla (演示数据)"></a>
+<br><b>行程分组</b> — 出差、周末出行各归一册, 分开算用车账; 组里组外的行程在「详细行程」页随手点选增减
 </p>
 
 <p align="center">
-<a name="shot-map"><img src="docs/screenshot-map.png" width="280" alt="足迹地图 · My Tesla (演示数据)"></a>
+<a name="shot-map"><img src="docs/screenshot-map.png?v=2" width="280" alt="足迹地图 · My Tesla (演示数据)"></a>
 <br><b>足迹地图</b> — 车轮碾过的每条路都亮在地图上, 拖时间轴回放这些年跑过的路
 </p>
 
 <p align="center">
-<a name="shot-charging"><img src="docs/screenshot-charging.png" width="280" alt="充电记录 · My Tesla (演示数据)"></a>
+<a name="shot-charging"><img src="docs/screenshot-charging.png?v=2" width="280" alt="充电记录 · My Tesla (演示数据)"></a>
 <br><b>充电记录</b> — 每次在哪充、充了多少、花了几块钱, 按区域翻查
 </p>
 
 <p align="center">
-<a name="shot-stats"><img src="docs/screenshot-stats.png" width="280" alt="充电统计 · My Tesla (演示数据)"></a>
+<a name="shot-stats"><img src="docs/screenshot-stats.png?v=2" width="280" alt="充电统计 · My Tesla (演示数据)"></a>
 <br><b>充电统计</b> — 每月充电量与花销的趋势, 用电的账一清二楚
 </p>
 
 <p align="center">
-<a name="shot-battery"><img src="docs/screenshot-battery.png" width="280" alt="电池健康 · My Tesla (演示数据)"></a>
+<a name="shot-battery"><img src="docs/screenshot-battery.png?v=2" width="280" alt="电池健康 · My Tesla (演示数据)"></a>
 <br><b>电池健康</b> — 电池还剩几成、衰减快不快, 曲线直接说话
 </p>
 
 <p align="center">
-<a name="shot-chargemap"><img src="docs/screenshot-chargemap.png" width="280" alt="充电地图 · My Tesla (演示数据)"></a>
+<a name="shot-chargemap"><img src="docs/screenshot-chargemap.png?v=2" width="280" alt="充电地图 · My Tesla (演示数据)"></a>
 <br><b>充电地图</b> — 常去充电点的地理分布, 陌生地方先看哪里充过电
 </p>
 
@@ -104,12 +104,17 @@ python3.13 -m venv .venv          # Windows: py -3.13 -m venv .venv
 
 ## 4. 初始化
 
+四页向导一路走: 管理员 → 数据源 → 地图 → 完成。数据源与地图两页各带
+「测试」钮 —— 数据库真连一次、地图 Key 真验一遍, 测试通过「下一步」才
+解锁, 改过输入就作废重测; 最后一页把三页所填汇总过目, 点「进入应用」
+进入应用。导航按钮常驻屏幕底部, 与表单内容分离。
+
 ### 4.1 建立管理员
 
 注册管理员账号, 注册即登录。
 
 <p align="center">
-<a name="shot-setup-1"><img src="docs/screenshot-setup-1.png" width="240" alt="向导第一步 · 建立管理员"></a>
+<a name="shot-setup-1"><img src="docs/screenshot-setup-1.png?v=2" width="240" alt="向导第一页 · 建立管理员"></a>
 </p>
 
 ### 4.2 数据源
@@ -146,12 +151,12 @@ compose 内部网络互通), 跨机器访问要先给 `database` 服务加端口
 ```
 
 <p align="center">
-<a name="shot-setup-2"><img src="docs/screenshot-setup-2.png?v=2" width="240" alt="向导第二步 · 填 TeslaMate 连接"></a>
+<a name="shot-setup-2"><img src="docs/screenshot-setup-2.png?v=3" width="240" alt="向导第二页 · 填 TeslaMate 连接"></a>
 </p>
 
 ### 4.3 地图
 
-填高德两把 Key, 保存并进入应用。
+填地图 Key、安全码和 Web Key, 先点「测试」验证, 通过了「下一步」才解锁。
 
 **地图 Key 与安全码** (服务平台选「Web端 (JS API)」):
 
@@ -161,14 +166,23 @@ compose 内部网络互通), 跨机器访问要先给 `database` 服务加端口
 - Key 生成后点开详情, 「安全密钥」就是这里的安全码 —— Key 和安全码配套,
   换新 Key 要配新安全码
 
-**Web 服务 Key** (足迹道路拟合要用):
+**Web Key** (足迹道路拟合要用):
 
 - 在同一个应用的「添加 Key」再来一把, 服务平台选「Web服务」
 - 和上面的地图 Key 是两种类型, 不能混用
 - 只在服务端用: 把足迹轨迹拟合到实际道路
 
 <p align="center">
-<a name="shot-setup-3"><img src="docs/screenshot-setup-3.png?v=2" width="240" alt="向导第三页 · 填高德 Key"></a>
+<a name="shot-setup-3"><img src="docs/screenshot-setup-3.png?v=3" width="240" alt="向导第三页 · 填高德 Key"></a>
+</p>
+
+### 4.4 完成
+
+最后一页把三页所填汇总过目 —— 密码与 Key 只显示打码后的样子。点
+「进入应用」进入应用, 直接落到状态页。
+
+<p align="center">
+<a name="shot-setup-4"><img src="docs/screenshot-setup-4.png" width="240" alt="向导第四页 · 所填汇总与进入应用"></a>
 </p>
 
 ## 5. 📄 许可证

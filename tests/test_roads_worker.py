@@ -4,6 +4,9 @@ v2 ok 无推断行直采不重拟合 / 配额歇一小时 / 网络错误同程 3
 现取工厂 / start·reset 生命周期。AmapClient 换假件, 不发真请求。"""
 from datetime import date, datetime, timedelta
 
+from sqlalchemy.orm import sessionmaker
+
+from app import database
 from app.tesla import roads_amap, roads_worker
 from app.tesla.models import AppSetting
 from app.tesla.repository.map_roads import (RoadLite, done_drive_ids, road_row,
@@ -58,7 +61,6 @@ def _seed(db, drive_id, km=1.5):
 
 
 def _factories():
-    from app import database  # pylint: disable=import-outside-toplevel
     return database.session_factory(), database.own_session_factory()
 
 
@@ -250,10 +252,10 @@ def test_loop_takes_tesla_factory_fresh_each_round(monkeypatch):
 
     monkeypatch.setattr(roads_worker, "_round", fake_round)
     fresh = iter(["boot-factory", "rebuilt-factory"])
-    monkeypatch.setattr(roads_worker.database, "session_factory",
+    monkeypatch.setattr(database, "session_factory",
                         lambda: next(fresh))
     roads_worker._State.stop.clear()        # pylint: disable=protected-access
-    roads_worker._loop(None)                # own 工厂由假 _round 收下
+    roads_worker._loop(sessionmaker())      # own 工厂由假 _round 收下
     assert seen == ["boot-factory", "rebuilt-factory"]
     roads_worker._State.stop.clear()        # 还原给后续用例
     assert not roads_worker._State.wake.is_set()        # pylint: disable=protected-access

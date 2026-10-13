@@ -4,6 +4,7 @@
 这些是列表/播放主流程之外的分支, 平时不出场, 出场就是生产事故面。"""
 import json
 import subprocess as subprocess_module
+import time
 
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
@@ -219,9 +220,9 @@ def test_warm_with_retry_retries_until_success(monkeypatch):
     引擎后无需重启就有预热 (NAS 实测: 老实现败了线程就没了, 统计页首访
     得现场积分全程)。"""
     sleeps: list[float] = []
-    monkeypatch.setattr(background.time, "sleep", sleeps.append)
+    monkeypatch.setattr(time, "sleep", sleeps.append)
     outcomes = iter([False, False, True])
-    monkeypatch.setattr(background.database, "session_factory", lambda: "f")
+    monkeypatch.setattr(database, "session_factory", lambda: "f")
     background._warm_with_retry(lambda _f: next(outcomes))  # pylint: disable=protected-access
     assert sleeps == [background.WARM_RETRY_S, background.WARM_RETRY_S]
 

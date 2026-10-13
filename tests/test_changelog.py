@@ -35,7 +35,7 @@ def test_versions_newest_first_and_wellformed():
         "3.1.6", "3.1.5", "3.1.4", "3.1.3", "3.1.2", "3.1.1",
         "3.1.0", "3.0.2", "3.0.1", "3.0.0", "2.6.0", "2.5.1", "2.5.0", "2.4.0",
         "2.3.0", "2.2.0", "2.1.0", "2.0.0", "1.1.0", "1.0.0"]
-    assert vs[0].date == "2026-10-12" and vs[-1].date == "2026-09-08"
+    assert vs[0].date == "2026-10-13" and vs[-1].date == "2026-09-08"
     for v in vs:
         assert v.items                                  # 每版至少一条
         assert len(v.date) == 10 and v.date[4] == "-"   # YYYY-MM-DD
@@ -73,7 +73,7 @@ def test_changelog_entries_endpoint(auth):
         assert e["items"] == [{"kind": it.kind, "text": it.text}
                               for it in v.items]
     # 头条是主打: 新功能或修的主 bug; 纯打磨的批次整版都是改进, 不硬凑
-    # (3.10.0 头条是新增「分组弹层第四页「详细行程」: 先标记后确认」;
+    # (3.10.0 头条是新增「分组弹层第四页「详细行程」: 点选 + 确定/取消」;
     # 3.9.0 头条是新增「历史路线构造进度蒙版」;
     # 3.8.1 整版都是改进「Web 服务 Key 必填 + 设置说明撤下」;
     # 3.8.0 头条是新增「--cert-file/--key-file 直接指定证书」;
