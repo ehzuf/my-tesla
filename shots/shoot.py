@@ -84,7 +84,9 @@ async def shoot_view(browser, key, ready_js, last_ms=1200):
 
 
 # 各视图数据就绪锚点 (等真实数据渲染完, 不是骨架出现):
-#   live        booting 占位收起 + 速度格有值
+#   live        booting 占位收起 + 速度格有值 + 蓝点落在地图框内
+#   (2026-10-13 发布批教训: 只等速度数字时, 一次种子库瞬态让地图塌成
+#    底部窄条、无轨迹无蓝点也过了锚, 坏图悄悄上线 —— 蓝点入框才算就绪)
 #   trips       列表首批卡片落 DOM
 #   tripstats   顶部里程累计 = 服务端汇总 (非空)
 #   groups      分组卡落 DOM
@@ -97,7 +99,12 @@ async def shoot_view(browser, key, ready_js, last_ms=1200):
 READY = {
     "live": "document.querySelector('#live') "
             "&& !document.querySelector('#live').hidden "
-            "&& document.querySelector('#lv-speed').textContent.trim() !== ''",
+            "&& document.querySelector('#lv-speed').textContent.trim() !== '' "
+            "&& (() => { const d = document.querySelector('.car-dot'), "
+            "m = document.querySelector('.map-wrap'); "
+            "if (!d || !m) return false; "
+            "const a = d.getBoundingClientRect(), b = m.getBoundingClientRect(); "
+            "return a.bottom > b.top && a.top < b.bottom; })()",
     "trips": "document.querySelectorAll('#list > *').length >= 5",
     "tripstats": "document.querySelector('#ts-km-total')"
                  ".textContent.trim() !== ''",

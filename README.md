@@ -25,7 +25,7 @@
 ## 1. ✨ 功能
 
 <p align="center">
-<a name="shot-live"><img src="docs/screenshot-live.png?v=3" width="280" alt="状态 · My Tesla (演示数据)"></a>
+<a name="shot-live"><img src="docs/screenshot-live.png?v=4" width="280" alt="状态 · My Tesla (演示数据)"></a>
 <br><b>状态</b> — 车开到哪、还剩多少电、还能跑多远, 打开即见; 行驶中蓝点实时跟车
 </p>
 
