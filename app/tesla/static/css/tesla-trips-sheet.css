@@ -46,19 +46,7 @@
 
 
 
-/* ---------- 轻提示 ---------- */
-#toast {
-  position: fixed; top: calc(env(safe-area-inset-top) + 60px); left: 50%;
-  transform: translateX(-50%) translateY(-8px); z-index: 99;
-  max-width: 80%;   /* 列宽的 80%: 大屏封在列内 (手机上与 80vw 等价) */
-  font-size: 13px; color: #fff; text-align: center;
-  background: rgba(10,10,12,.85);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  border-radius: 999px; padding: 9px 16px;
-  opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none;
-}
-#toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
-#toast[hidden] { display: none; }
+/* #toast 顶置副本已删 (2026-10-13) —— 全站屏底 toast 是 tesla-base 单源 */
 /* 基座收口到 #sheet (3.0 四张弹层共用 .sheet 类名互相漏样式, 充电侧先
    收口): 这里并入此前漏进来的宽屏居中/描边/阴影与现行内衬, 渲染不变 */
 #sheet {

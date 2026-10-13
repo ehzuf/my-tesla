@@ -104,20 +104,8 @@ main { max-width: 920px; margin: 0 auto; padding-bottom: 40px; }
   border-radius: 5px; background: rgba(57,135,229,.32); border: 2px solid var(--blue);
 }
 
-/* ---------- 加载/错误 ---------- */
-.tail { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 0 40px; }
-.spin {
-  width: 22px; height: 22px; border-radius: 50%;
-  border: 2px solid var(--surface-3); border-top-color: #9a9aa0;
-  animation: rot .8s linear infinite;
-}
-@keyframes rot { to { transform: rotate(360deg); } }
-.err-box { text-align: center; padding: 40px 20px; }
-.err-box p { color: var(--ink-2); margin-bottom: 14px; font-size: 13.5px; }
-.retry {
-  padding: 8px 22px; border-radius: 12px; background: var(--surface-2);
-  color: var(--ink-1); font-weight: 600; font-size: 13.5px;
-}
+/* ---------- 加载/错误 ----------
+   .tail/.spin/.err-box/.retry 已收编 tesla-base 单源 (2026-10-13) */
 .charts-grid.dim { opacity: .45; pointer-events: none; }
 .charts-grid { transition: opacity .25s; }
 /* 电池健康度页的口径脚注 (2026-09-27 新视图): 弱色小字, 与图卡同宽收在网格里 */

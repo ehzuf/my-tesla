@@ -190,6 +190,30 @@ main {
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ---------- 共享状态件 (2026-10-13 收编单源) ----------
+   .spin/.tail/.err-box/.retry 原先散在充电/行程/统计/分组/日志/地图/驾驶
+   七八份视图 CSS 里, 同特异度全局层叠互相覆盖 —— 作者值大半是死码
+   (行程 22px/统计 22px 从没渲染过, 实渲染一直是最后一份), 错误态更是
+   三家 margin/padding/gap 叠罗汉。收编成 base 单源: 尺寸/配色取当日
+   有效值 (30px·3px 蓝帽), 间距全走 flex gap; 视图独有的位置微调
+   (分组顶距/日志底距/弹层内 margin) 留视图内 scoped 规则。 */
+.spin {
+  width: 30px; height: 30px; border-radius: 50%; margin-inline: auto;
+  border: 3px solid rgba(255,255,255,.18); border-top-color: var(--blue);
+  animation: rot .8s linear infinite;
+}
+@keyframes rot { to { transform: rotate(360deg); } }
+.tail { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 0 40px; }
+/* 错误态: 文案 (p) + 重试钮纵排居中, 间距走 gap 不再 margin 叠加;
+   中性 pill 钮 (地图族的蓝色主钮是 .retry-btn, 各自留在视图里) */
+.err-box { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 40px 20px; }
+.err-box p { color: var(--ink-2); font-size: 13.5px; }
+.retry {
+  padding: 8px 22px; border-radius: 999px; background: var(--surface-2);
+  border: 1px solid var(--hairline); color: var(--ink-1);
+  font-weight: 600; font-size: 13.5px;
+}
+
 /* ---------- 全局悬浮菜单键 (2026-10-12) ----------
    Safari 左缘右划是系统后退手势, 边缘呼出抽屉在 Safari 用不了 —— 独立
    悬浮键兜底, 任何视图常驻 (点击开抽屉, 接线在 tesla-drawer)。刻意不进

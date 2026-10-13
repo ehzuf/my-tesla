@@ -386,19 +386,7 @@ input::placeholder { color: var(--ink-3); }
 .place-pin.sel::before { background: rgba(57,135,229,.42); }
 .place-pin.sel::after { background: #fff; border-color: #3987e5; }
 
-/* ---------- 轻提示 ---------- */
-#toast {
-  position: fixed; top: calc(env(safe-area-inset-top) + 60px); left: 50%;
-  transform: translateX(-50%) translateY(-8px); z-index: 99;
-  max-width: 80%;   /* 列宽的 80%: 大屏封在列内 (手机上与 80vw 等价) */
-  font-size: 13px; color: #fff; text-align: center;
-  background: rgba(10,10,12,.85);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  border-radius: 999px; padding: 9px 16px;
-  opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none;
-}
-#toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
-#toast.err { color: #ffb3ad; }
+/* #toast 顶置副本已删 (2026-10-13) —— 全站屏底 toast 是 tesla-base 单源 */
 .about-link { display: flex; align-items: center; justify-content: space-between;
   text-decoration: none; color: var(--ink-1); font-size: 15px; padding: 4px 2px; }
 .about-link:active { opacity: .6; }

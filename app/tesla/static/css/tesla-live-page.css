@@ -36,9 +36,4 @@ main {
 /* 首帧等待 (第一次状态返回前) */
 .booting { flex: 1; display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 14px; color: var(--ink-2); }
-.spin {
-  width: 30px; height: 30px; border-radius: 50%;
-  border: 3px solid rgba(255,255,255,.18); border-top-color: var(--blue);
-  animation: rot .8s linear infinite;
-}
-@keyframes rot { to { transform: rotate(360deg); } }
+/* .spin 已收编 tesla-base 单源 (2026-10-13) */
