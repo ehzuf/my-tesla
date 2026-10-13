@@ -17,7 +17,7 @@ def test_guard_assets_versioned_on_shell(auth):
     for ref, v in (("js/tesla-viewport.js", 4), ("js/tesla-sheet-drag.js", 5),
                    ("js/view/charging-detail.js", 16),  # v16: Esc 一层一关 (v15 统计区三格)
                    ("css/tesla-charging-sheet.css", 11),  # v11: 总价一格 + 充电时间格; v10: pill 最右
-                   ("css/tesla-trips-sheet.css", 38),    # v38: 顶置 toast 副本拆净 (base 单源); v37: 宽度查询折叠 (选中信息独占一行恒生效);
+                   ("css/tesla-trips-sheet.css", 39),    # v39: 曲线令牌采用 (ios, #sheet); v38: 顶置 toast 副本拆净 (base 单源); v37: 宽度查询折叠 (选中信息独占一行恒生效);
                                                  #   v36: 大屏手机一列 (顶置 toast 列内口径
                                                  #   + 驾驶员钮 40vw 封顶 192px);
                                                  #   v35: 弹层批整批破缓存 +1 (车机 immutable
@@ -26,7 +26,7 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # (3.10.0); v33: 弹层底行横排「详细行程」
                                                          # 并排 (已出批, 随第四页方案撤回); v31: 三页独立
                    ("css/tesla-trips-playback.css", 9),  # 播放条住回轨迹页 (翻页不收不还)
-                   ("css/tesla-chargemap-map.css", 9),  # v9: 共享状态件收编 (.spin 副本拆); v8: 图例挪画布右上 (左下让位恒定菜单键);
+                   ("css/tesla-chargemap-map.css", 10),  # v10: 曲线令牌采用 (ios, #cm-sheet); v9: 共享状态件收编 (.spin 副本拆); v8: 图例挪画布右上 (左下让位恒定菜单键);
                                                          #   v7: sh-grid margin 显式钉住 (足迹
                                                          # css 裸规则拆净, 泄漏值收编); v6: 图例
                                                          # 搬画布内左下角 (极值随视野算)
@@ -161,13 +161,14 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # 同一水平线, music 同款)
                                                          # + 菜单圆键退役后无 chips 视图底部让位收起
                                                          #   (body.no-bar, --bar-clear 只剩安全区)
-                   ("css/tesla-drawer.css", 10),        # v10: 足迹地图闸灰行 (.drw-leaf.off,
+                   ("css/tesla-drawer.css", 11),        # v11: 曲线令牌采用 (ios); v10: 足迹地图闸灰行 (.drw-leaf.off,
                                                          #   拟合 Key 没填菜单不可点);
                                                          #   v9: 二级叶行缩进 45→28 (用户点名
                                                          #   嫌深); v8: 车辆选择卡住抽屉顶
+                   ("css/tesla-pull-refresh.css", 3),   # v3: 曲线令牌采用 (ios); v1-2 历史漏钉, 本批补上
                    ("css/tesla-filter-bar.css", 5),     # 菜单圆键退役 (#menu-key 拆净,
                                                          # #bar-row.no-chips 整条收起)
-                   ("css/tesla-settings.css", 27),      # v27: 顶置 toast 副本拆净 (base 单源); v26: 宽度查询折叠; 独立页死块退役;
+                   ("css/tesla-settings.css", 28),      # v28: 曲线令牌采用 (ios + swipe); v27: 顶置 toast 副本拆净 (base 单源); v26: 宽度查询折叠; 独立页死块退役;
                                                          #   v25: 大屏手机一列 (顶置 toast 列内口径);
                                                          #   v24: 「获取方式」折叠块
                                                          #   撤下 (说明集中 README);

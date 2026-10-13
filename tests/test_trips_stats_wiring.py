@@ -150,5 +150,5 @@ def test_stats_module_wiring(auth):
     assert "view/trips-playback-session.js?v=14" in html    # defer 起播: 数据会话先挂, begin 才进播放态
     assert "view/trips-sheet-close.js?v=14" in html    # v14: 破缓存批 (v13: hideSheet 摘第四页 gtrDetach)
     assert "view/trips-sheet-open.js?v=12" in html    # v12: 破缓存批 (v11: openTrip 挂第四页 gtrPageSync)
-    assert "css/tesla-trips-sheet.css?v=38" in html    # v37: 宽度查询折叠 (v36: 大屏手机一列, v35: 破缓存批)
+    assert "css/tesla-trips-sheet.css?v=39" in html    # v37: 宽度查询折叠 (v36: 大屏手机一列, v35: 破缓存批)
     assert "css/tesla-trips-playback.css?v=9" in html

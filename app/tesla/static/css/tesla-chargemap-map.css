@@ -102,7 +102,7 @@ main { position: relative; flex: 1; min-height: 0; margin-top: 10px; }
   border: 1px solid var(--hairline); border-bottom: 0;
   box-shadow: 0 -12px 48px rgba(0,0,0,.5);
   padding: 10px 20px calc(env(safe-area-inset-bottom) + 22px);
-  transform: translateY(105%); transition: transform .28s cubic-bezier(.32,.72,.33,1);
+  transform: translateY(105%); transition: transform .28s var(--ease-ios);
 }
 #cm-sheet.show { transform: none; }   /* 开态 none: 闲置不顶变换层 (见 charging-sheet 同注) */
 .sh-title { font-size: 17px; font-weight: 700; margin-top: 10px; }

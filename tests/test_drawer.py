@@ -47,7 +47,7 @@ def test_drawer_anatomy(auth):
     block = page[i:page.index("}", i)]
     for frag in ("width: min(180px, 88vw)", "transform: translateX(-100%)",
                  "rgba(22,22,24,.88)", "blur(24px) saturate(180%)",
-                 "cubic-bezier(.32,.72,.35,1)"):
+                 "var(--ease-ios)"):
         assert frag in block, f"抽屉本体缺 {frag}"
     assert "#drawer.on { transform: translateX(0); }" in page
     assert "#drawer.dragging { transition: none; }" in page   # 拖拽期不过渡

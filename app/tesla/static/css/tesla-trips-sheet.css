@@ -60,7 +60,7 @@
   /* 底衬收窄 (2026-09-23 用户点名把最下方的空白用起来): 原来的 +22px 空
      白改放弹层底一行页标题+页标 (.tp-foot, 在 .tp-pager-zone 里) */
   padding: 10px 20px calc(env(safe-area-inset-bottom) + 8px);
-  transform: translateY(105%); transition: transform .28s cubic-bezier(.32,.72,.33,1);
+  transform: translateY(105%); transition: transform .28s var(--ease-ios);
 }
 #sheet.show { transform: none; }   /* 开态 none: 闲置不顶变换层 (见 charging-sheet 同注) */
 /* 手柄改成整行命中区 (5px 的胶囊本体根本点不中), 胶囊用 ::before 画。
