@@ -93,7 +93,7 @@ python3.13 -m venv .venv          # Windows: py -3.13 -m venv .venv
 ```
 
 终端打出 `Uvicorn running on http://0.0.0.0:8500` 即已启动; 浏览器打开
-`http://<host>:8500/`, 见到登录页 (未初始化则是三步向导) 就是服务正常。
+`http://<host>:8500/`, 见到登录页 (未初始化则是四页向导) 就是服务正常。
 
 监听 `--host` (默认 `0.0.0.0`)、端口 `--port` (默认 `8500`)。端口分两种情况:
 
@@ -168,7 +168,7 @@ compose 内部网络互通), 跨机器访问要先给 `database` 服务加端口
 - 只在服务端用: 把足迹轨迹拟合到实际道路
 
 <p align="center">
-<a name="shot-setup-3"><img src="docs/screenshot-setup-3.png?v=2" width="240" alt="向导第三步 · 填高德 Key"></a>
+<a name="shot-setup-3"><img src="docs/screenshot-setup-3.png?v=2" width="240" alt="向导第三页 · 填高德 Key"></a>
 </p>
 
 ## 5. 📄 许可证
