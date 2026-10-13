@@ -48,6 +48,7 @@ input, select {
   font: inherit; color: var(--ink-1); width: 100%;
   background: rgba(255,255,255,.06); border: 1px solid var(--hairline);
   border-radius: 10px; padding: 9px 12px; outline: none;
+  transition: border-color .18s var(--ease-ios);
 }
 input:focus, select:focus { border-color: var(--blue); }
 input::placeholder { color: var(--ink-3); }
@@ -86,6 +87,7 @@ input::placeholder { color: var(--ink-3); }
    点段)。行间横线照 .plc-item 钉条目层 —— 行体 (.drv-row) 住 .swipe-wrap
    里永远不是末孩, 挂行体上结构一换就瞎 */
 .drv-row { display: flex; align-items: center; gap: 8px; padding: 11px 0; }
+.drv-row:active { background: rgba(255,255,255,.06); }   /* 点行 = 改名, 按下有回声 (抽屉叶行同语言) */
 .drv-item { border-bottom: 1px solid var(--hairline); }
 .drv-item:last-child { border-bottom: 0; }
 .drv-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
@@ -139,6 +141,7 @@ input::placeholder { color: var(--ink-3); }
   display: flex; align-items: center; gap: 8px;
   padding: 10px 0;
 }
+.plc-row:active { background: rgba(255,255,255,.06); }   /* 点行 = 开编辑器 (drv-row 同语言) */
 /* 行间分隔线钉在条目层 (2026-10-04 用户点名「每个item之间都要有横线隔开」):
    原来挂在 .plc-row 上, 而 .plc-row 住在 .swipe-wrap 里永远不是末孩 ——
    规则一换结构就瞎 (v5 裸行那版整片行丢了线); 钉在 .plc-item 上不管行内

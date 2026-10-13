@@ -37,6 +37,7 @@
   flex: 1; min-width: 0; font-size: 14px; color: var(--ink-1);
   padding: 8px 12px; border-radius: 10px;
   border: 1px solid var(--hairline); background: rgba(255,255,255,.06); outline: none;
+  transition: border-color .18s var(--ease-ios);
 }
 .gp-row input:focus { border-color: var(--blue); }
 /* 选中信息独占一行, 按钮行换到下面 (列≤480 恒手机布局; 只 .sel-row,
@@ -163,7 +164,8 @@
 .tp-foot-lb { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .tp-dots { flex: none; display: inline-flex; align-items: center; gap: 5px; }
 .tp-dots i { width: 6px; height: 6px; border-radius: 50%;
-             background: rgba(235,235,245,.25); }
+             background: rgba(235,235,245,.25);
+             transition: background .18s var(--ease-ios); }
 .tp-dots i.on { background: #f5f5f7; }   /* iOS 桌面同款: 当前页白点 */
 /* 轨迹页 = 地图 + 数字带 + 播放条 (2026-09-27 用户点名三页独立: 页面自有
    布局恒定, 翻页不收不还 —— 地图比两页图卡矮一截是常态, 换来的是全程尺寸

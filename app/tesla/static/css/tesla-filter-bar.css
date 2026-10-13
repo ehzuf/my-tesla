@@ -36,8 +36,9 @@
 .fchip {
   flex-shrink: 0;
   padding: 6px 13px; font-size: 12.5px; white-space: nowrap;
-  color: var(--ink-2); transition: all .18s;
+  color: var(--ink-2); transition: all .18s var(--ease-ios);
 }
+.fchip:active { transform: scale(.94); }   /* 裸文字 chip 的按压回声 */
 .fchip.on {   /* 有非默认筛选的 chip 高亮 */
   background: rgba(57,135,229,.20); color: #7db3f0;
 }

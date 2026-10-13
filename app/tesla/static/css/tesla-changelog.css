@@ -60,7 +60,5 @@ main { flex: 1; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px);
 /* .spin 已收编 tesla-base 单源 (2026-10-13); 本页独有: 裸 spin 立在
    .state 文案上方, 底距 12 */
 .state .spin { margin-bottom: 12px; }
-.retry-btn {
-  margin-top: 14px; padding: 9px 26px; border-radius: 999px;
-  font-size: 14px; font-weight: 600; background: var(--blue); color: #fff;
-}
+/* .retry-btn 已收编 tesla-base 单源; 本页独有: 顶距 14 与文案隔开 */
+.state .retry-btn { margin-top: 14px; }

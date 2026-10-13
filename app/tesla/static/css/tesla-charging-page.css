@@ -42,5 +42,6 @@ main { max-width: 760px; margin: 0 auto; }
 
 /* 迷你分段钮 (详情弹层的 功率/电压/电流 切换; 统计图表卡已挪充电统计页) */
 .mini-seg { display: flex; background: rgba(118,118,128,.24); border-radius: 8px; padding: 2px; }
-.mini-seg button { padding: 3px 9px; border-radius: 6px; font-size: 11px; color: var(--ink-2); }
+.mini-seg button { padding: 3px 9px; border-radius: 6px; font-size: 11px; color: var(--ink-2);
+                   transition: background .18s var(--ease-ios), color .18s var(--ease-ios); }
 .mini-seg button.on { background: #636366; color: #fff; }

@@ -59,7 +59,7 @@
 .alert-backdrop {
   position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,.45);
   display: flex; align-items: center; justify-content: center; padding: 24px;
-  opacity: 0; pointer-events: none; transition: opacity .22s;
+  opacity: 0; pointer-events: none; transition: opacity .22s var(--ease-ios);
 }
 .alert-backdrop.on { opacity: 1; pointer-events: auto; }
 .alert {
@@ -67,7 +67,7 @@
   background: rgba(44,44,46,.94);
   -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
   border: 1px solid var(--hairline);
-  transform: scale(1.05); transition: transform .22s;
+  transform: scale(1.05); transition: transform .22s var(--ease-ios);
 }
 .alert-backdrop.on .alert { transform: scale(1); }
 .al-title { padding: 17px 16px 2px; font-size: 16px; font-weight: 650; }

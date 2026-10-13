@@ -185,7 +185,8 @@ main {
   max-width: 82%;   /* 列宽的 82%: 手机上列=屏宽与原 82vw 等价, 大屏封在列内 */
   padding: 9px 18px; border-radius: 999px;
   background: rgba(58,58,60,.95); color: var(--ink-1); font-size: 13px;
-  text-align: center; opacity: 0; transition: opacity .25s, transform .25s;
+  text-align: center; opacity: 0;
+  transition: opacity .25s var(--ease-ios), transform .25s var(--ease-ios);
   pointer-events: none;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -213,6 +214,15 @@ main {
   border: 1px solid var(--hairline); color: var(--ink-1);
   font-weight: 600; font-size: 13.5px;
 }
+.retry:active { transform: scale(.97); }
+/* 地图/日志错误层的蓝色主钮 (原先三份副本, 2026-10-13 随压感批收编);
+   按压反馈与设置页 .primary 同档 scale(.97) */
+.retry-btn {
+  padding: 9px 26px; border-radius: 999px; font-size: 14px; font-weight: 600;
+  background: var(--blue); color: #fff;
+}
+.retry-btn:active { transform: scale(.97); }
+.retry-row { text-align: center; margin-top: 16px; }  /* 重新检测按钮居中 (原内联样式) */
 
 /* ---------- 全局悬浮菜单键 (2026-10-12) ----------
    Safari 左缘右划是系统后退手势, 边缘呼出抽屉在 Safari 用不了 —— 独立
