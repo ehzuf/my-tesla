@@ -20,6 +20,12 @@
   --green: #1fa349;    /* SOC */
   --grid: #2c2c2a;     /* 图表网格线 (细实线) */
   --chart-ink: #c3c2b7;
+  /* 动效令牌 (2026-10-13 UI 重构): 位移主曲线 = 抽屉/下拉刷新/弹层已在用
+     的 iOS 曲线收编成令牌, 全站一套曲线语言; 左滑面板回弹另立一支 (快起
+     手, 松手要弹得干脆)。时长不入令牌 —— 各件的时长都是逐件调过的,
+     只统一曲线不统一节奏 */
+  --ease-ios: cubic-bezier(.32,.72,.35,1);
+  --ease-swipe: cubic-bezier(.25,.1,.25,1);
 }
 /* 顶带下限: iOS 26+ 主屏独立模式的系统磨砂带比安全区深一截 (music 实测
    CSS 60-88 仍被栅糊, 116 才全锐)。只在中招形态 (独立模式 + 竖屏 + 触屏)
@@ -110,6 +116,17 @@ main {
   position: relative;
 }
 .view { position: absolute; inset: 0; display: flex; flex-direction: column; }
+/* 视图入场 (2026-10-13 UI 重构): navigate() 翻 hidden 的瞬间整棵子树重新
+   渲染、动画自动重启, 纯 CSS 不动 js —— 淡入 + 10px 上浮, 320ms 正好套在
+   layerMotion 的 400ms 撤磨砂窗里 (入场层从磨砂件底下扫过正是重影配方)。
+   关键取舍: fill 用 backwards 不用 both —— forwards 会把 transform 留在
+   元素上, 视图内 fixed 件 (.selbar/#chg-sheet/#cm-sheet) 会被 transform
+   造的包含块长期拐走; backwards 动画一结束 transform 整个摘掉, 动画期间
+   的短暂重锚也零跳变 (main 与 #shell 同盒, 几何分毫不差) */
+.view:not([hidden]) { animation: view-in .32s var(--ease-ios) backwards; }
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(10px); }
+}
 .view-scroll {
   flex: 1; min-height: 0;
   overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -181,4 +198,16 @@ body.layer-anim #drawer {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   background: rgb(24,24,26);
+}
+
+/* ---------- 无动画偏好 (prefers-reduced-motion): 动效一律瞬时收口 ----------
+   入场/错峰/过渡全压到一帧; 迭代动画 (spin 旋转/脉冲) 也只跑一帧 —— 加载
+   态不冻结在半格, 只是感知不到旋转。功能零损: 弹层照开 (瞬移到位),
+   拖拽跟手 (拖动中本就 transition:none) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }

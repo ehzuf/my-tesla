@@ -131,7 +131,12 @@ def test_guard_assets_versioned_on_shell(auth):
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
-                   ("css/tesla-base.css", 13),          # v13: 宽度查询全折叠 + 悬浮菜单键恒定锚
+                   ("css/tesla-base.css", 14),          # v14: UI 重构基座 —— 动效令牌
+                                                         #   (--ease-ios/--ease-swipe) + 视图入场
+                                                         #   动画 (view-in 淡入上浮, backwards 不
+                                                         #   留 transform) + prefers-reduced-motion
+                                                         #   全局收口;
+                                                         #   v13: 宽度查询全折叠 + 悬浮菜单键恒定锚
                                                          #   (bottom 恒 bar-h+32, 地图让位块退役);
                                                          #   v12: 列上收口 overflow:hidden —— 屏外层
                                                          #   (placed-sheet/抽屉) 宽屏只出列不出
