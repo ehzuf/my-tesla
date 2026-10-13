@@ -22,7 +22,7 @@
 
 </div>
 
-## 1. ✨ 功能
+## 1. 功能
 
 <p align="center">
 <a name="shot-live"><img src="docs/screenshot-live.png?v=4" width="280" alt="状态 · My Tesla (演示数据)"></a>
@@ -80,7 +80,7 @@
 <a name="arch"><img src="docs/architecture.svg?v=7" width="800" alt="My Tesla 数据链路"></a>
 </p>
 
-## 3. 🚀 部署
+## 3. 部署
 
 需要 Python 3.13+:
 
@@ -173,7 +173,7 @@ compose 内部网络互通), 跨机器访问要先给 `database` 服务加端口
 - 只在服务端用: 把足迹轨迹拟合到实际道路
 
 <p align="center">
-<a name="shot-setup-3"><img src="docs/screenshot-setup-3.png?v=3" width="240" alt="向导第三页 · 填高德 Key"></a>
+<a name="shot-setup-3"><img src="docs/screenshot-setup-3.png?v=4" width="240" alt="向导第三页 · 填高德 Key"></a>
 </p>
 
 ### 4.4 完成
@@ -182,9 +182,9 @@ compose 内部网络互通), 跨机器访问要先给 `database` 服务加端口
 「进入应用」进入应用, 直接落到状态页。
 
 <p align="center">
-<a name="shot-setup-4"><img src="docs/screenshot-setup-4.png" width="240" alt="向导第四页 · 所填汇总与进入应用"></a>
+<a name="shot-setup-4"><img src="docs/screenshot-setup-4.png?v=2" width="240" alt="向导第四页 · 所填汇总与进入应用"></a>
 </p>
 
-## 5. 📄 许可证
+## 5. 许可证
 
 [MIT](./LICENSE) © 2026 kinopico
