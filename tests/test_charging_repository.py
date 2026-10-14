@@ -8,11 +8,11 @@ from app.tesla.models import Geofence
 from tests.seed_factories import seed_addresses, seed_charge, seed_charging
 
 # ---------------------------------------------------------------- 转换语义 (repository)
-def test_session_fields_and_price(db):
+def test_session_fields_and_price(db, owndb):
     seed_addresses(db)
     seed_charge(db, 1)
     seed_charging(db)          # 默认: 45/48kWh, 25.5 元, 无 geofence
-    row = repository.list_charging_sessions(db, repository.SessionFilter(
+    row = repository.list_charging_sessions(db, owndb, repository.SessionFilter(
         date_range=None, charge_type="all", query=None,
         sort="date_desc", offset=0, limit=50))[1][0]
     assert row.id == 1
@@ -26,22 +26,22 @@ def test_session_fields_and_price(db):
     assert row.city == "深圳市"
 
 
-def test_session_geofence_preferred(db):
+def test_session_geofence_preferred(db, owndb):
     db.add(Geofence(id=7, name="公司"))
     db.commit()
     seed_addresses(db)
     seed_charging(db, geofence_id=7)
     seed_charge(db, 1)
-    item = repository.list_charging_sessions(db, repository.SessionFilter(
+    item = repository.list_charging_sessions(db, owndb, repository.SessionFilter(
         date_range=None, charge_type="all", query=None,
         sort="date_desc", offset=0, limit=50))[1][0]
     assert item.location == "公司"
 
 
-def test_session_without_cost(db):
+def test_session_without_cost(db, owndb):
     seed_addresses(db)
     seed_charging(db, cost=None)
-    item = repository.list_charging_sessions(db, repository.SessionFilter(
+    item = repository.list_charging_sessions(db, owndb, repository.SessionFilter(
         date_range=None, charge_type="all", query=None,
         sort="date_desc", offset=0, limit=50))[1][0]
     assert item.cost is None

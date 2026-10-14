@@ -19,10 +19,10 @@ from .. import database
 from . import roads_amap
 from .repository.place_names import (all_address_coords, done_address_ids,
                                      place_name_row, save_place_name)
-from .roads_amap_wire import AmapSpot, Regeocode
+from .roads_amap_wire import AddressComponent, AmapSpot, Regeocode
 from .settings_store import amap_web_key_value
 
-PLACE_NAME_V = 1          # 取名策略版本: 阈值/优先级改了 bump 重查
+PLACE_NAME_V = 2          # v2 = v1 取名 + 省市区区划随行落库 (v1 老行区划空, bump 补齐)
 CALL_CAP_PER_DAY = 3000   # 自记账日上限 (官方个人 5000, 留余量)
 THROTTLE_S = 0.4          # 相邻 REST 调用最小间隔
 IDLE_SLEEP_S = 60         # 空转轮询 (无 key / 无待办)
@@ -166,9 +166,12 @@ def _round(tesla_factory: sessionmaker[Session],
                 continue
             name = pick_place_name(geo) if geo else ""
             status = "ok" if name else "skip"
+            comp = geo.address if geo else AddressComponent()  # 境外/失败 → 空
             with own_factory() as own:
                 save_place_name(own, place_name_row(
-                    addr_id, status, PLACE_NAME_V, name))
+                    addr_id, status, PLACE_NAME_V, name,
+                    province=comp.province, city=comp.city,
+                    district=comp.district))
             progressed = True
             print(f"[places] {addr_id} {status} {name}", file=sys.stderr)
     finally:

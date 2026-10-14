@@ -17,7 +17,9 @@ def test_guard_assets_versioned_on_shell(auth):
     for ref, v in (("js/tesla-viewport.js", 4), ("js/tesla-sheet-drag.js", 5),
                    ("js/view/charging-detail.js", 16),  # v16: Esc 一层一关 (v15 统计区三格)
                    ("css/tesla-charging-sheet.css", 12),  # v11: 总价一格 + 充电时间格; v10: pill 最右
-                   ("css/tesla-trips-sheet.css", 40),    # v39: 曲线令牌采用 (ios, #sheet); v38: 顶置 toast 副本拆净 (base 单源); v37: 宽度查询折叠 (选中信息独占一行恒生效);
+                   ("css/tesla-trips-sheet.css", 40),    # v39: 曲线令牌采用 (ios, #sheet);
+                                                 #   v38: 顶置 toast 副本拆净 (base 单源);
+                                                 #   v37: 宽度查询折叠 (选中信息独占一行恒生效);
                                                  #   v36: 大屏手机一列 (顶置 toast 列内口径
                                                  #   + 驾驶员钮 40vw 封顶 192px);
                                                  #   v35: 弹层批整批破缓存 +1 (车机 immutable
@@ -26,11 +28,14 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # (3.10.0); v33: 弹层底行横排「详细行程」
                                                          # 并排 (已出批, 随第四页方案撤回); v31: 三页独立
                    ("css/tesla-trips-playback.css", 9),  # 播放条住回轨迹页 (翻页不收不还)
-                   ("css/tesla-chargemap-map.css", 11),  # v10: 曲线令牌采用 (ios, #cm-sheet); v9: 共享状态件收编 (.spin 副本拆); v8: 图例挪画布右上 (左下让位恒定菜单键);
+                   ("css/tesla-chargemap-map.css", 11),  # v10: 曲线令牌采用 (ios, #cm-sheet);
+                                                         #   v9: 共享状态件收编 (.spin 副本拆);
+                                                         #   v8: 图例挪画布右上 (左下让位恒定菜单键);
                                                          #   v7: sh-grid margin 显式钉住 (足迹
                                                          # css 裸规则拆净, 泄漏值收编); v6: 图例
                                                          # 搬画布内左下角 (极值随视野算)
-                   ("css/tesla-map-canvas.css", 25),    # v24: 共享状态件收编 (.spin 副本拆); v23: 图例/日期浮标挪画布右上 (左下让位恒定菜单键);
+                   ("css/tesla-map-canvas.css", 25),    # v24: 共享状态件收编 (.spin 副本拆);
+                                                         #   v23: 图例/日期浮标挪画布右上 (左下让位恒定菜单键);
                                                          #   v22: 首回构造蒙版 (#fp-build z40 + 进度条);
                                                          #   v21: 驾驶员筛选并播放条行 + 进度条封顶
                                                          #   220px + 日期浮标去磨砂 (性能);
@@ -88,23 +93,28 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("js/trackutil.js", 5),   # v5: 扁平版 splitGapsFlat/decimateFlat 随原始轨迹层退役
                    ("js/track-animation.js", 3),
                    ("js/format.js", 6),      # 新增 shiftStamp (段首时刻平移段内行驶秒, 时刻跟播)
-                   ("css/tesla-charging-cards.css", 13),  # v13: 共享状态件收编 (.tail/.spin/.err-box/.retry 副本拆);
-                                                          #   v12: 侧距统一 16 (gap 10 + 卡内衬 14); v10: sec-head 顶距 0 (全 app 标题统一
+                   ("css/tesla-charging-cards.css", 13),  # v13: 共享状态件收编;
+                                                          #   (.tail/.spin/.err-box/.retry 副本拆);
+                                                          #   v12: 侧距统一 16 (gap 10 + 卡内衬 14);
+                                                          #   v10: sec-head 顶距 0 (全 app 标题统一
                                                           # --content-top 一条线, 2026-09-27)
                                                           # v11: 快慢充 pill 常驻卡右上角,
                                                           # Tesla 字标立到它左边
                    # ⑤ 视图 css 撤 body 尺寸 + 菜单封顶吃 --shell-h 的 9 份
                    ("css/tesla-charging-page.css", 5),    # v4: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
                                                           #   v3: 大屏手机一列 (.fl 标签列内封顶)
-                   ("css/tesla-stats.css", 14),          # v14: 共享状态件收编 (.tail/.spin/.err-box/.retry 副本拆);
-                                                         #   v13: 侧距统一 16; v12: 720 多栏退役 (统计卡恒两列/图卡恒单列); 独立页死块退役;
+                   ("css/tesla-stats.css", 14),          # v14: 共享状态件收编;
+                                                         #   (.tail/.spin/.err-box/.retry 副本拆);
+                                                         #   v13: 侧距统一 16;
+                                                         #   v12: 720 多栏退役 (统计卡恒两列/图卡恒单列); 独立页死块退役;
                                                          #   v11: 常去地点 12 根 (注释对齐)
                                                          # + 电池健康页复用统计卡/图卡 (共用底座)
                                                          # + .bh-note 口径脚注 + 表格退役 + id 规则改类
                                                          #   (行程统计复用) + 月度降高/滑块轨道/网格 dim
                                                          # + v9: 名字图加高; v10: ts-loc 340 (全量出柱)
                    ("css/tesla-groups.css", 14),  # v14: 共享状态件收编 (.spin/.err-box/.retry/#toast 副本拆);
-                                                 #   v13: 侧距统一 16; v12: 宽度查询折叠 (列表 12px 恒生效); 独立页死块退役;
+                                                 #   v13: 侧距统一 16; v12: 宽度查询折叠 (列表 12px 恒生效);
+                                                 #   独立页死块退役;
                                                  #   v11: 大屏手机一列 (顶置 toast 列内口径);
                                                  # v10: 破缓存批 (见上); v9: sec-head 顶距 0 + 跨度格字号特异性真收一档
                                                  # + 斜杠断行保底
@@ -112,9 +122,12 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # 页头/说明/行内按钮撤净, 底条常驻取消/确定);
                                                          # v4: 破缓存批; v3: 整行可点反馈 (v2 第四页版;
                                                          # v1 二级页版已出批)
-                   ("css/tesla-trips-cards.css", 5),       # v5: 共享状态件收编 (.tail/.spin/.err-box/.retry 副本拆); v4: 侧距统一 16 (#list 12→16, 卡内衬 13→14);
+                   ("css/tesla-trips-cards.css", 5),       # v5: 共享状态件收编;
+                                                         #   (.tail/.spin/.err-box/.retry 副本拆);
+                                                         #   v4: 侧距统一 16 (#list 12→16, 卡内衬 13→14);
                                                          #   v1-3 历史漏钉, 本批补上
-                   ("css/tesla-changelog.css", 5),  # v4: 共享状态件收编 (.spin 副本拆); v3: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役
+                   ("css/tesla-changelog.css", 5),  # v4: 共享状态件收编 (.spin 副本拆); v3: 宽度查询折叠;
+                                                    #   独立页死块 (header/菜单/日历) 退役;
                    ("css/tesla-trips-page.css", 8),      # v8: 宽度查询折叠; 独立页死块 (header/菜单/日历/筛选行) 退役;
                                                  #   v7: 大屏手机一列 (.fl 标签列内封顶);
                                                  # v6: sec-head 顶距 0 (标题统一一条线)
@@ -122,7 +135,8 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   v4: sec-head 顶距 0 (标题统一一条线)
                    ("css/tesla-chargemap-page.css", 6),  # v5: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役;
                                                          #   v4: sec-head 顶距 0 (标题统一一条线)
-                   ("css/tesla-live-page.css", 4),  # v4: 共享状态件收编 (.spin 副本拆); v3: 宽度查询折叠; 独立页死块 (header/菜单/日历) 退役
+                   ("css/tesla-live-page.css", 4),  # v4: 共享状态件收编 (.spin 副本拆); v3: 宽度查询折叠;
+                                                    #   独立页死块 (header/菜单/日历) 退役;
                    ("css/tesla-live-driving.css", 20),  # v20: 平均电耗/最高车速两格退役 (剩
                                                          #   里程/已耗电); v19: 真底边对齐 +
                                                          #   填充条满格收口防溢
@@ -136,7 +150,9 @@ def test_guard_assets_versioned_on_shell(auth):
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
-                   ("css/tesla-base.css", 17),          # v16: 共享状态件收编单源 (.spin/.tail/.err-box/.retry); v15: 列表入场错峰 (rise,
+                   ("css/tesla-base.css", 17),          # v16: 共享状态件收编单源;
+                                                         #   (.spin/.tail/.err-box/.retry);
+                                                         #   v15: 列表入场错峰 (rise,;
                                                          #   头 6 项递进 45ms, 容器
                                                          #   = 全 app 内容列表/统计格/
                                                          #   图卡/changelog/状态面板/
@@ -161,14 +177,17 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # 同一水平线, music 同款)
                                                          # + 菜单圆键退役后无 chips 视图底部让位收起
                                                          #   (body.no-bar, --bar-clear 只剩安全区)
-                   ("css/tesla-drawer.css", 11),        # v11: 曲线令牌采用 (ios); v10: 足迹地图闸灰行 (.drw-leaf.off,
+                   ("css/tesla-drawer.css", 11),        # v11: 曲线令牌采用 (ios);
+                                                         #   v10: 足迹地图闸灰行 (.drw-leaf.off,;
                                                          #   拟合 Key 没填菜单不可点);
                                                          #   v9: 二级叶行缩进 45→28 (用户点名
                                                          #   嫌深); v8: 车辆选择卡住抽屉顶
                    ("css/tesla-pull-refresh.css", 3),   # v3: 曲线令牌采用 (ios); v1-2 历史漏钉, 本批补上
                    ("css/tesla-filter-bar.css", 6),     # 菜单圆键退役 (#menu-key 拆净,
                                                          # #bar-row.no-chips 整条收起)
-                   ("css/tesla-settings.css", 29),      # v28: 曲线令牌采用 (ios + swipe); v27: 顶置 toast 副本拆净 (base 单源); v26: 宽度查询折叠; 独立页死块退役;
+                   ("css/tesla-settings.css", 29),      # v28: 曲线令牌采用 (ios + swipe);
+                                                         #   v27: 顶置 toast 副本拆净 (base 单源);
+                                                         #   v26: 宽度查询折叠; 独立页死块退役;
                                                          #   v25: 大屏手机一列 (顶置 toast 列内口径);
                                                          #   v24: 「获取方式」折叠块
                                                          #   撤下 (说明集中 README);
@@ -193,7 +212,8 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   .swipe-list) + .plc-sum
                                                          #   汇总行 + 红钮; v17:
                                                          #   账号三卡
-                   ("css/tesla-shell-floor.css", 12),   # v12: toast 重申块拆 (base 单源); v11: 侧距统一 16; v10: 大屏手机一列 (屏底 toast 列内口径);
+                   ("css/tesla-shell-floor.css", 12),   # v12: toast 重申块拆 (base 单源); v11: 侧距统一 16;
+                                                         #   v10: 大屏手机一列 (屏底 toast 列内口径);
                                                          #   v9: 设置族卡间纵距 + 账号/地点视图
                                                          #   补进族规则 (v8: 左缘边条 40px)
                    ("js/tesla-navigation.js", 4),       # v4: 足迹地图闸 (navigate 拦旁路);

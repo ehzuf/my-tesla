@@ -37,18 +37,21 @@ def get_car(db: Session = Depends(database.get_db)) -> list[CarInfo]:
 def get_charging_summary(
         frm: str | None = Query(None, alias="from"), to: str | None = None,
         car_id: int | None = None,
-        db: Session = Depends(database.get_db)) -> ChargingSummary:
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> ChargingSummary:
     """充电汇总 (次数/电量/费用/SOC 与续航增益), 可按日期/车辆过滤。"""
-    return repository.charging_summary(db, date_range_or_400(frm, to), car_id)
+    return repository.charging_summary(db, own, date_range_or_400(frm, to), car_id)
 
 
 @charging.get("/dimensions")
 def get_charging_dimensions(
         frm: str | None = Query(None, alias="from"), to: str | None = None,
         car_id: int | None = None,
-        db: Session = Depends(database.get_db)) -> ChargeDims:
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> ChargeDims:
     """充电统计维度聚合: 快慢/开始时段/起充 SOC/峰值功率/城市 (统计页图表)。"""
-    return repository.charging_dimensions(db, date_range_or_400(frm, to), car_id)
+    return repository.charging_dimensions(db, own, date_range_or_400(frm, to),
+                                          car_id)
 
 
 @charging.get("/battery")
@@ -62,27 +65,31 @@ def get_battery_health(
 @charging.get("/districts")
 def get_charging_districts(
         city: str, car_id: int | None = None,
-        db: Session = Depends(database.get_db)) -> list[DistrictStat]:
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> list[DistrictStat]:
     """城市下钻: 某市内的区/县/镇充电分布 (统计页城市图双击展开, 2026-09-27)。"""
-    return repository.district_stats(db, car_id, city)
+    return repository.district_stats(db, own, car_id, city)
 
 
 @charging.get("/map-locations")
 def get_charging_map_locations(
         frm: str | None = Query(None, alias="from"), to: str | None = None,
         car_id: int | None = None,
-        db: Session = Depends(database.get_db)) -> list[ChargeMapLocation]:
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> list[ChargeMapLocation]:
     """充电地图充电点聚合 (按地址, 次数降序; 无坐标的地址不上图)。"""
-    return repository.charging_map_locations(db, date_range_or_400(frm, to),
+    return repository.charging_map_locations(db, own,
+                                             date_range_or_400(frm, to),
                                              car_id)
 
 
 @charging.get("/regions")
 def get_charging_regions(
         car_id: int | None = None,
-        db: Session = Depends(database.get_db)) -> list[RegionNode]:
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> list[RegionNode]:
     """充电地点省市区树 (级联下拉数据源, 按充电次数降序)。"""
-    return repository.charging_region_tree(db, car_id)
+    return repository.charging_region_tree(db, own, car_id)
 
 
 @charging.get("/sessions")
@@ -92,7 +99,8 @@ def get_sessions(  # pylint: disable=too-many-arguments,too-many-positional-argu
         region: str | None = None, cost: str | None = None,
         frm: str | None = Query(None, alias="from"), to: str | None = None,
         car_id: int | None = None,
-        db: Session = Depends(database.get_db)) -> ChargingSessionsPage:
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> ChargingSessionsPage:
     """充电列表: 过滤 (日期/快慢/地点省市区/费用记录/地址搜索/车辆) → 排序 → 分页。
 
     region 是 "/" 连接的省市区路径 (1~3 段 = 精确到省/市/区县), 与行程页同款。
@@ -109,15 +117,16 @@ def get_sessions(  # pylint: disable=too-many-arguments,too-many-positional-argu
         date_range=date_range_or_400(frm, to), charge_type=type_,
         region=region or None, query=q, sort=sort, offset=offset, limit=limit,
         cost=None if cost == "all" else cost, car_id=car_id)
-    total, items = repository.list_charging_sessions(db, flt)
+    total, items = repository.list_charging_sessions(db, own, flt)
     return ChargingSessionsPage(total=total, items=items)
 
 
 @charging.get("/sessions/{session_id}")
 def get_session(session_id: int,
-                db: Session = Depends(database.get_db)) -> ChargingSessionDetail:
+                db: Session = Depends(database.get_db),
+                own: Session = Depends(database.get_own_db)) -> ChargingSessionDetail:
     """充电详情: 卡片字段 + 采样曲线。"""
-    detail = repository.charging_session_detail(db, session_id)
+    detail = repository.charging_session_detail(db, own, session_id)
     if detail is None:
         raise HTTPException(404, "充电记录不存在")
     return detail
@@ -140,15 +149,17 @@ def update_cost(session_id: int, body: CostUpdateRequest,
 def get_monthly(
         frm: str | None = Query(None, alias="from"), to: str | None = None,
         car_id: int | None = None,
-        db: Session = Depends(database.get_db)) -> list[MonthlyStat]:
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> list[MonthlyStat]:
     """按月充电统计 (图表用)。"""
-    return repository.monthly_stats(db, date_range_or_400(frm, to), car_id)
+    return repository.monthly_stats(db, own, date_range_or_400(frm, to), car_id)
 
 
 @charging.get("/locations")
 def get_locations(
         frm: str | None = Query(None, alias="from"), to: str | None = None,
         car_id: int | None = None,
-        db: Session = Depends(database.get_db)) -> list[LocationStat]:
+        db: Session = Depends(database.get_db),
+        own: Session = Depends(database.get_own_db)) -> list[LocationStat]:
     """按充电地点分组统计 (图表用)。"""
-    return repository.location_stats(db, date_range_or_400(frm, to), car_id)
+    return repository.location_stats(db, own, date_range_or_400(frm, to), car_id)

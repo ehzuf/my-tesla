@@ -31,15 +31,22 @@ class PlaceName(OwnBase):
 
     place_worker 拿 Address 行自带的 WGS-84 停车坐标问高德 v3 逆地理, 按
     「最近 POI (≤300m) → 道路名 (≤100m) → 区+街道」取名后落这表 (键 =
-    TeslaMate address_id, 一址一行); 读侧 (常去地点) 高德名优先, 没查到
-    /境外/失败回退 TeslaMate 名。v=取名策略版本, 策略改了 bump 重查;
+    TeslaMate address_id, 一址一行); 读侧高德优先, 没查到/境外/失败
+    逐址回退 TeslaMate 名。v=取名策略版本, 策略改了 bump 重查;
     status: ok=有名字 / skip=境外 (不耗配额) —— 两者同 v 都算已处理
-    不重查; 空坐标的地址在待办查询侧就排除, 不落行。"""
+    不重查; 空坐标的地址在待办查询侧就排除, 不落行。
+
+    2026-10-14 v2 起顺手存省市区区划 (province/city/district): 行程起终点
+    与充电地点的省市区/城市分布同走高德 —— v1 老行区划空, 读侧该址回退
+    TeslaMate 解析, worker 重查 (v bump) 后补齐。"""
 
     __tablename__ = "place_names"
 
     address_id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String, default="")
+    province: Mapped[str] = mapped_column(String, default="")
+    city: Mapped[str] = mapped_column(String, default="")
+    district: Mapped[str] = mapped_column(String, default="")
     status: Mapped[str] = mapped_column(String, default="ok")
     v: Mapped[int] = mapped_column(default=1)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)

@@ -9,7 +9,9 @@ from ...models import Address, Drive
 from .trip_marks import _driver_condition, annotate_drivers, annotate_tolls
 from ..charging import _range_conditions, charge_efficiency
 from ..common import DateRange, _clean_addr, fdate, ftime
-from ..region_tree import _acc_region_tree, region_address_ids, region_chain
+from ..place_names import PlaceInfo, place_info_map
+from ..region_tree import (_acc_triple_tree, amap_chain, amap_full,
+                           region_address_ids, region_chain, resolve_region)
 from ...schemas import RegionNode, TripItem, TripRegions
 
 
@@ -27,11 +29,19 @@ def _consumption(drive: Drive, eff: float | None) -> tuple[float | None, float |
 
 
 def _trip_item(drive: Drive, start_addr: Address | None,
-               end_addr: Address | None, eff: float | None = None) -> TripItem:
+               end_addr: Address | None, eff: float | None = None,
+               amap: dict[int, PlaceInfo] | None = None) -> TripItem:
     """条目组装: from/to 是清洗后的整链 (播放会话还在用), from_region/
     from_loc 等是省市区链 + 地名 —— 前端配 fmtPlaceShort 取最小两段
-    (用户点名: 卡片起终点与充电列表同款「区 · 地名」)。"""
+    (用户点名: 卡片起终点与充电列表同款「区 · 地名」)。
+
+    省市区/地名高德优先 (amap = 地址 id → 高德缓存行; TeslaMate 的 OSM
+    反查语言/覆盖不可信, 2026-10-14 地名高德化), 没刷到/境外的逐址回退
+    TeslaMate —— 后台慢慢刷, 刷好一址换一址。"""
+    amap = amap or {}
     kwh, wh_per_km = _consumption(drive, eff)
+    s_info = amap.get(start_addr.id) if start_addr else None
+    e_info = amap.get(end_addr.id) if end_addr else None
     return TripItem(
         id=drive.id,
         date=fdate(drive.start_date),
@@ -40,12 +50,20 @@ def _trip_item(drive: Drive, start_addr: Address | None,
         km=round(float(drive.distance), 2) if drive.distance is not None else None,
         min=drive.duration_min,
         speed_max=drive.speed_max,
-        from_=_clean_addr(start_addr.display_name if start_addr else None),
-        to=_clean_addr(end_addr.display_name if end_addr else None),
-        from_region=region_chain(start_addr.display_name) if start_addr else None,
-        from_loc=(start_addr.name or None) if start_addr else None,
-        to_region=region_chain(end_addr.display_name) if end_addr else None,
-        to_loc=(end_addr.name or None) if end_addr else None,
+        from_=(amap_full(s_info)
+               or _clean_addr(start_addr.display_name if start_addr else None)),
+        to=(amap_full(e_info)
+            or _clean_addr(end_addr.display_name if end_addr else None)),
+        from_region=((amap_chain(s_info)
+                      or region_chain(start_addr.display_name))
+                     if start_addr else None),
+        from_loc=((s_info.name if s_info else None)
+                  or (start_addr.name or None)) if start_addr else None,
+        to_region=((amap_chain(e_info)
+                    or region_chain(end_addr.display_name))
+                   if end_addr else None),
+        to_loc=((e_info.name if e_info else None)
+                or (end_addr.name or None)) if end_addr else None,
         kwh=kwh, wh_per_km=wh_per_km)
 
 
@@ -75,7 +93,7 @@ def _trip_rows_stmt(start_addr: type[Address],
             .where(Drive.end_date.is_not(None)))
 
 
-def _trip_conditions(session: Session,
+def _trip_conditions(session: Session, own: Session,
                      flt: TripFilter | None) -> list[ColumnElement[bool]]:
     """时间 / 起终地区 / 里程 / 车辆过滤条件 (计数与列表共用)。"""
     conds = _range_conditions(Drive.start_date, flt.date_range if flt else None)
@@ -84,10 +102,10 @@ def _trip_conditions(session: Session,
             conds.append(Drive.car_id == flt.car_id)
         if flt.from_loc:
             conds.append(Drive.start_address_id.in_(
-                region_address_ids(session, flt.from_loc)))
+                region_address_ids(session, own, flt.from_loc)))
         if flt.to_loc:
             conds.append(Drive.end_address_id.in_(
-                region_address_ids(session, flt.to_loc)))
+                region_address_ids(session, own, flt.to_loc)))
         if flt.km_min is not None:
             conds.append(Drive.distance >= flt.km_min)
         if flt.km_max is not None:
@@ -104,7 +122,7 @@ def _eff_by_car(session: Session,
 def list_trips(session: Session, own: Session, offset: int, limit: int,
                flt: TripFilter | None = None) -> tuple[int, list[TripItem]]:
     """行程列表 (最新在前), total 为已结束行程数; 按出发时间/起终地区/里程过滤。"""
-    conds = _trip_conditions(session, flt)
+    conds = _trip_conditions(session, own, flt)
     if flt and flt.driver_id is not None:
         conds.append(_driver_condition(own, flt.driver_id))
     total = session.scalar(
@@ -115,33 +133,38 @@ def list_trips(session: Session, own: Session, offset: int, limit: int,
         .order_by(Drive.start_date.desc())
         .offset(offset).limit(limit)).all()
     effs = _eff_by_car(session, {d.car_id for d, _, _ in rows})
-    items = [_trip_item(d, s, e, effs.get(d.car_id)) for d, s, e in rows]
+    amap = place_info_map(own, {a.id for _, s, e in rows for a in (s, e) if a})
+    items = [_trip_item(d, s, e, effs.get(d.car_id), amap)
+             for d, s, e in rows]
     annotate_drivers(own, items)
     annotate_tolls(own, items)
     return int(total), items
 
 
-def _region_tree(session: Session,
+def _region_tree(session: Session, own: Session,
                  address_id: InstrumentedAttribute[int | None],
                  car_id: int | None = None) -> list[RegionNode]:
-    """某个地址角色 (起点/终点) 的省→市→区县计数树 (次数降序, 未结束行程不计)。"""
+    """某个地址角色 (起点/终点) 的省→市→区县计数树 (次数降序, 未结束行程
+    不计); 三级高德优先, 没刷到的逐址回退 TeslaMate 链解析。"""
     addr = aliased(Address)
-    stmt = (select(addr.display_name)
+    stmt = (select(addr.id, addr.display_name)
             .select_from(Drive)
             .join(addr, address_id == addr.id, isouter=True)
             .where(Drive.end_date.is_not(None)))
     if car_id is not None:
         stmt = stmt.where(Drive.car_id == car_id)
     rows = session.execute(stmt).all()
-    return _acc_region_tree(name for (name,) in rows)
+    amap = place_info_map(own, [aid for aid, _ in rows if aid])
+    return _acc_triple_tree(resolve_region(amap.get(aid), name)
+                            for aid, name in rows)
 
 
-def list_trip_regions(session: Session,
+def list_trip_regions(session: Session, own: Session,
                       car_id: int | None = None) -> TripRegions:
     """行程起终点省市区树 (级联下拉数据源); car_id 选定时只数那台车的行程。"""
     return TripRegions(
-        start=_region_tree(session, Drive.start_address_id, car_id),
-        end=_region_tree(session, Drive.end_address_id, car_id))
+        start=_region_tree(session, own, Drive.start_address_id, car_id),
+        end=_region_tree(session, own, Drive.end_address_id, car_id))
 
 
 def drive_open(session: Session, drive_id: int) -> bool:
@@ -164,8 +187,9 @@ def get_trip(session: Session, own: Session, drive_id: int) -> TripItem | None:
     if not rows:
         return None
     drive = rows[0][0]
+    amap = place_info_map(own, {a.id for _, s, e in rows for a in (s, e) if a})
     item = _trip_item(drive, rows[0][1], rows[0][2],
-                      charge_efficiency(session, drive.car_id))
+                      charge_efficiency(session, drive.car_id), amap)
     annotate_drivers(own, [item])
     annotate_tolls(own, [item])
     return item

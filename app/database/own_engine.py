@@ -56,6 +56,14 @@ def migrate_own_db() -> None:
         if "gaps" not in rcols:  # v: 推断层顶点区间 (可能走过, 虚线渲染)
             conn.exec_driver_sql(
                 "ALTER TABLE drive_roads ADD COLUMN gaps VARCHAR NOT NULL DEFAULT '[]'")
+        pcols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(place_names)")}
+        # v: 高德区划三列 (2026-10-14 地名高德化 v2) —— v1 老行补列默认空,
+        # 读侧该址回退 TeslaMate 解析, worker 重查 (v bump) 后补齐
+        for col in ("province", "city", "district"):
+            if col not in pcols:
+                conn.exec_driver_sql(
+                    f"ALTER TABLE place_names ADD COLUMN {col}"
+                    " TEXT NOT NULL DEFAULT ''")
 
 
 def dispose_own_engine() -> None:

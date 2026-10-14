@@ -5,18 +5,21 @@
 """
 from sqlalchemy.orm import Session
 
-from ...models import Address
 from ...schemas import DistrictStat
 from ..common import _fnum
-from .charge_samples import CityAgg, _charge_rows
-from .charging_stats import _city_name
+from .charge_samples import ChargeRow, CityAgg, _charge_rows
+from .charging_sessions import _city_of
 
 _TOWN_SUFFIX = ("区", "县", "旗", "镇", "街道")
 
 
-def _district_of(address: Address | None, city: str) -> str | None:
-    """二级地区: display_name 链里市名的前一段 (…, 龙华区, 深圳市, 广东省);
-    解析不出退回原始 city 字段 (东莞这类直筒子市整市一根柱)。"""
+def _district_of(row: ChargeRow, city: str) -> str | None:
+    """二级地区: 高德区县优先; 没刷到回退 display_name 链里市名的前一段
+    (…, 龙华区, 深圳市, 广东省); 再解析不出退回原始 city 字段
+    (东莞这类直筒子市整市一根柱)。"""
+    if row.amap is not None and row.amap.district:
+        return row.amap.district
+    address = row.address
     if address is None:
         return None
     parts = [p.strip() for p in (address.display_name or "").replace("，", ",").split(",")]
@@ -26,15 +29,15 @@ def _district_of(address: Address | None, city: str) -> str | None:
     return address.city or city
 
 
-def district_stats(session: Session, car_id: int | None,
+def district_stats(session: Session, own: Session, car_id: int | None,
                    city: str) -> list[DistrictStat]:
     """某市的区/县/镇充电分布 (次数降序, 最多 12 档); 没充电的城市给空表。"""
-    rows = [r for r in _charge_rows(session, None, None, car_id)
-            if _city_name(r.address) == city]
+    rows = [r for r in _charge_rows(session, own, None, None, car_id)
+            if _city_of(r) == city]
     grouped: dict[str, CityAgg] = {}
     for row in rows:
         cp = row.process
-        d = grouped.setdefault(_district_of(row.address, city) or city, CityAgg())
+        d = grouped.setdefault(_district_of(row, city) or city, CityAgg())
         d.sessions += 1
         d.energy += _fnum(cp.charge_energy_used) or _fnum(cp.charge_energy_added) or 0.0
         d.cost += _fnum(cp.cost) or 0.0

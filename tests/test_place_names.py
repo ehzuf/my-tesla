@@ -8,8 +8,10 @@ from app import database
 from app.tesla import place_worker, roads_amap
 from app.tesla.models import Address, AppSetting
 from app.tesla.repository.place_names import (done_address_ids,
+                                              place_info_map,
                                               place_name_map,
                                               place_name_row,
+                                              place_search_ids,
                                               save_place_name)
 from app.tesla.roads_amap_wire import Regeocode
 
@@ -106,6 +108,41 @@ def test_place_name_map_filters(owndb):
     assert done_address_ids(owndb, 1) == {1, 2, 3} and done_address_ids(owndb, 2) == set()
 
 
+def test_place_info_map_mixes_v1_rows(owndb):
+    """v1 老行 (只有名没区划) 名照用、区划空由消费侧回退; 只有区划没名的
+    ok 行也回 (境外/兜底名空但区划在); skip/双空行不进读侧。"""
+    save_place_name(owndb, place_name_row(1, "ok", 1, "旧名"))            # v1
+    save_place_name(owndb, place_name_row(2, "ok", 2, "", province="广东省"))
+    save_place_name(owndb, place_name_row(3, "skip", 2, ""))              # 境外
+    save_place_name(owndb, place_name_row(4, "ok", 2, ""))                # 双空
+    got = place_info_map(owndb, [1, 2, 3, 4])
+    assert got[1].name == "旧名" and got[1].province == ""
+    assert got[2].province == "广东省" and got[2].name == ""
+    assert 3 not in got and 4 not in got
+    assert place_info_map(owndb, []) == {}   # 空 ids 短路
+
+
+def test_place_search_ids_matches_name_and_region(owndb):
+    """充电地址搜索的补充口径: 搜高德名/省/市/区都命中, 大小写不敏感。"""
+    save_place_name(owndb, place_name_row(
+        1, "ok", 2, "万象天地", province="广东省", city="深圳市",
+        district="龙岗区"))
+    save_place_name(owndb, place_name_row(2, "ok", 2, "Shenzhen Bay"))
+    for hit in ("万象", "龙岗", "深圳市", "广东省"):
+        assert place_search_ids(owndb, hit) == [1]
+    assert place_search_ids(owndb, "bay") == [2]      # 英文名小写命中
+    assert place_search_ids(owndb, "长安镇") == []
+
+
+def test_place_name_row_truncates_name_and_region():
+    """工厂截断: 名 60 字 (与改名接口对齐), 区划三列各 24 字。"""
+    row = place_name_row(7, "ok", 2, "名" * 80, province="广" * 40,
+                         city="深" * 40, district="龙" * 40)
+    assert row.name == "名" * 60
+    assert row.province == "广" * 24 and row.city == "深" * 24
+    assert row.district == "龙" * 24 and row.status == "ok" and row.v == 2
+
+
 # ---------------------------------------------------------------- worker 轮次
 class _FakeClient:
     mode = "ok"           # ok / abroad / quota / error
@@ -128,7 +165,9 @@ class _FakeClient:
             return None
         return Regeocode.model_validate(
             {"pois": [{"name": "高德大厦", "distance": 25}],
-             "roads": [], "addressComponent": {}})
+             "roads": [],
+             "addressComponent": {"province": "广东省", "city": [],
+                                  "district": "龙岗区"}})
 
     def close(self):
         """假件无操作。"""
@@ -170,6 +209,10 @@ def test_round_backfills_then_watermark(db, owndb, monkeypatch):
     assert _round(monkeypatch) == (True, 0.0)
     assert done_address_ids(owndb, place_worker.PLACE_NAME_V) == {1, 2}
     assert place_name_map(owndb, [1, 2]) == {1: "高德大厦", 2: "高德大厦"}
+    # v2: 区划随行落库 (city=[] 验形收编成空串)
+    info = place_info_map(owndb, [1, 2])
+    assert (info[1].province, info[1].city, info[1].district) == (
+        "广东省", "", "龙岗区")
     assert _round(monkeypatch) == (False, 0.0)     # 水位已到: 不再构造 client
     assert _FakeClient.made == 0
     # 策略版本没到的行重查 (v bump = 全量换名机制)

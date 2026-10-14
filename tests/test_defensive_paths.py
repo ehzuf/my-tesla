@@ -129,6 +129,21 @@ def test_migrate_own_db_adds_roads_initial_done_column():
     database.migrate_own_db()  # 再跑不炸
 
 
+def test_migrate_own_db_adds_place_region_columns():
+    """地名高德化 v2: 老 place_names (v1 行只有名) 启动自动补省市区三列
+    (默认空 → 读侧区划回退 TeslaMate 解析, worker 重查后补齐), 幂等。"""
+    with database.own_engine().begin() as conn:
+        conn.exec_driver_sql("DROP TABLE IF EXISTS place_names")
+        conn.exec_driver_sql(
+            "CREATE TABLE place_names (address_id INTEGER PRIMARY KEY,"
+            " name TEXT, status TEXT, v INTEGER, created_at DATETIME)")
+    database.migrate_own_db()
+    with database.own_engine().connect() as conn:
+        cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(place_names)")}
+    assert {"province", "city", "district"} <= cols
+    database.migrate_own_db()  # 再跑不炸
+
+
 # ---------------------------------------------------------------- 统一错误契约
 def test_sqlalchemy_error_maps_to_503(auth, monkeypatch):
     """路由里的 SQLAlchemyError 统一兜成 503, 不把异常细节裸奔给前端。"""
@@ -235,7 +250,7 @@ def test_disk_cache_with_wrong_version_is_ignored():
 
 
 # ---------------------------------------------------------------- 地区解析兜底
-def test_parse_region_rejects_province_less_chain(db):
+def test_parse_region_rejects_province_less_chain(db, owndb):
     """全是国家名/邮编的地址链解析不出省 → 无地区; 空路径地区过滤 → 空。"""
     assert repository.parse_region("中国,518000") == (None, None, None)
-    assert not repository.region_address_ids(db, " / ")
+    assert not repository.region_address_ids(db, owndb, " / ")

@@ -50,9 +50,10 @@ def get_trip_sessions(  # pylint: disable=too-many-arguments,too-many-positional
 
 @router.get("/regions")
 def get_trip_regions(car_id: int | None = None,
-                     db: Session = Depends(database.get_db)) -> TripRegions:
-    """行程起终点省市区树 (级联下拉数据源)。"""
-    return repository.list_trip_regions(db, car_id)
+                     db: Session = Depends(database.get_db),
+                     own: Session = Depends(database.get_own_db)) -> TripRegions:
+    """行程起终点省市区树 (级联下拉数据源, 三级高德优先)。"""
+    return repository.list_trip_regions(db, own, car_id)
 
 
 @router.get("/sessions/{drive_id}")

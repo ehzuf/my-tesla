@@ -4,6 +4,11 @@ TeslaMate (OSM) 的 display_name 是逗号分隔、从细到粗的地址链:
 "POI, 路, 街道/镇, 区县, 市, 省, 邮编, 中国", 但市/区偶尔重复或缺失
 ("…, 顺德区, 佛山市, 顺德区, 广东省", 省直辖县没有市)。addresses 的
 city 列则混着 市/区/街道, 不能当层级用 —— 三级只能从 display_name 解析。
+
+2026-10-14 地名高德化: 三级解析优先走高德缓存 (place_names 的 province/
+city/district, worker 拿停车 GPS 问的), TeslaMate 链降为逐址兜底 (那些
+库的 OSM 反查可能是英文); 直辖市高德只给省+区 (city=[]), 匹配/建树把
+区县提市层, 展示链补一层省名重复。
 """
 from functools import lru_cache
 import re
@@ -13,6 +18,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import Address
+from .place_names import PlaceInfo, place_info_map
 from ..schemas import RegionNode
 
 
@@ -83,17 +89,64 @@ def region_chain(display_name: str | None) -> str | None:
     return " · ".join(p for p in (prov, city, dist) if p)
 
 
-def region_address_ids(session: Session, path: str) -> list[int]:
-    """省市区路径 → 命中的地址 id 列表 (段数即精确到哪一级)。
+def amap_region(info: PlaceInfo | None) -> tuple[str | None, str | None, str | None]:
+    """高德缓存行 → (省, 市, 区县) (与 parse_region 同形状): 无行/区划缺省
+    (v1 老行/境外) 三连 None; 直辖市 city=[] 区县提市层 (省直辖县口径)。"""
+    if info is None or not info.province:
+        return (None, None, None)
+    city, dist = info.city or None, info.district or None
+    if not city and dist:          # 直辖市: 区县提市层 (省直辖县口径)
+        city, dist = dist, None
+    return (info.province, city, dist)
 
-    空路径返回 []; 无命中返回 [] (调用方 in_([]) 自然过滤成空列表)。
-    """
+
+def resolve_region(info: PlaceInfo | None,
+                   display_name: str | None) -> tuple[str | None, str | None, str | None]:
+    """(高德缓存行, TeslaMate 地址链) → (省, 市, 区县): 缓存行有省用高德,
+    v1 老行/境外/没刷到逐址回退 display_name 解析。"""
+    if info is not None:
+        triple = amap_region(info)
+        if triple[0]:
+            return triple
+    return parse_region(display_name or "")
+
+
+def amap_chain(info: PlaceInfo | None) -> str | None:
+    """高德缓存行 → 省市区展示链 (" · " 连, 大→小)。直辖市市层缺位补省名
+    (北京市 · 北京市 · 大兴区) —— 前端 shortPlace 只在 ≥3 段时取尾两段;
+    无行/没省 = None (调用方回退 TeslaMate 链)。"""
+    if info is None or not info.province:
+        return None
+    return " · ".join(p for p in (info.province, info.city or info.province,
+                                  info.district) if p)
+
+
+def amap_full(info: PlaceInfo | None) -> str:
+    """高德缓存行 → 整链清洗串 (无分隔, _clean_addr 同形态): 省+市 (直辖市
+    补省)+区+地名, 相邻重名去重, 兜底名与区重前缀剪掉; 无行/没省 = ""。"""
+    if info is None or not info.province:
+        return ""
+    name = info.name
+    if name and info.district and name.startswith(info.district):
+        name = name[len(info.district):]
+    kept: list[str] = []
+    for part in (info.province, info.city or info.province, info.district, name):
+        if part and (not kept or part != kept[-1]):
+            kept.append(part)
+    return "".join(kept)[:80]
+
+
+def region_address_ids(session: Session, own: Session, path: str) -> list[int]:
+    """省市区路径 → 命中的地址 id 列表 (段数即精确到哪一级; 三级解析高德
+    优先, 没刷到的逐址回退 TeslaMate 链; 空/无命中返回 [])。"""
     segs = [s for s in (p.strip() for p in path.split("/")) if s]
     if not segs:
         return []
+    rows = session.execute(select(Address.id, Address.display_name)).all()
+    amap = place_info_map(own, [aid for aid, _ in rows])
     ids: list[int] = []
-    for aid, name in session.execute(select(Address.id, Address.display_name)).all():
-        prov, city, dist = parse_region(name or "")
+    for aid, name in rows:
+        prov, city, dist = resolve_region(amap.get(aid), name)
         if (prov == segs[0]
                 and (len(segs) < 2 or city == segs[1])
                 and (len(segs) < 3 or dist == segs[2])):
@@ -125,15 +178,14 @@ class _RegionAcc:
                       sorted(self.children.values(), key=lambda c: -c.count)])
 
 
-def _acc_region_tree(names: Iterable[str | None]) -> list[RegionNode]:
-    """display_name 序列 → 省→市→区县计数树 (次数降序)。
-
-    无省信息的地址 (解析不出省) 不进树; 有市无区的计入省市两级, 省直辖县
-    由 parse_region 把区县提升到市层 (口径见该函数)。
-    """
+def _acc_triple_tree(
+        triples: Iterable[tuple[str | None, str | None, str | None]]
+) -> list[RegionNode]:
+    """(省, 市, 区县) 三元组序列 → 省→市→区县计数树 (次数降序): 无省的
+    不进树, 有市无区的计入省市两级。来源混建 —— 高德缓存行 (amap_region)
+    与 TeslaMate 链解析同形状, 后台慢慢刷, 树里两路节点自然并账。"""
     root = _RegionAcc("")
-    for name in names:
-        prov, city, dist = parse_region(name or "")
+    for prov, city, dist in triples:
         if not prov:
             continue
         prov_acc = root.child(prov)

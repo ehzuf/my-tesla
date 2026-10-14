@@ -99,7 +99,7 @@ def get_merged_summary(ids: str, request: Request, response: Response,
     if len(id_list) < 2:                    # 上限 2026-09-25 用户点名撤掉
         raise HTTPException(400, "ids 需至少 2 个行程")
     try:
-        return repository.merged_track_plan(db, id_list).header
+        return repository.merged_track_plan(db, own, id_list).header
     except repository.NotFound as exc:
         raise HTTPException(404, str(exc)) from exc
 
@@ -122,7 +122,7 @@ def get_merged_track_stream(ids: str, request: Request,
     if len(id_list) < 2:                    # 上限 2026-09-25 用户点名撤掉
         raise HTTPException(400, "ids 需至少 2 个行程")
     try:
-        plan = repository.merged_track_plan(db, id_list)   # 校验 + 头部 (404 在流开始前)
+        plan = repository.merged_track_plan(db, own, id_list)   # 校验 + 头部 (404 在流开始前)
     except repository.NotFound as exc:
         raise HTTPException(404, str(exc)) from exc
 

@@ -99,8 +99,14 @@ class AmapSpot(BaseModel):
 
 
 class AddressComponent(BaseModel):
-    """regeo 应答的区划段 (空字段高德发 [] 不是 "", _to_text 收编)。"""
+    """regeo 应答的区划段 (空字段高德发 [] 不是 "", _to_text 收编)。
 
+    直辖市的 city 是 [] (省市区三级里市层缺位, 消费侧自行并省层) ——
+    2026-10-14 起省市区全存 (地名高德化: 行程/充电的省市区不再信
+    TeslaMate 的 OSM 链)。"""
+
+    province: Annotated[str, BeforeValidator(_to_text)] = ""
+    city: Annotated[str, BeforeValidator(_to_text)] = ""
     district: Annotated[str, BeforeValidator(_to_text)] = ""
     township: Annotated[str, BeforeValidator(_to_text)] = ""
 

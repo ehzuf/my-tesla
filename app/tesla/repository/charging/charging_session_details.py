@@ -9,10 +9,11 @@ from ..common import _fnum
 from ...schemas import ChargeCurve, ChargingSessionDetail, CostUpdateResult
 
 
-def charging_session_detail(session: Session,
+def charging_session_detail(session: Session, own: Session,
                             session_id: int) -> ChargingSessionDetail | None:
-    """充电详情: 卡片字段 + 采样曲线 / 充电线缆 / 快充品牌。"""
-    rows = _charge_rows_by_ids(session, [session_id])
+    """充电详情: 卡片字段 + 采样曲线 / 充电线缆 / 快充品牌
+    (卡片字段高德优先, own 供取数层挂高德缓存行)。"""
+    rows = _charge_rows_by_ids(session, own, [session_id])
     if not rows:
         return None
     row = rows[0]

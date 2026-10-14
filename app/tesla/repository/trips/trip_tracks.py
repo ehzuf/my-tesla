@@ -12,6 +12,8 @@ from .track_gaps import detect_gap_pairs, keep_with_gaps
 from .trip_listing import _consumption, _trip_rows_stmt
 from ..charging import charge_efficiency
 from ..common import NotFound, _clean_addr, fdate, ftime
+from ..place_names import place_info_map
+from ..region_tree import amap_full
 from ...schemas import MergedTrack, TripTrack
 
 
@@ -60,15 +62,10 @@ class MergedPlan(BaseModel):
 
 def merged_track(session: Session, own: Session,
                  ids: Sequence[int]) -> MergedTrack:
-    """多段行程合并成一条连续轨迹 (整包 JSON)。
-
-    - ids 必须都是已结束行程, 否则 NotFound("包含不存在或未完成的行程");
-    - ts 为累计行驶秒, 行程之间的停驶时段被剔除;
-    - 各段按原始点数占比分享总预算下采样 (见 merged_track_plan);
-    - 各段的断档补路同样在服务端拼好 (见 _track_points);
-    - 逐段流式版本见 merged_track_segments (前端边下边播用)。
-    """
-    plan = merged_track_plan(session, ids)
+    """多段行程合并成一条连续轨迹 (整包 JSON): ids 须全为已结束行程, ts 为
+    累计行驶秒 (停驶剔除), 各段按点数占比分享总预算下采样 (见
+    merged_track_plan), 断档补路在服务端拼好; 流式版见 merged_track_segments。"""
+    plan = merged_track_plan(session, own, ids)
     pts: list[list[float | None]] = []
     ts: list[int] = []
     seg_starts: list[int] = []
@@ -90,7 +87,8 @@ def merged_track(session: Session, own: Session,
     return plan.header
 
 
-def merged_track_plan(session: Session, ids: Sequence[int]) -> MergedPlan:
+def merged_track_plan(session: Session, own: Session,
+                      ids: Sequence[int]) -> MergedPlan:
     """校验 ids (须全为已结束行程) 并算好汇总头 + 各段下采样预算。"""
     drive_rows = session.execute(
         _trip_rows_stmt(aliased(Address), aliased(Address))
@@ -111,6 +109,10 @@ def merged_track_plan(session: Session, ids: Sequence[int]) -> MergedPlan:
     first, last = drive_rows[0][0], drive_rows[-1][0]
     effs = {cid: charge_efficiency(session, cid)
             for cid in {d.car_id for d, _, _ in drive_rows}}
+    # 起终点高德优先 (2026-10-14 地名高德化), 没刷到的逐址回退清洗链
+    amap = place_info_map(own, {a.id for _, s, e in drive_rows
+                                for a in (s, e) if a})
+    s0, e0 = drive_rows[0][1], drive_rows[-1][2]
     raw_kwh = sum(_consumption(d, effs.get(d.car_id))[0] or 0.0
                   for d, _, _ in drive_rows)
     total_km = sum(float(d.distance or 0) for d, _, _ in drive_rows)
@@ -124,8 +126,10 @@ def merged_track_plan(session: Session, ids: Sequence[int]) -> MergedPlan:
         kwh=round(raw_kwh, 1) if any(effs.values()) else None,
         wh_per_km=(round(raw_kwh / total_km * 1000)
                    if any(effs.values()) and total_km >= 1 else None),
-        from_=_clean_addr(drive_rows[0][1].display_name if drive_rows[0][1] else None),
-        to=_clean_addr(drive_rows[-1][2].display_name if drive_rows[-1][2] else None))
+        from_=(amap_full(amap.get(s0.id) if s0 else None)
+               or _clean_addr(s0.display_name if s0 else None)),
+        to=(amap_full(amap.get(e0.id) if e0 else None)
+            or _clean_addr(e0.display_name if e0 else None)))
     return MergedPlan(header=header, id_list=id_list, budgets=budgets)
 
 

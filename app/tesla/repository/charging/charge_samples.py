@@ -11,6 +11,7 @@ from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from ...models import Address, Car, Charge, ChargingProcess, Geofence
 from ..common import DateRange
+from ..place_names import PlaceInfo, place_info_map, place_search_ids
 from ...schemas import CarInfo
 
 
@@ -96,7 +97,11 @@ def _range_conditions(column: InstrumentedAttribute[datetime],
 
 
 class ChargeRow(BaseModel):
-    """充电过程 + 关联地址/围栏 + 采样聚合 (列表/详情/汇总共用)。"""
+    """充电过程 + 关联地址/围栏 + 采样聚合 (列表/详情/汇总共用)。
+
+    amap = 高德缓存行 (地名/省市区/城市高德优先的读侧原料, 没刷到 =
+    None, 消费侧逐址回退 TeslaMate); 取数层统一挂上, 组装方不再各自查。
+    """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -104,13 +109,16 @@ class ChargeRow(BaseModel):
     address: Address | None
     geofence: Geofence | None
     agg: ChargeAgg
+    amap: PlaceInfo | None = None
 
 
-def _charge_rows(session: Session, date_range: DateRange | None,
+def _charge_rows(session: Session, own: Session, date_range: DateRange | None,
                  q: str | None, car_id: int | None = None) -> list[ChargeRow]:
     """按日期区间/地址关键字/车辆取充电过程 (不排序不分页, 交由调用方)。
 
-    car_id 缺省 None = 全部车 (多车口径, 与前端车辆切换器一致)。"""
+    car_id 缺省 None = 全部车 (多车口径, 与前端车辆切换器一致)。地址搜索
+    除 TeslaMate 原字段外, 高德缓存里的名/区划命中也算 (地名高德化后,
+    列表显示的是高德名, 搜索得跟得上显示)。"""
     conds: list[ColumnElement[bool]] = _range_conditions(ChargingProcess.start_date, date_range)
     if car_id is not None:
         conds.append(ChargingProcess.car_id == car_id)
@@ -126,7 +134,9 @@ def _charge_rows(session: Session, date_range: DateRange | None,
                     .concat(func.coalesce(Address.city, ""))
                     .concat(" ")
                     .concat(func.coalesce(Address.display_name, "")))
-        conds.append(func.lower(haystack).like(f"%{q.lower()}%"))
+        like = func.lower(haystack).like(f"%{q.lower()}%")
+        amap_ids = place_search_ids(own, q)
+        conds.append(or_(like, Address.id.in_(amap_ids)) if amap_ids else like)
     stmt = (select(ChargingProcess, Address, Geofence)
             .join(Address, Address.id == ChargingProcess.address_id, isouter=True)
             .join(Geofence, Geofence.id == ChargingProcess.geofence_id, isouter=True))
@@ -135,10 +145,11 @@ def _charge_rows(session: Session, date_range: DateRange | None,
     rows = [ChargeRow(process=cp, address=a, geofence=g, agg=_NO_AGG)
             for cp, a, g in session.execute(stmt).all()]
     _attach_aggs(session, rows)
+    _attach_place(own, rows)
     return rows
 
 
-def _charge_rows_by_ids(session: Session,
+def _charge_rows_by_ids(session: Session, own: Session,
                         ids: Sequence[int]) -> list[ChargeRow]:
     stmt = (select(ChargingProcess, Address, Geofence)
             .join(Address, Address.id == ChargingProcess.address_id, isouter=True)
@@ -147,7 +158,15 @@ def _charge_rows_by_ids(session: Session,
     rows = [ChargeRow(process=cp, address=a, geofence=g, agg=_NO_AGG)
             for cp, a, g in session.execute(stmt).all()]
     _attach_aggs(session, rows)
+    _attach_place(own, rows)
     return rows
+
+
+def _attach_place(own: Session, rows: list[ChargeRow]) -> None:
+    """高德缓存行挂到各行 (地址 id → PlaceInfo, 没刷到 = None)。"""
+    amap = place_info_map(own, [r.address.id for r in rows if r.address is not None])
+    for row in rows:
+        row.amap = amap.get(row.address.id) if row.address is not None else None
 
 
 def _attach_aggs(session: Session, rows: list[ChargeRow]) -> None:
