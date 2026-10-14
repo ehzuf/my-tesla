@@ -11,6 +11,7 @@ from .own_engine import (
     own_engine,
     own_session_factory,
     _OwnEngineState,
+    _add_col,
 )
 from .teslamate_engine import (
     DB_CONTAINER,
@@ -41,6 +42,7 @@ __all__ = [
     # 私有持有者类也走门面 (测试隔离直接拨它的属性; 名单见 tests/test_defensive_paths.py)
     "_EngineState",
     "_OwnEngineState",
+    "_add_col",
     "build_db_url",
     "dispose_engine",
     "dispose_own_engine",

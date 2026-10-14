@@ -144,6 +144,26 @@ def test_migrate_own_db_adds_place_region_columns():
     database.migrate_own_db()  # 再跑不炸
 
 
+def test_migrate_own_db_swallows_race_duplicate_column():
+    """双 uvicorn 同启竞态 (2026-10-14 生产实锤掐死过 8501): 检查与加列之间
+    列被另一进程先加 → duplicate column 当已迁移吞掉, 不掐死启动。"""
+    with database.own_engine().begin() as conn:
+        conn.exec_driver_sql("DROP TABLE IF EXISTS place_names")
+        conn.exec_driver_sql(
+            "CREATE TABLE place_names (address_id INTEGER PRIMARY KEY,"
+            " name TEXT, status TEXT, v INTEGER, created_at DATETIME)")
+        stale = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(place_names)")}
+        # 另一进程抢先加列 (本连接的旧名单还看不见它们)
+        for col in ("province", "city", "district"):
+            conn.exec_driver_sql(f"ALTER TABLE place_names ADD COLUMN {col}"
+                                 " TEXT NOT NULL DEFAULT ''")
+        # 竞态窗口里的补列: 撞 duplicate 须吞掉
+        for col in ("province", "city", "district"):
+            database._add_col(conn, "place_names", col,   # pylint: disable=protected-access
+                              "TEXT NOT NULL DEFAULT ''", cols=stale)
+    database.migrate_own_db()   # 全量迁移再跑不炸 (幂等)
+
+
 # ---------------------------------------------------------------- 统一错误契约
 def test_sqlalchemy_error_maps_to_503(auth, monkeypatch):
     """路由里的 SQLAlchemyError 统一兜成 503, 不把异常细节裸奔给前端。"""

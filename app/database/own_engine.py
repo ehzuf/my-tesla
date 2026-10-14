@@ -3,7 +3,8 @@
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Connection, Engine, create_engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, sessionmaker
 
 from .. import config
@@ -31,39 +32,45 @@ def init_own_engine(url: str | None = None) -> None:
                                            expire_on_commit=False)
 
 
+def _add_col(conn: Connection, table: str, col: str, ddl: str,
+             cols: set[str] | None = None) -> None:
+    """幂等加列 (老库补列): cols 可传预读的列名单 (省一次 PRAGMA)。
+    检查与 ALTER 之间列被并启的另一进程先加 → sqlite 报 duplicate
+    column, 当已迁移吞掉 (2026-10-14 8500/8501 双 uvicorn 同启实锤
+    掐死过 8501)。"""
+    if cols is None:
+        cols = {r[1] for r in conn.exec_driver_sql(f"PRAGMA table_info({table})")}
+    if col in cols:
+        return
+    try:
+        conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {col} {ddl}")
+    except OperationalError as exc:
+        if "duplicate column name" not in str(exc):
+            raise
+
+
 def migrate_own_db() -> None:
-    """create_all 只建新表不改旧表: 已有生产库要补的列写在这里 (幂等)。
+    """create_all 只建新表不改旧表: 已有生产库要补的列写在这里 (幂等,
+    双进程同启竞态安全 —— _add_col 吞并启 duplicate)。
 
     配方单一来源 —— My Home 组合仓的 lifespan 起同一份自有库时调的也是
     它 (组合部署 / 单仓部署共用同一个 data/mytesla.db, 补列只记一处)。"""
     with own_engine().begin() as conn:
-        cols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(app_settings)")}
-        if "amap_style" not in cols:   # v: 高德地图样式 (设置页可换, 三页地图共用)
-            conn.exec_driver_sql(
-                "ALTER TABLE app_settings ADD COLUMN amap_style TEXT NOT NULL DEFAULT ''")
-        if "map_provider" not in cols:  # v: 地图服务商 (2026-09-25 起只留高德,
-            # 列不再读写; 已装库的列留着, 迁移测试仍盖着加列路径)
-            conn.exec_driver_sql(
-                "ALTER TABLE app_settings ADD COLUMN map_provider TEXT NOT NULL DEFAULT ''")
-        if "amap_web_key" not in cols:  # v: 高德 Web 服务 key (足迹道路拟合)
-            conn.exec_driver_sql(
-                "ALTER TABLE app_settings ADD COLUMN amap_web_key TEXT NOT NULL DEFAULT ''")
-        if "roads_initial_done" not in cols:  # v: 历史道路首轮回填完成旗 (蒙版掀盖判据)
-            conn.exec_driver_sql(
-                "ALTER TABLE app_settings ADD COLUMN roads_initial_done "
-                "BOOLEAN NOT NULL DEFAULT 0")
-        rcols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(drive_roads)")}
-        if "gaps" not in rcols:  # v: 推断层顶点区间 (可能走过, 虚线渲染)
-            conn.exec_driver_sql(
-                "ALTER TABLE drive_roads ADD COLUMN gaps VARCHAR NOT NULL DEFAULT '[]'")
-        pcols = {r[1] for r in conn.exec_driver_sql("PRAGMA table_info(place_names)")}
+        # v: 高德地图样式 (设置页可换, 三页地图共用)
+        _add_col(conn, "app_settings", "amap_style", "TEXT NOT NULL DEFAULT ''")
+        # v: 地图服务商 (2026-09-25 起只留高德, 列不再读写; 老库列留着)
+        _add_col(conn, "app_settings", "map_provider", "TEXT NOT NULL DEFAULT ''")
+        # v: 高德 Web 服务 key (足迹道路拟合 / 地名 worker)
+        _add_col(conn, "app_settings", "amap_web_key", "TEXT NOT NULL DEFAULT ''")
+        # v: 历史道路首轮回填完成旗 (蒙版掀盖判据)
+        _add_col(conn, "app_settings", "roads_initial_done",
+                 "BOOLEAN NOT NULL DEFAULT 0")
+        # v: 推断层顶点区间 (可能走过, 虚线渲染)
+        _add_col(conn, "drive_roads", "gaps", "VARCHAR NOT NULL DEFAULT '[]'")
         # v: 高德区划三列 (2026-10-14 地名高德化 v2) —— v1 老行补列默认空,
         # 读侧该址回退 TeslaMate 解析, worker 重查 (v bump) 后补齐
         for col in ("province", "city", "district"):
-            if col not in pcols:
-                conn.exec_driver_sql(
-                    f"ALTER TABLE place_names ADD COLUMN {col}"
-                    " TEXT NOT NULL DEFAULT ''")
+            _add_col(conn, "place_names", col, "TEXT NOT NULL DEFAULT ''")
 
 
 def dispose_own_engine() -> None:
