@@ -144,7 +144,10 @@ def test_map_playback_wiring(auth):
     播放」—— 切视图/切后台整场收播, 大帧间隔停原地); 正常层藏而不拆; 两格联动;
     出口钩变否决; 打开即开播 (不等铺层); 10-04 收场兜底重画改暗铺一帧换装;
     10-14 飞线修 (拖进度到最后再放大全是百米直线): 拖到尽头 = 完场退场交还
-    正常层 (seek_end), 暂停中的回放遇缩放跨档/爬级让位 (fpPlayYield)。"""
+    正常层 (seek_end), 暂停中的回放遇缩放跨档/爬级让位 (fpPlayYield);
+    同日二轮 (报「拖到最后自动回到开始很奇怪」): 重铺期滑杆钉松手位
+    (seekPinFrac), 放到头的退场滑杆停在满格不归 0, 让位只认缩放手势
+    (镜头跟框的动画尾波 zoomend 不再杀暂停回放)。"""
     html = _shell(auth)
     for frag in ('<div class="playbar" id="fp-bar">', 'id="fp-play" class="pb-btn"',
                  'aria-label="按时间顺序回放走过的路"', 'id="fp-seek" class="pb-seek"',
@@ -168,7 +171,16 @@ def test_map_playback_wiring(auth):
                  "renderTracks(fpVisibleTracks(), true)", "gen === renderGen",
                  # 10-14 飞线修: 拖到尽头 = 完场 (fpPlaySeek 收尾); 暂停中缩放让位
                  'fpPlayExit(true, "seek_end")', "function fpPlayYield()",
-                 'fpPlayExit(true, "zoom_yield")', "return playLayerOk;"):
+                 'fpPlayExit(true, "zoom_yield")', "return playLayerOk;",
+                 # 10-14 二轮: 拖到尽头不「自动回到开始」—— 重铺期滑杆钉在
+                 # 松手位, 放到头的退场滑杆停在满格不归 0; 让位只认缩放手势
+                 # (镜头跟框 setBounds 的动画尾波也发 zoomend, 不设手势闸
+                 # 暂停回放被自己的镜头悄悄退场); change 兜底先取值再 enter
+                 "let seekPinFrac = -1;", 'playSeekBar.value = "1000"',
+                 "const atEnd = playList.length > 0",
+                 "performance.now() - userZoomAt > PLAY_YIELD_MS",
+                 'fpMapEl.addEventListener("touchstart"',
+                 'const frac = +$("#fp-seek").value / 1000;'):
         assert frag in js, f"回放模块缺少 {frag}"
     # 让路闸/出口钩/藏层: 正常层回放期只藏不拆 (收场 show 亮回); renderTracks
     # 入口反调 fpPlayExit(false) —— 换筛选/同步任何重渲染都是对回放态的否决

@@ -43,6 +43,16 @@
 // 退场, 拖完停在回放态是口径漏, 交还正常层才有跨档换画/重抽稀那套); (2) 暂
 // 停中的回放遇缩放跨档/爬级让位正常层 (fpPlayYield, roadZoomCrossed 调) ——
 // 让位走完场口径, ▶ 从头重放。
+// 同日二轮 (用户报「拖进度条, 拖到最后, 它会自动回到开始, 这个逻辑很奇怪」):
+// 暂停拖杆的重铺期滑杆钉在松手位不从 0 爬 (seekPinFrac —— 重铺是补状态,
+// 不是回放, 从 0 爬一遍读作回放开头), 放到头的退场滑杆停在满格不归 0
+// (atEnd —— 画面停在终态, 归 0 读作「回到开头」与画面打架); 中途退场
+// (让位/切走/否决) 照旧归 0 = 回放确已终了。二轮排查又揪出让位门误开:
+// 镜头跟框 setBounds 的动画尾波在重铺/走带收步后 ~0.5-1s 还会发一个
+// zoomend, 暂停中的回放被自己的镜头 zoom_yield 悄悄退场 —— 让位只认用户
+// 缩放手势 (pinch/滚轮/双击戳 userZoomAt, PLAY_YIELD_MS 窗内才算), 程序
+// 镜头不算。顺修 change 兜底取值时序: enter 的 UI 刷会先把滑杆归 0, 处理
+// 器得先取值再 enter (真用户路径 input 先来无此坑)。
 /* global $, diag, mapLib, map, mapReady, fpVisibleTracks, makeRoadLines,
           roadLegend, renderTracks, fpPlaying, overlays, fpViewOn,
           roadPlayReset, roadPlayMerge, roadPlayBump, roadPlayEnd,
@@ -59,6 +69,7 @@ const PLAY_SEEK_CHUNK = 80;     // 拖进度整段重铺: 单帧最多铺的程�
 const PLAY_CAM_EASE = 0.12;     // 跟框指数补间: 每帧向目标走的份额 (连续小步)
 const PLAY_UI_MS = 120;         // 钮/浮标/滑杆刷屏节流 (60fps 全量刷是白烧)
 const PLAY_STAT_MS = 240;       // 顶部两格联动节流 (innerHTML 解析不便宜)
+const PLAY_YIELD_MS = 3000;     // 缩放手势戳的有效窗 (手势→zoomend→350ms 防抖)
 // 播放钮图标 (行程播放条同款 SVG, trips-playback-bar 同源): 空闲态的 ▶ 由
 // app.html 内联初值给, JS 只管换 播放中 ↔ 暂停
 const FP_ICON_PLAY = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M7.5 4.6v14.8L20 12z" fill="currentColor"/></svg>';
@@ -74,6 +85,10 @@ let playT0 = 0;                 // 走带起点 (续播按当前进度回拨)
 let playPaused = true;          // 走带态 (进回放态默认停在 0)
 let seekGen = 0;                // 重铺代号 (新一次拖动作废在途批)
 let seekDragging = false;       // 滑杆拖动中 (UI 不抢滑杆位置/标签)
+let seekPinFrac = -1;           // 暂停拖杆重铺期的滑杆钉位, -1 = 不钉 (松手即
+                                // 落位不从 0 爬, 2026-10-14 二轮)
+let userZoomAt = 0;             // 最近一次用户缩放手势时刻 (让位只认手势: 镜头
+                                // 跟框的动画尾波 zoomend 不算, 0 = 从未手势)
 let playCam = null;             // 镜头框 (渲染坐标): 跟框补间的自家态
 let playLastStep = 0;           // 走带上帧时刻 (>1s 间隔 = 冻结/后台解冻)
 let playAutoDone = false;       // 本场页面生命周期已自动开播过 (只此一回)
@@ -141,7 +156,9 @@ function fpPlayUI(force) {       // 钮/浮标/滑杆 一并刷 (走带每帧调
     : "";
   if (seekDragging) return;     // 拖动中: 滑杆位置与标签 input 预览说了算
   const bar = playSeekBar;
-  const frac = n ? playIdx / n : 0;
+  // 重铺钉位优先: 暂停拖杆的重铺期滑杆停在松手位 (playIdx 已清零重爬,
+  // 照它刷就是「回到开始再走一遍」)
+  const frac = seekPinFrac >= 0 ? seekPinFrac : (n ? playIdx / n : 0);
   bar.value = String(Math.round(frac * 1000));
   bar.style.setProperty("--pb", (frac * 100).toFixed(1) + "%");   // 与 .pb-seek 同变量
 }
@@ -224,6 +241,9 @@ function fpPlaySeek(frac, autoplay) {   // 拖进度: 整段分帧重铺到 want
   playIdx = 0;
   roadPlayReset();              // 重铺从零累计: 色跟着重铺进度一起冷起
   const gen = seekGen;
+  // 暂停中松手: 滑杆钉在松手位 (重铺是补状态不是回放); 续播重铺 (autoplay,
+  // 放完再点从头重放那路) 照旧走带爬杆
+  seekPinFrac = autoplay ? -1 : want / Math.max(1, playList.length);
   (function step() {
     if (gen !== seekGen || !fpPlaying || !map) return;
     const end = Math.min(playIdx + PLAY_SEEK_CHUNK, want);
@@ -234,6 +254,7 @@ function fpPlaySeek(frac, autoplay) {   // 拖进度: 整段分帧重铺到 want
     if (playIdx < want) playSeekRaf = requestAnimationFrame(step);
     else {
       playSeekRaf = 0;
+      seekPinFrac = -1;         // 钉位解除: 退场/续播自己会刷杆
       // 拖到尽头 = 完场 (与走带放完同口径, 2026-10-14): 交还正常层 —— 留在
       // 回放态的话, 放大后的线永远停在重铺时的抽稀档 (百米直线「飞线」)
       if (playIdx >= playList.length) { fpPlayExit(true, "seek_end"); return; }
@@ -245,6 +266,7 @@ function fpPlaySeek(frac, autoplay) {   // 拖进度: 整段分帧重铺到 want
 function fpPlayExit(restore, why) {  // 收场: 撤回放层; restore = 放完/✕ → 回正常层
                                       // (why = MAPDIAG 归因: seek_end/zoom_yield)
   const n = playIdx;
+  const atEnd = playList.length > 0 && playIdx >= playList.length;   // 放到头
   fpPlaying = false;
   playPaused = true;
   seekGen++;
@@ -263,7 +285,15 @@ function fpPlayExit(restore, why) {  // 收场: 撤回放层; restore = 放完/�
   playBBox = playCam = null;
   playKm = 0; playMin = 0;
   seekDragging = false;
+  seekPinFrac = -1;
   fpPlayUI(true);               // 钮回 ▶, 浮标收起, 滑杆归 0
+  if (atEnd) {                  // 放到头的退场: 滑杆停在满格 (2026-10-14 二轮
+                                // 用户报「拖到最后自动回到开始很奇怪」—— 画面
+                                // 停在终态, 归 0 读作回到开头; 再点 ▶ 照旧
+                                // 从头重放)
+    playSeekBar.value = "1000";
+    playSeekBar.style.setProperty("--pb", "100%");   // 与 .pb-seek 同变量
+  }
   fpRestoreStats();             // 顶部两格还原服务端汇总口径
   if (restore && map && mapReady) {
     if (playLayerOk) {
@@ -320,9 +350,11 @@ function fpPlayYield() {        // 缩放要路 (roadZoomCrossed 调): 暂停中
   // 细化」)。让位 = 完场口径退出, 正常层接管 (重抽稀/跨档/视野裁剪全套)。
   // 返真 = 正常层完整 (playLayerOk 的 show 路), 调用方紧接着按新缩放换画;
   // 返假 = 没让 (走带中: 每程现画跟当前缩放, 镜头跟框也在拉锯; 重铺占线:
-  // 作废即至) 或走的暗铺路 (正常层没铺过, 收场的 renderTracks 自带当前缩放
-  // 口径在途, 不再叠画)。
+  // 作废即至; 或非手势: 镜头跟框 setBounds 的动画尾波也发 zoomend, 不设
+  // 手势闸的话暂停回放被自己的镜头悄悄退场) 或走的暗铺路 (正常层没铺过,
+  // 收场的 renderTracks 自带当前缩放口径在途, 不再叠画)。
   if (!fpPlaying || !playPaused || playSeekRaf || !playList.length) return false;
+  if (performance.now() - userZoomAt > PLAY_YIELD_MS) return false;
   fpPlayExit(true, "zoom_yield");
   return playLayerOk;   // 让位走的哪条路 (exit 不清这旗, 事后可读)
 }
@@ -356,12 +388,27 @@ $("#fp-seek").addEventListener("input", () => {   // 拖动中: 走带先停, �
 });
 $("#fp-seek").addEventListener("change", () => {  // 松手: 提交进度 (整段重铺)
   seekDragging = false;
+  const frac = +$("#fp-seek").value / 1000;   // 先取值: 下面的 enter 会把滑杆
+  // 归 0, 读完再 enter (兜底路径才有的坑 —— 真用户 input 先来, seekDragging
+  // 占位下 enter 不刷杆)
   if (!fpPlaying) {   // 空闲态直接点滑杆 (input 没进过回放态的兜底)
     if (!map || !mapReady || !fpVisibleTracks().length) return;
     fpPlayEnter();
   }
-  fpPlaySeek(+$("#fp-seek").value / 1000, !playPaused);
+  fpPlaySeek(frac, !playPaused);
 });
+// 用户缩放手势戳 (让位只认手势, fpPlayYield 读): pinch 双指/滚轮/双击是
+// 用户要路; 镜头跟框 setBounds 的动画尾波也发 zoomend, 不设此戳暂停中的
+// 回放会被自己的镜头悄悄退场 (2026-10-14 二轮排查实锤)。touchmove 持续
+// 续戳 —— 慢捏几秒也不出窗
+const fpMapEl = document.getElementById("fp-map");
+if (fpMapEl) {
+  const stamp = e => { if (!e.touches || e.touches.length >= 2) userZoomAt = performance.now(); };
+  fpMapEl.addEventListener("touchstart", stamp, { passive: true });
+  fpMapEl.addEventListener("touchmove", stamp, { passive: true });
+  fpMapEl.addEventListener("wheel", stamp, { passive: true });
+  fpMapEl.addEventListener("dblclick", stamp);
+}
 addEventListener("maplib:swap", () => { if (fpPlaying) fpPlayExit(false); });
 // 切后台/锁屏 (iOS 冻结前页先转 hidden): 整场收掉 —— 解冻回来不会自己接着
 // 播 (2026-10-02 用户报「打开足迹地图就自动开始播放」: 冻结时播放在途, 解冻
