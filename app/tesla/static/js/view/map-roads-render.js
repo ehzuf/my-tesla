@@ -31,7 +31,7 @@
 // (多—少渐变条) 也在这层。
 /* global mapLib, map, mapReady, RoadsGrid, pathFromFlat,
           roadCells, roadCellsById, roadMax, tracksById, linesById, renderGen,
-          fpPlaying,
+          fpPlaying, fpPlayYield,
           overlays: writable */
 /* exported makeRoadLines, roadLegend, roadBandSync,
            scheduleRoadZoom, roadZoomCrossed, redrawRoads, roadsViewportSync,
@@ -281,6 +281,13 @@ function drawnBand() {   // 屏上线的档位 (以第一组为准; 空屏用变
 }
 
 function roadZoomCrossed(zoom) {   // 防抖到点来问: 档位变没变 (变则换画)
+  // 回放中先问让不让路 (2026-10-14 用户报「拖进度到最后再放大, 大量飞线,
+  // 没有任何路径的细化」): 走带中不让 (每程现画跟当前缩放, 镜头跟框也在
+  // 拉锯); 暂停中让位正常层 —— 回放线只在起画缩放下抽稀, 回放态又否决
+  // 一切换画, 暂停着放大线就永远停在起画抽稀档 (低倍起的百米直线)。
+  // 让位返真的接着走本轮换画 (show 路亮的是进场时的旧档, 得按新缩放重
+  // 铺); 暗铺路收场的 renderTracks 自带当前缩放口径, 返假不再叠画
+  if (fpPlaying && !fpPlayYield()) return;
   const rb = zoom >= ROAD_ZOOM ? 1 : 0;
   if (rb === drawnBand()) {
     roadBand = rb;
@@ -310,7 +317,8 @@ function _dropOut(keep) {   // 摘掉 keep 之外的道路线 (视野外/旧档)
 }
 
 function redrawRoads(repath) {   // 跨 15 级换画: 低倍全量主桶单线 / 高倍只画视野内
-  if (fpPlaying) return;   // 时间回放中 (map-roads-playback): 换画让路, 停止时整版重建
+  if (fpPlaying) return;   // 时间回放中 (map-roads-playback): 换画让路 (暂停中的
+                           // 让位在 roadZoomCrossed 的 fpPlayYield 先行处置)
   const gen = ++roadRedrawGen, rgen = renderGen;
   roadDrawnZoom = map ? map.getZoom() : 0;   // 本轮按这个缩放抽稀
   const roads = roadsInView([...tracksById.values()]);   // 高倍: 只换画视野内的

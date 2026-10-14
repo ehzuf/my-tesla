@@ -142,7 +142,9 @@ def test_map_playback_wiring(auth):
     一条在地图卡外下方 (✕ 钮退役); 10-02 修三处: 回放色按累计升温 (报「一开始
     的路径不是黄的」—— live 读 playStat); 回放只在人看着时活着 (报「打开就自动
     播放」—— 切视图/切后台整场收播, 大帧间隔停原地); 正常层藏而不拆; 两格联动;
-    出口钩变否决; 打开即开播 (不等铺层); 10-04 收场兜底重画改暗铺一帧换装。"""
+    出口钩变否决; 打开即开播 (不等铺层); 10-04 收场兜底重画改暗铺一帧换装;
+    10-14 飞线修 (拖进度到最后再放大全是百米直线): 拖到尽头 = 完场退场交还
+    正常层 (seek_end), 暂停中的回放遇缩放跨档/爬级让位 (fpPlayYield)。"""
     html = _shell(auth)
     for frag in ('<div class="playbar" id="fp-bar">', 'id="fp-play" class="pb-btn"',
                  'aria-label="按时间顺序回放走过的路"', 'id="fp-seek" class="pb-seek"',
@@ -163,13 +165,18 @@ def test_map_playback_wiring(auth):
                  "writeStats", "fpRestoreStats", "o.show()", "FP_ICON_PAUSE", "--pb",
                  'addEventListener("visibilitychange"', "mapLib.bounds(playCam), true)",
                  "roadPlayMerge", "roadPlayBump", "makeRoadLines(t, true)", "PLAY_UI_MS",
-                 "renderTracks(fpVisibleTracks(), true)", "gen === renderGen"):
+                 "renderTracks(fpVisibleTracks(), true)", "gen === renderGen",
+                 # 10-14 飞线修: 拖到尽头 = 完场 (fpPlaySeek 收尾); 暂停中缩放让位
+                 'fpPlayExit(true, "seek_end")', "function fpPlayYield()",
+                 'fpPlayExit(true, "zoom_yield")', "return playLayerOk;"):
         assert frag in js, f"回放模块缺少 {frag}"
     # 让路闸/出口钩/藏层: 正常层回放期只藏不拆 (收场 show 亮回); renderTracks
     # 入口反调 fpPlayExit(false) —— 换筛选/同步任何重渲染都是对回放态的否决
     for ref, frag in (("map-tracks-render.js", "if (fpPlaying) fpPlayExit(false);"),
                       ("map-tracks-render.js", "if (fpPlaying) for (const l of lines) l.hide();"),
                       ("map-roads-render.js", "if (fpPlaying) return;"),
+                      # 10-14: 暂停中的回放遇缩放跨档/爬级让位 (roadZoomCrossed 先问)
+                      ("map-roads-render.js", "if (fpPlaying && !fpPlayYield()) return;"),
                       ("map-roads-render.js", "if (fpPlaying || !map || !mapReady"),
                       ("map-roads-boot.js", "overlays.length && !fpPlaying"),
                       ("map-boot.js", "if (roadsById.size && !autoOn) await renderTracks"),

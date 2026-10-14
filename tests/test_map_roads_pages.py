@@ -20,8 +20,8 @@ def test_map_roads_scripts_and_load_order(auth):
     (map-boot) 前 —— 同为顶层 const/function, 序即文档。
     细化模块 (map-tracks-refine) 已随原始轨迹层整文件退役。"""
     html = _shell(auth)
-    for src in ('js/roads-grid.js?v=4', 'js/view/map-roads-render.js?v=13',
-                'js/view/map-roads-playback.js?v=14', 'js/view/map-roads-boot.js?v=8',
+    for src in ('js/roads-grid.js?v=4', 'js/view/map-roads-render.js?v=14',
+                'js/view/map-roads-playback.js?v=15', 'js/view/map-roads-boot.js?v=8',
                 'js/view/map-build-mask.js?v=1'):
         assert f'src="/tesla/static/{src}"' in html, f"缺脚本 {src}"
     refs = page_asset_paths(auth, "/tesla")

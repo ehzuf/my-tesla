@@ -37,14 +37,21 @@
 // 镜头跟框: 已画程的并集 bbox (t.gbb 本就是 GCJ 渲染坐标) 每程并一点,
 // playCam 指数补间框住全部已走的路 (= 框住它的最大倍率); 拖进度整段分帧
 // 重铺 (seekGen 作废在途批)。
+// 2026-10-14 两收口 (用户报「拖进度到最后再放大, 轨迹大量飞线, 没有任何
+// 路径的细化」—— 回放线只在起画缩放下抽稀, 回放态又否决一切换画): (1) 拖
+// 进度到尽头 = 完场退场 (fpPlaySeek 收尾 fpPlayExit(true) —— 走带放完本就
+// 退场, 拖完停在回放态是口径漏, 交还正常层才有跨档换画/重抽稀那套); (2) 暂
+// 停中的回放遇缩放跨档/爬级让位正常层 (fpPlayYield, roadZoomCrossed 调) ——
+// 让位走完场口径, ▶ 从头重放。
 /* global $, diag, mapLib, map, mapReady, fpVisibleTracks, makeRoadLines,
           roadLegend, renderTracks, fpPlaying, overlays, fpViewOn,
           roadPlayReset, roadPlayMerge, roadPlayBump, roadPlayEnd,
           writeStats, fpRestoreStats, tracksRendering,
           fpPlaying: writable, renderGen: writable */
-/* exported fpPlayExit, fpPlayAuto, fpPlayRestart */
+/* exported fpPlayExit, fpPlayAuto, fpPlayRestart, fpPlayYield */
 // fpPlayExit 给 renderTracks 出口钩; fpPlayAuto 给 map-boot 同步收尾 /
-// map-filters 回视图; fpPlayRestart 给 map-boot 换驾驶员点名重播
+// map-filters 回视图; fpPlayRestart 给 map-boot 换驾驶员点名重播;
+// fpPlayYield 给 map-roads-render 缩放换画要路 (暂停中的回放让位)
 "use strict";
 const PLAY_TOTAL_MS = 36000;    // 全量回放的目标时长 (程少自动放慢)
 const PLAY_MAX_PER_FRAME = 6;   // 播放单帧最多补的程数
@@ -225,11 +232,18 @@ function fpPlaySeek(frac, autoplay) {   // 拖进度: 整段分帧重铺到 want
     fpPlayStats();
     fpPlayFit();
     if (playIdx < want) playSeekRaf = requestAnimationFrame(step);
-    else { playSeekRaf = 0; if (autoplay && playIdx < playList.length) fpPlayResume(); }
+    else {
+      playSeekRaf = 0;
+      // 拖到尽头 = 完场 (与走带放完同口径, 2026-10-14): 交还正常层 —— 留在
+      // 回放态的话, 放大后的线永远停在重铺时的抽稀档 (百米直线「飞线」)
+      if (playIdx >= playList.length) { fpPlayExit(true, "seek_end"); return; }
+      if (autoplay) fpPlayResume();
+    }
   })();
 }
 
-function fpPlayExit(restore) {  // 收场: 撤回放层; restore = 放完/✕ → 回正常层
+function fpPlayExit(restore, why) {  // 收场: 撤回放层; restore = 放完/✕ → 回正常层
+                                      // (why = MAPDIAG 归因: seek_end/zoom_yield)
   const n = playIdx;
   fpPlaying = false;
   playPaused = true;
@@ -271,7 +285,7 @@ function fpPlayExit(restore) {  // 收场: 撤回放层; restore = 放完/✕ �
       });
     }
   }
-  diag("fp_play_exit", { shown: n, restore: !!restore,
+  diag("fp_play_exit", { shown: n, restore: !!restore, why: why || "",
                          layer: restore ? (playLayerOk ? "show" : "swap") : "veto" });
 }
 
@@ -297,6 +311,20 @@ function fpPlayRestart() {      // 换驾驶员点名重播: 新清单从头播 
   fpPlayEnter();
   fpPlayResume();
   diag("fp_play_restart", { n: playList.length });
+}
+
+function fpPlayYield() {        // 缩放要路 (roadZoomCrossed 调): 暂停中的回放让位正常层
+  // 回放层的线在起画缩放下抽稀 (makeRoadLines 的 roadDecStep), 回放态又否决
+  // 一切换画 —— 暂停中 (拖到中途停住细看/播前暂停) 放大全是百米直线「飞
+  // 线」(2026-10-14 用户报「拖进度到最后再放大, 大量飞线, 没有任何路径的
+  // 细化」)。让位 = 完场口径退出, 正常层接管 (重抽稀/跨档/视野裁剪全套)。
+  // 返真 = 正常层完整 (playLayerOk 的 show 路), 调用方紧接着按新缩放换画;
+  // 返假 = 没让 (走带中: 每程现画跟当前缩放, 镜头跟框也在拉锯; 重铺占线:
+  // 作废即至) 或走的暗铺路 (正常层没铺过, 收场的 renderTracks 自带当前缩放
+  // 口径在途, 不再叠画)。
+  if (!fpPlaying || !playPaused || playSeekRaf || !playList.length) return false;
+  fpPlayExit(true, "zoom_yield");
+  return playLayerOk;   // 让位走的哪条路 (exit 不清这旗, 事后可读)
 }
 
 /* ---------- 接线 ---------- */
