@@ -150,7 +150,11 @@ def test_guard_assets_versioned_on_shell(auth):
                    # 3.3.0 定稿: 左抽屉纯导航回归 (tab-dock 草稿整链撤); 车辆
                    # 选择住抽屉顶, 时间筛选整个下线 (全局 chips 退役), 账号
                    # 卡进设置页
-                   ("css/tesla-base.css", 17),          # v16: 共享状态件收编单源;
+                   ("css/tesla-base.css", 18),          # v18: #task-list 进
+                                                         #   rise 容器清单 (任务卡
+                                                         #   够不着 .view-scroll >
+                                                         #   .card 那条);
+                                                         #   v16: 共享状态件收编单源;
                                                          #   (.spin/.tail/.err-box/.retry);
                                                          #   v15: 列表入场错峰 (rise,;
                                                          #   头 6 项递进 45ms, 容器
@@ -213,7 +217,10 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   .swipe-list) + .plc-sum
                                                          #   汇总行 + 红钮; v17:
                                                          #   账号三卡
-                   ("css/tesla-shell-floor.css", 12),   # v12: toast 重申块拆 (base 单源); v11: 侧距统一 16;
+                   ("css/tesla-shell-floor.css", 13),   # v13: 后台任务页补进设置族
+                                                         #   规则 (贴屏缘+零纵距);
+                                                         #   v12: toast 重申块拆 (base 单源);
+                                                         #   v11: 侧距统一 16;
                                                          #   v10: 大屏手机一列 (屏底 toast 列内口径);
                                                          #   v9: 设置族卡间纵距 + 账号/地点视图
                                                          #   补进族规则 (v8: 左缘边条 40px)

@@ -203,3 +203,19 @@ def test_filter_bar_chips(auth):
     i = page.index(".fchip {")               # chip 不框椭圆: 无边框无圆标
     block = page[i:page.index("}", i)]
     assert "border" not in block
+
+
+def test_settings_views_join_floor_family(auth):
+    """设置族视图必须全部在收口层三条族规则里 (592 窄栏 / 卡片 16 侧距 /
+    相邻卡 16 纵距): 账号、常用地点、后台任务三页先后「卡片贴屏缘 / panel
+    挤在一起」都是新视图没跟族规则 (floor css 注释记着三起) —— 这条自
+    扩展: 新设置视图漏跟任何一组直接红, 不等用户报。"""
+    html = auth.get(SHELL).text
+    ids = sorted(set(re.findall(r'id="(view-settings-[a-z-]+)"', html)))
+    assert len(ids) >= 6                     # 设置页只会多不会少
+    css = auth.get("/tesla/static/css/tesla-shell-floor.css").text
+    for decl in ("max-width: 592px", "margin: 0 16px", "margin-top: 16px"):
+        end = css.index(decl)
+        group = css[css.rfind("}", 0, end) + 1:end]   # 该声明的选择器组
+        for vid in ids:
+            assert f"#{vid}" in group, f"{vid} 没进 floor 族规则 ({decl})"

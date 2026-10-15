@@ -60,13 +60,18 @@ body.selecting #bar-row { display: none; }
    同日用户报「地图设置两个 panel 挤在一起」: 壳化时旧页 main 的
    flex gap:16 也没跟过来 (.view-scroll 是纯滚动容器不给距), 地图设置
    是设置族唯一双卡页, 两卡纵向零距贴了几周 —— 相邻卡补 16px 纵距
-   (隔了标题的不算相邻, 常用地点「已删除」区不吃这条) ---- */
+   (隔了标题的不算相邻, 常用地点「已删除」区不吃这条)。
+   后台任务页 (2026-10-15) 是第三个没跟上的: 新页照抄了双卡结构但
+   卡住 #task-list 里, 三条族规则全没沾 —— 用户报「panel 太大/边框
+   太窄」= 卡贴屏缘全幅 + 零纵距贴死, 补进同款。 ---- */
 #view-settings-db > .view-scroll, #view-settings-map > .view-scroll,
 #view-settings-drivers > .view-scroll, #view-settings-account > .view-scroll,
-#view-settings-places > .view-scroll { max-width: 592px; }
+#view-settings-places > .view-scroll, #view-settings-tasks > .view-scroll {
+  max-width: 592px; }
 #view-settings-db .card, #view-settings-map .card,
 #view-settings-drivers .card, #view-settings-account .card,
-#view-settings-places .card { margin: 0 16px; }
+#view-settings-places .card, #view-settings-tasks .card { margin: 0 16px; }
 #view-settings-db .card + .card, #view-settings-map .card + .card,
 #view-settings-drivers .card + .card, #view-settings-account .card + .card,
-#view-settings-places .card + .card { margin-top: 16px; }
+#view-settings-places .card + .card, #view-settings-tasks .card + .card {
+  margin-top: 16px; }

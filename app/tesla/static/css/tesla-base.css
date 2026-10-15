@@ -135,12 +135,14 @@ main {
    重灌 (innerHTML 清空重排) 也吃到同一套。live 轮询只重写值层 span
    (不在容器直下), 5 秒一轮不会重跑动画。容器清单 = 全 app 的内容列表
    (行程/充电/分组/组详情) + 统计格两族 + 图卡族 + changelog 版本行 +
-   状态页面板排 + 两地图页顶统计行 + 设置族表单卡 */
+   状态页面板排 + 两地图页顶统计行 + 设置族表单卡 + 后台任务卡
+   (2026-10-15: 任务卡住 #task-list 里, 够不着 .view-scroll > .card
+   那条, 进容器清单吃同款错峰) */
 @keyframes rise {
   from { opacity: 0; transform: translateY(12px); }
 }
 :is(#list, #chg-masonry, .gp-list, .gtr-list, .stats-grid, .charts-grid,
-    #entries, #lv-panels, .stats) > *,
+    #entries, #lv-panels, .stats, #task-list) > *,
 .view-scroll > .card {
   animation: rise .4s var(--ease-ios) backwards;
 }
