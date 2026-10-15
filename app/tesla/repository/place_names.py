@@ -72,11 +72,26 @@ def done_address_ids(own: Session, ver: int) -> set[int]:
         select(PlaceName.address_id).where(PlaceName.v == ver)))
 
 
+def places_progress(session: Session, own: Session, ver: int) -> tuple[int, int]:
+    """(已处理数, 总数), roads_progress 同口径: 总数 = 有坐标的全量地址,
+    已处理 = 其中当前策略版本有行的 (ok/skip 都算)。后台任务页用 —— 与
+    worker 待办严格对齐。"""
+    ids = {i for i, _, _ in all_address_coords(session)}
+    return len(done_address_ids(own, ver) & ids), len(ids)
+
+
 def save_place_name(own: Session, row: PlaceName) -> None:
     """命名结果落库: 一址一行, 重写 = 先删后插 (save_road 同款)。"""
     own.execute(delete(PlaceName)
                 .where(PlaceName.address_id == row.address_id))
     own.add(row)
+    own.commit()
+
+
+def wipe_place_names(own: Session) -> None:
+    """清空全部命名行 (设置「后台任务」页重新命名用): wipe_roads 同款 ——
+    成果全撤, worker 水位随行走, 从头回填。"""
+    own.execute(delete(PlaceName))
     own.commit()
 
 

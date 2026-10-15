@@ -131,6 +131,14 @@ def mark_roads_initial_done(own: Session) -> None:
         own.commit()
 
 
+def reset_roads_initial_done(own: Session) -> None:
+    """撤首回完成旗 (后台任务页重新拟合): 足迹地图蒙版重新盖上从头走。"""
+    row = _row(own)
+    if row.roads_initial_done:
+        row.roads_initial_done = False
+        own.commit()
+
+
 def wizard_missing(own: Session) -> list[str]:
     """首启引导 (三步版) 还差的配置步: "teslamate" / "amap"。
 

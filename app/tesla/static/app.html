@@ -38,7 +38,7 @@
 <link rel="stylesheet" href="/tesla/static/css/tesla-chargemap-map.css?v=11">
 <link rel="stylesheet" href="/tesla/static/css/tesla-live-page.css?v=4">
 <link rel="stylesheet" href="/tesla/static/css/tesla-live-driving.css?v=20">
-<link rel="stylesheet" href="/tesla/static/css/tesla-settings.css?v=29">
+<link rel="stylesheet" href="/tesla/static/css/tesla-settings.css?v=30">
 <link rel="stylesheet" href="/tesla/static/css/tesla-shell-floor.css?v=12">
 </head>
 <body>
@@ -827,6 +827,18 @@
       </div>
     </section>
 
+    <!-- 后台任务页 (2026-10-15 用户点名「设置菜单里加一个任务页面, 每项
+         任务一个进度条, 可重启重新刷新数据库」): 任务卡由 view/settings-
+         tasks.js 现铺 (名单/文案单一来源在服务端任务注册表), 每卡 = 名字
+         + 一句说明 + 进度条 (done/total 与 worker 待办同口径) + 状态行 +
+         重启钮 (清成果全量重算, confirm 把关); 页面在视野内 5s 轮询。 -->
+    <section class="view" id="view-settings-tasks" data-view="settings-tasks" hidden>
+      <div class="view-scroll" id="task-scroll">
+        <div class="sec-head"><h2>后台任务</h2></div>
+        <div id="task-list"></div>
+      </div>
+    </section>
+
     <!-- 更新日志视图 (P3): 标记沿用旧页 (entries/loading/error), list/retry
          撞名让路 —— #list 留给行程列表 (tesla-trips-cards.css 按它布列) -->
     <section class="view" id="view-changelog" data-view="changelog" hidden>
@@ -1114,7 +1126,7 @@
 <script src="/tesla/static/js/tesla-viewport.js?v=4"></script>
 <script src="/tesla/static/js/tesla-pull-refresh.js?v=3"></script>
 <script src="/tesla/static/js/tesla-gesture.js?v=10"></script>
-<script src="/tesla/static/js/tesla-drawer.js?v=13"></script>
+<script src="/tesla/static/js/tesla-drawer.js?v=14"></script>
 <script src="/tesla/static/js/tesla-car-switcher.js?v=6"></script>
 <script src="/tesla/static/js/tesla-filter-bar.js?v=8"></script>
 <script src="/tesla/static/js/tesla-paged-list.js?v=1"></script>
@@ -1175,6 +1187,7 @@
 <script src="/tesla/static/js/view/settings-drivers.js?v=6"></script>
 <script src="/tesla/static/js/view/trips-place-detail.js?v=12"></script>
 <script src="/tesla/static/js/view/settings-places.js?v=8"></script>
+<script src="/tesla/static/js/view/settings-tasks.js?v=1"></script>
 <script src="/tesla/static/js/view/settings-account.js?v=6"></script>
 <script src="/tesla/static/js/tesla-app-boot.js?v=4"></script>
 </body>

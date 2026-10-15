@@ -408,3 +408,31 @@ input::placeholder { color: var(--ink-3); }
 }
 .acct-acts button:active { background: var(--surface-3); }
 .acct-out { color: #e5484d; }
+
+/* ---------- 后台任务 (2026-10-15 用户点名「设置菜单里加一个任务页面,
+   每项任务一个进度条, 可重启重新刷新数据库」) ----------
+   任务卡: 名字 + 一句说明 + 进度条 + 状态行 (状态字 / 计数 / 重启钮)。
+   进度条吃足迹地图首回构造蒙版同语言 (.fp-build-bar 同款: 6px 胶囊轨道
+   + 蓝填 + width 过渡, 轮询原位更新才有得看); 状态字按 state 变色
+   (进行中蓝 / 完成绿 / 待配置灰)。JS 在 view/settings-tasks.js。 */
+.task-desc { font-size: 12px; color: var(--ink-2); margin: 4px 0 12px; }
+.task-bar {
+  height: 6px; border-radius: 999px;
+  background: rgba(255,255,255,.14); overflow: hidden;
+}
+.task-fill {
+  width: 0%; height: 100%; background: var(--blue);
+  transition: width .4s var(--ease-ios);
+}
+.task-meta { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.task-state { font-size: 12.5px; color: var(--ink-2); }
+.task-state[data-state="running"] { color: #7db3f0; }
+.task-state[data-state="done"] { color: var(--green); }
+.task-count { flex: 1; text-align: right; font-size: 12.5px; color: var(--ink-3); }
+.task-restart {
+  flex: none; font-size: 12.5px; color: var(--ink-2);
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--hairline);
+}
+.task-restart:active { transform: scale(.97); }
+.task-restart:disabled { opacity: .4; }

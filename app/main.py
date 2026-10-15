@@ -35,6 +35,7 @@ from .tesla.routers import (charging as charging_routes,
                             live as live_routes,
                             map as map_routes, pages,
                             settings as settings_routes,
+                            tasks as tasks_routes,
                             trips as trips_routes)
 
 
@@ -87,6 +88,7 @@ app.include_router(map_routes.mapapi)
 app.include_router(trips_routes.trips)
 app.include_router(live_routes.live)
 app.include_router(settings_routes.settingsapi)
+app.include_router(tasks_routes.tasksapi)
 app.include_router(changelog_routes.changelogapi)
 app.mount("/static", StaticFiles(directory=HOME_STATIC_DIR), name="home-static")
 app.mount("/tesla/static", StaticFiles(directory=config.STATIC_DIR), name="static")

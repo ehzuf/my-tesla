@@ -185,7 +185,8 @@ def test_guard_assets_versioned_on_shell(auth):
                    ("css/tesla-pull-refresh.css", 3),   # v3: 曲线令牌采用 (ios); v1-2 历史漏钉, 本批补上
                    ("css/tesla-filter-bar.css", 6),     # 菜单圆键退役 (#menu-key 拆净,
                                                          # #bar-row.no-chips 整条收起)
-                   ("css/tesla-settings.css", 29),      # v28: 曲线令牌采用 (ios + swipe);
+                   ("css/tesla-settings.css", 30),      # v30: 后台任务卡 (进度条/状态行/重启钮);
+                                                         #   v28: 曲线令牌采用 (ios + swipe);
                                                          #   v27: 顶置 toast 副本拆净 (base 单源);
                                                          #   v26: 宽度查询折叠; 独立页死块退役;
                                                          #   v25: 大屏手机一列 (顶置 toast 列内口径);
@@ -218,7 +219,8 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          #   补进族规则 (v8: 左缘边条 40px)
                    ("js/tesla-navigation.js", 4),       # v4: 足迹地图闸 (navigate 拦旁路);
                                                          #   v3: 视图直挂 hidden + 冷启首跳藏净
-                   ("js/tesla-drawer.js", 13),          # v13: 大屏手机一列 (左缘呼出带
+                   ("js/tesla-drawer.js", 14),          # v14: 设置组加后台任务行;
+                                                         #   v13: 大屏手机一列 (左缘呼出带
                                                          #   drawerEdgeX 列内换算);
                                                          #   v12: 悬浮菜单键 #menu-fab 接线;
                                                          #   v11: 左缘右划统一呼出
@@ -351,10 +353,13 @@ def test_guard_assets_versioned_on_shell(auth):
                                                          # 小图 / Web服务 POST
                                                          # 候选); v12: 两把 Key
                                                          # 各添「测试」钮
-                   ("js/view/settings-account.js", 6)):  # v6: 三卡 + 名字行内
-                                                          # 编辑 (Enter 存 Esc 弃)
-                                                          # (v5: 弹层退役; v4:
-                                                          # 独立页生命周期+手势)
+                   ("js/view/settings-account.js", 6),   # v6: 三卡 + 名字行内
+                                                         # 编辑 (Enter 存 Esc 弃)
+                                                         # (v5: 弹层退役; v4:
+                                                         # 独立页生命周期+手势)
+                   ("js/view/settings-tasks.js", 1)):    # v1: 后台任务页 (新建:
+                                                         # 任务卡现铺 + 5s 轮询 +
+                                                         # 重启 confirm/飞行锁)
         assert f"{ref}?v={v}" in html, f"{ref} 版本号没跟上 (期望 v={v})"
     # tab-dock / 时间档模块资产整个退役: include 不许回潮
     assert "tesla-tab-dock" not in html and "tesla-time-range" not in html

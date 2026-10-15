@@ -76,6 +76,13 @@ def save_road(own: Session, row: DriveRoad) -> None:
     own.commit()
 
 
+def wipe_roads(own: Session) -> None:
+    """清空全部拟合行 (设置「后台任务」页重新拟合用): 成果全撤后水位随行
+    走 —— worker 下一轮看到的就是全量待办, 从头回填。"""
+    own.execute(delete(DriveRoad))
+    own.commit()
+
+
 def closed_drives(session: Session) -> list[tuple[int, float]]:
     """已结束行程 (distance/end_date 非空) 的 (id, distance_km), 开始时间
     倒序 —— worker 最新优先回填。"""

@@ -7,7 +7,7 @@
 自记账日上限 3000 歇到次日零点; key 每轮现读 (换 key 不用重启, /roads/tick
 会 nudge); TeslaMate 引擎工厂同样每轮现取 (热换引擎跟手); 会话短开短闭; 境外坐标 regeo 短路不耗配额 (落 skip 行)。
 网络/服务错误不落行, 同址 3 次后本进程放弃 —— 读侧没缓存自然回退
-TeslaMate 名, 不会更糟。"""
+TeslaMate 名, 不会更糟。取名策略在 place_naming (纯函数)。"""
 # pylint: disable=duplicate-code   # _State/轮次样板与 roads_worker 有意同款
 import sys
 import threading
@@ -17,9 +17,10 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from .. import database
 from . import roads_amap
+from .place_naming import pick_place_name
 from .repository.place_names import (all_address_coords, done_address_ids,
                                      place_name_row, save_place_name)
-from .roads_amap_wire import AddressComponent, AmapSpot, Regeocode
+from .roads_amap_wire import AddressComponent
 from .settings_store import amap_web_key_value
 
 PLACE_NAME_V = 2          # v2 = v1 取名 + 省市区区划随行落库 (v1 老行区划空, bump 补齐)
@@ -30,33 +31,6 @@ PEAK_DELAY_S = 150        # 启动错峰: 预热线程与 roads worker (90s) 先
 ROUND_MAX = 100           # 每轮最多处理地址数 (再查待办, 不长占库)
 QUOTA_PAUSE_S = 3600      # 配额码的歇时
 ATTEMPTS_MAX = 3          # 同址网络/服务错误重试上限 (本进程)
-
-_POI_MAX_M = 300.0        # POI 认定半径: 送学停校门 300m 外也是「到学校」
-_ROAD_MAX_M = 100.0       # 没有近 POI 时贴路名 (停路边)
-
-
-def _nearest(spots: list[AmapSpot]) -> tuple[str, float] | None:
-    """列表里距离最近的一条 (pois/roads 不保证按距离排, 自己挑;
-    距离缺/坏的条目跳过)。"""
-    best: AmapSpot | None = None
-    best_d = float("inf")
-    for spot in spots:
-        if spot.distance is not None and spot.distance < best_d:
-            best_d, best = spot.distance, spot
-    return (best.name, best_d) if best is not None else None
-
-
-def pick_place_name(geo: Regeocode) -> str:
-    """regeocode → 展示名: 最近的 POI ≤300m 优先, 其次 ≤100m 的道路名,
-    都没有用 区+街道 兜底 (addressComponent 的空字段是 [] 不是 "", 验形时
-    已收编成 "")。取不出回 "" (落 skip, 同 v 不再重试)。"""
-    poi = _nearest(geo.pois)
-    if poi and poi[0] and poi[1] <= _POI_MAX_M:
-        return poi[0][:60]
-    road = _nearest(geo.roads)
-    if road and road[0] and road[1] <= _ROAD_MAX_M:
-        return road[0][:60]
-    return (geo.address.district + geo.address.township)[:60]
 
 
 class _State:
@@ -86,6 +60,11 @@ def start(own_factory: sessionmaker[Session]) -> None:
 def nudge() -> None:
     """踢醒空转的 worker (设置页存了 Web 服务 key 后立即开跑)。"""
     _State.wake.set()
+
+
+def forget_failures() -> None:
+    """清同址失败计数 (设置「后台任务」页重新命名用): roads_worker 同款。"""
+    _State.attempts.clear()
 
 
 def running() -> bool:

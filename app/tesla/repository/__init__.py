@@ -47,13 +47,16 @@ from .map_roads import (
     roads_progress,
     roads_rows,
     save_road,
+    wipe_roads,
 )
 from .place_names import (
     all_address_coords,
     done_address_ids,
     place_name_map,
     place_name_row,
+    places_progress,
     save_place_name,
+    wipe_place_names,
 )
 from .region_tree import parse_region, region_address_ids
 from .trips import (
@@ -117,7 +120,7 @@ __all__ = [
     "merged_track", "merged_track_plan", "merged_track_segments",
     "monthly_stats", "parse_date_range", "parse_region", "place_hidden_set",
     "place_name_map",
-    "place_name_row", "query_tracks",
+    "place_name_row", "places_progress", "query_tracks",
     "region_address_ids", "rename_trip_group",
     "road_row", "roads_lite",
     "roads_progress", "roads_rows", "save_fill",
@@ -127,5 +130,5 @@ __all__ = [
     "set_place_alias", "trip_dimensions", "trip_driver_stats",
     "trip_locations", "trip_monthly",
     "trip_summary", "trip_track",
-    "update_charging_cost",
+    "update_charging_cost", "wipe_place_names", "wipe_roads",
 ]

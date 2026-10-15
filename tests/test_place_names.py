@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from app import database
 from app.tesla import place_worker, roads_amap
 from app.tesla.models import Address, AppSetting
+from app.tesla.place_naming import pick_place_name
 from app.tesla.repository.place_names import (done_address_ids,
                                               place_info_map,
                                               place_name_map,
@@ -24,14 +25,14 @@ def test_pick_prefers_nearest_poi():
     geo = Regeocode.model_validate(
         {"pois": [{"name": "远处商场", "distance": 200},
                   {"name": "近处学校", "distance": 40}]})
-    assert place_worker.pick_place_name(geo) == "近处学校"
+    assert pick_place_name(geo) == "近处学校"
 
 
 def test_pick_poi_beyond_300m_falls_to_road():
     geo = Regeocode.model_validate(
         {"pois": [{"name": "远处商场", "distance": 500}],
          "roads": [{"name": "坂田大道", "distance": 30}]})
-    assert place_worker.pick_place_name(geo) == "坂田大道"
+    assert pick_place_name(geo) == "坂田大道"
 
 
 def test_pick_road_beyond_100m_falls_to_district():
@@ -39,7 +40,7 @@ def test_pick_road_beyond_100m_falls_to_district():
         {"pois": [{"name": "远处商场", "distance": 500}],
          "roads": [{"name": "远路", "distance": 400}],
          "addressComponent": {"district": "花都区", "township": "新雅街道"}})
-    assert place_worker.pick_place_name(geo) == "花都区新雅街道"
+    assert pick_place_name(geo) == "花都区新雅街道"
 
 
 def test_pick_filters_list_empty_fields_and_unnamed_poi():
@@ -49,11 +50,11 @@ def test_pick_filters_list_empty_fields_and_unnamed_poi():
         {"pois": [{"name": "", "distance": 10}],
          "roads": [{"name": "环城东路", "distance": 20}],
          "addressComponent": {"district": [], "township": "新雅街道"}})
-    assert place_worker.pick_place_name(geo) == "环城东路"
+    assert pick_place_name(geo) == "环城东路"
     geo2 = Regeocode.model_validate(
         {"addressComponent": {"district": [], "township": []}})
-    assert place_worker.pick_place_name(geo2) == ""
-    assert len(place_worker.pick_place_name(Regeocode.model_validate(
+    assert pick_place_name(geo2) == ""
+    assert len(pick_place_name(Regeocode.model_validate(
         {"pois": [{"name": "名" * 80, "distance": 5}]}))) == 60   # 截 60 字
 
 

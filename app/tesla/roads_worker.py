@@ -60,6 +60,12 @@ def nudge() -> None:
     _State.wake.set()
 
 
+def forget_failures() -> None:
+    """清同程失败计数 (设置「后台任务」页重新拟合用): 之前 3 败放弃的
+    行程重新进待办。"""
+    _State.attempts.clear()
+
+
 def running() -> bool:
     """worker 是否在跑 (诊断用)。"""
     return _State.thread is not None and _State.thread.is_alive()

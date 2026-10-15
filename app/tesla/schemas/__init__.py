@@ -46,6 +46,7 @@ from .settings_schemas import (
     TmdbTest,
     TmdbTestIn,
 )
+from .tasks_schemas import TaskInfo
 from .trip_group_schemas import (
     GroupChangesIn,
     GroupMemberUpdate,
@@ -96,7 +97,8 @@ __all__ = [
     "MapSummary", "MapTrack", "MergedTrack", "MonthlyStat", "PlaceAliasUpdate",
     "PlaceHideUpdate",
     "RegionNode", "RoadStreamRow", "RoadsStatus",
-    "SettingsState", "SettingsUpdate", "TeslaMateSettings", "TmdbTest",
+    "SettingsState", "SettingsUpdate", "TaskInfo", "TeslaMateSettings",
+    "TmdbTest",
     "TmdbTestIn", "TollRoad",
     "TrackHist", "TripDims", "TripGroupIn", "TripGroupInfo",
     "TripGroupRename",
